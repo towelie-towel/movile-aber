@@ -33,7 +33,7 @@ import { polylineDecode } from '~/utils/helpers';
 
 void Image.prefetch("https://lh3.googleusercontent.com/a/AAcHTtfPgVic8qF8hDw_WPE80JpGOkKASohxkUA8y272Ow=s1000-c")
 
-const snapPoints = ["25%", "50%", "75%"];
+const snapPoints = ["25%", "50%", "75%", "100%"];
 
 const DiscoberTab = () => {
     return (

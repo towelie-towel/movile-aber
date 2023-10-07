@@ -1,17 +1,17 @@
-import React, { useRef, useCallback, useEffect, memo } from 'react'
-import { Animated, Dimensions, Easing, Platform } from 'react-native';
-import type { MapMarkerProps } from 'react-native-maps';
-import { AnimatedRegion, MarkerAnimated, type MapMarker } from 'react-native-maps';
+import { useCallback, useEffect, useRef } from "react";
+import { Animated, Dimensions, Easing, Platform } from "react-native";
+import { AnimatedRegion, MapMarker, Marker } from "react-native-maps";
 
 type AnimatedMarkerParams = {
+    index: string;
+    onPress: () => void;
     longitude: number;
     latitude: number;
     heading: number;
     headingAnimated?: boolean;
-} & Omit<MapMarkerProps, "coordinate">
+}
 
-const AnimatedMarker: React.FC<AnimatedMarkerParams> = ({ latitude, longitude, heading, headingAnimated, children, style, ...restProps }) => {
-
+export default function TaxiMarker({ index, onPress, latitude, longitude, heading, headingAnimated }: AnimatedMarkerParams) {
     const { width, height } = Dimensions.get('window');
     const ASPECT_RATIO = width / height;
     const LATITUDE_DELTA = 0.003;
@@ -64,33 +64,17 @@ const AnimatedMarker: React.FC<AnimatedMarkerParams> = ({ latitude, longitude, h
     }, [latitude, longitude, animateTo, heading])
 
     return (
-        <MarkerAnimated
+        <Marker.Animated
+            renderToHardwareTextureAndroid
+            shouldRasterizeIOS
+            key={index}
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
             coordinate={anim_marker_coords_ref.current} ref={(_ref) => anim_marker_ref.current = _ref}
             tracksViewChanges={false}
-            {...restProps}
-            style={style}
-            rotation={!headingAnimated ? heading : undefined}
-        >
-            <Animated.View
-                style={headingAnimated ? {
-                    ...(heading !== -1 && {
-                        transform: [
-                            {
-                                rotate: animatedHeading.interpolate({
-                                    inputRange: [0, 360],
-                                    outputRange: ['0deg', '360deg'],
-                                }),
-                            },
-                        ],
-                    }),
-                } : {}}
-            >
-                {children}
-            </Animated.View>
-        </MarkerAnimated>
-    )
+            onPress={onPress}
+            anchor={{ x: 0.5, y: 0.5 }}
+            rotation={!!headingAnimated ? heading : undefined}
+            icon={require("../../../assets/images/Car_Black.png")} />
+    );
 }
-
-export default memo(AnimatedMarker)

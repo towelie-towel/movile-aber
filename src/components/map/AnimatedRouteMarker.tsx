@@ -1,11 +1,9 @@
 import { useState, useRef, useCallback, useEffect, memo } from 'react'
 import { type LatLng } from 'react-native-maps';
-import { MaterialIcons } from '@expo/vector-icons';
 import { useColorScheme } from 'nativewind';
 
 import { getDirections } from '~/utils/helpers';
-import Colors from '~/constants/Colors';
-import AnimatedMarker from '~/components/map/AnimatedMarker';
+import TaxiMarker from './TaxiMarker';
 
 const AnimatedRouteMarker = () => {
 
@@ -49,9 +47,11 @@ const AnimatedRouteMarker = () => {
         const interbal_sub = setInterval(() => {
             _getLiveLocation()
         }, 3000)
+        console.log("🚀 ~ file: AnimatedRouteMarker.tsx:52 ~ constinterbal_sub=setInterval ~ interbal_sub:", interbal_sub)
 
         return () => {
             clearInterval(interbal_sub)
+            console.log("🚀 ~ file: AnimatedRouteMarker.tsx:56 ~ return ~ clearInterval:", clearInterval)
         }
 
     }, [_getLiveLocation])
@@ -61,14 +61,7 @@ const AnimatedRouteMarker = () => {
             {
                 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                 // @ts-ignore
-                anim_route_ref.current.length > 0 && <AnimatedMarker latitude={current_coords.latitude} longitude={current_coords.longitude} heading={0} >
-
-                    <MaterialIcons
-                        name="location-on"
-                        size={24}
-                        color={Colors[colorScheme ?? 'light'].text}
-                    />
-                </AnimatedMarker>
+                anim_route_ref.current.length > 0 && <TaxiMarker index={2} onPress={() => { }} latitude={current_coords.latitude} longitude={current_coords.longitude} heading={0} />
             }
         </>
     )

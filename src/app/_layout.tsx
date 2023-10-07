@@ -70,7 +70,7 @@ const RootLayout = () => {
               }}
             />
             <Stack.Screen
-              name="/new"
+              name="new"
               options={{
                 /* headerShown: true,
                 headerTintColor: colorScheme === 'dark' ? 'white' : 'black',

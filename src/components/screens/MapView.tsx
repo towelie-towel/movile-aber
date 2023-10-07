@@ -169,8 +169,7 @@ const MapViewComponent = ({ navigation }: { navigation: DrawerNavigationProp<Dra
     return (
         <BottomSheetModalProvider>
 
-            <View className={"bg-transparent w-full h-full relative"}>
-
+            <View>
 
                 <MapView
                     style={{

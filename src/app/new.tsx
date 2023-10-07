@@ -5,6 +5,7 @@ import {
     Dimensions,
     LayoutAnimation,
     Keyboard,
+    View
 } from "react-native";
 import MapView, { type LatLng, PROVIDER_GOOGLE, Polyline, Circle } from 'react-native-maps';
 import { type BottomSheetModal, BottomSheetModalProvider } from "@gorhom/bottom-sheet";
@@ -12,17 +13,14 @@ import { useAtom, } from 'jotai';
 import { useKeepAwake } from 'expo-keep-awake';
 import { useColorScheme } from 'nativewind';
 import NetInfo from '@react-native-community/netinfo';
-import type {
-    DrawerNavigationProp
-} from '@react-navigation/drawer';
 import { Accuracy, getCurrentPositionAsync } from 'expo-location';
 import { GooglePlacesAutocompleteRef } from '~/components/map/lib/GooglePlacesAutocomplete';
-import { View } from 'react-native';
 
 import BottomSheet from '~/components/containers/BottomSheeetModal';
 import SearchBar from '~/components/containers/SearchBar';
 import { NightMap } from '~/constants/NightMap';
 import { polylineDecode } from '~/utils/helpers';
+import AnimatedRouteMarker from '~/components/map/AnimatedRouteMarker';
 
 
 export default function Home() {
@@ -179,6 +177,7 @@ export default function Home() {
                         longitude: -82.38052,
                         latitude: 23.11848
                     }} radius={200} /> */}
+                <AnimatedRouteMarker key={2} />
 
             </MapView>
             <SearchBar
