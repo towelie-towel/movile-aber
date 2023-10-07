@@ -260,12 +260,13 @@ const MapViewComponent = ({ navigation }: { navigation: DrawerNavigationProp<Dra
 
                 </MapView>
 
+                <View>
 
+                </View>
                 <SearchBar
                     refFor={(ref) => (placesInputViewRef.current = ref)}
                     onFocus={onSearchBarFocus}
                     onBlur={onSearchBarBlur}
-                    navigation={navigation}
                     onPlacePress={async (data, details) => {
                         if (!details) {
                             return

@@ -12,6 +12,7 @@ import { AntDesign, FontAwesome, FontAwesome5, Ionicons, MaterialIcons } from '@
 import { useColorScheme } from 'nativewind';
 import NetInfo from '@react-native-community/netinfo';
 import { useAtom, } from 'jotai';
+import { useRouter } from "expo-router";
 
 import { View, Text } from '~/components/shared/Themed';
 import { PressBtn } from '~/components/shared/PressBtn';
@@ -59,6 +60,7 @@ export default function Home() {
         : isSmallScreen ? 200 : (width / 2)
     const { isConnected, isInternetReachable, type: connectionType } = NetInfo.useNetInfo()
     const { colorScheme } = useColorScheme();
+    const { push } = useRouter();
 
     const [isFirstTime, _] = useAtom(isFirstTimeAtom);
 
@@ -273,6 +275,9 @@ export default function Home() {
                                     return (
                                         <View className={`w-full my-2 flex-row justify-start items-center bg-transparent px-5 max-[376px]:px-3 max-[376px]:my-0`}>
                                             <MaterialIcons
+                                                onPress={() => {
+                                                    push("new")
+                                                }}
                                                 name='admin-panel-settings'
                                                 size={30}
                                                 color={Colors[colorScheme ?? 'light'].text}

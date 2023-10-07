@@ -2,17 +2,15 @@ import type {
     ViewProps
 } from 'react-native';
 import {
-    ActivityIndicator, LayoutAnimation
+    ActivityIndicator,
+    LayoutAnimation,
+    Text,
+    View,
+    TouchableOpacity
 } from 'react-native';
 import { useEffect, useState } from 'react';
 import { BlurView } from 'expo-blur';
 import { useColorScheme } from 'nativewind';
-
-import {
-    Text,
-    View
-} from '~/components/shared/Themed';
-import { PressBtn } from './PressBtn';
 
 type Params = {
     onCancel?: () => void,
@@ -79,9 +77,9 @@ const AbsoluteLoading = ({ onCancel, size, visible, intensity = 5, style, ...res
                     animating
                     color={colorScheme === 'light' ? 'black' : 'white'}
                 />
-                {onCancel && <PressBtn onPress={() => { onCancel() }} className={'w-[200px] max-[367px]:w-[180px] max-w-[280px] bg-[#FCCB6F] mt-4 dark:bg-white rounded-3xl h-12 max-[367px]:h-8 flex-row justify-center items-center'} >
-                    <Text darkColor="black" className={'text-white dark:text-black font-bold text-lg max-[367px]:text-base mr-3'}>Cancelar</Text>
-                </PressBtn>}
+                {onCancel && <TouchableOpacity onPress={() => { onCancel() }} className={'w-[200px] max-[367px]:w-[180px] max-w-[280px] bg-[#FCCB6F] mt-4 dark:bg-white rounded-3xl h-12 max-[367px]:h-8 flex-row justify-center items-center'} >
+                    <Text className={'text-white dark:text-black font-bold text-lg max-[367px]:text-base mr-3'}>Cancelar</Text>
+                </TouchableOpacity>}
             </View>}
         </BlurView>
     )

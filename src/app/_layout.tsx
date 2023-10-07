@@ -45,6 +45,7 @@ const RootLayout = () => {
             screenOptions={{
               headerShown: false,
             }}
+            initialRouteName="new"
           >
             <Stack.Screen
               name="auth/sign-in"
@@ -55,8 +56,7 @@ const RootLayout = () => {
                   backgroundColor: colorScheme === 'dark' ? 'black' : 'white',
                 }, */
                 /* presentation: "transparentModal", */
-              }} 
-              redirect={true} 
+              }}
             />
             <Stack.Screen
               name="auth/sign-up"
@@ -68,7 +68,17 @@ const RootLayout = () => {
                 }, */
                 /* presentation: "transparentModal", */
               }}
-              redirect={true} 
+            />
+            <Stack.Screen
+              name="/new"
+              options={{
+                /* headerShown: true,
+                headerTintColor: colorScheme === 'dark' ? 'white' : 'black',
+                headerStyle: {
+                  backgroundColor: colorScheme === 'dark' ? 'black' : 'white',
+                }, */
+                /* presentation: "transparentModal", */
+              }}
             />
           </Stack>
         </SafeAreaProvider>
