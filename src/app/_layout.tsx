@@ -1,15 +1,16 @@
-import React, { useCallback, useEffect } from "react";
-import { NativeModules, Platform } from "react-native";
-import { SafeAreaProvider } from "react-native-safe-area-context";
-import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
-import * as SplashScreen from "expo-splash-screen";
-import { StatusBar } from "expo-status-bar";
+import 'react-native-gesture-handler';
+import { useFonts } from 'expo-font';
+import { Stack } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
+import { StatusBar } from 'expo-status-bar';
+import React, { useCallback, useEffect } from 'react';
+import { NativeModules, Platform } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-import { UserProvider } from "~/context/UserContext";
-import { WSProvider } from "~/context/WSContext";
+import { UserProvider } from '~/context/UserContext';
+import { WSProvider } from '~/context/WSContext';
 
-if (Platform.OS === "android") {
+if (Platform.OS === 'android') {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
   NativeModules.UIManager.setLayoutAnimationEnabledExperimental?.(true);
 }
@@ -20,11 +21,10 @@ void SplashScreen.preventAutoHideAsync();
 const RootLayout = () => {
   const [fontsLoaded] = useFonts({
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    "Inter-Regular": require("../../assets/Inter-Regular.otf"),
+    'Inter-Regular': require('../../assets/Inter-Regular.otf'),
   });
 
-  useEffect(() => {
-  }, []);
+  useEffect(() => {}, []);
 
   const onLayoutRootView = useCallback(async () => {
     if (fontsLoaded) {
@@ -44,42 +44,9 @@ const RootLayout = () => {
           <Stack
             screenOptions={{
               headerShown: false,
-            }}
-            initialRouteName="new"
-          >
-            <Stack.Screen
-              name="auth/sign-in"
-              options={{
-                /* headerShown: true,
-                headerTintColor: colorScheme === 'dark' ? 'white' : 'black',
-                headerStyle: {
-                  backgroundColor: colorScheme === 'dark' ? 'black' : 'white',
-                }, */
-                /* presentation: "transparentModal", */
-              }}
-            />
-            <Stack.Screen
-              name="auth/sign-up"
-              options={{
-                /* headerShown: true,
-                headerTintColor: colorScheme === 'dark' ? 'white' : 'black',
-                headerStyle: {
-                  backgroundColor: colorScheme === 'dark' ? 'black' : 'white',
-                }, */
-                /* presentation: "transparentModal", */
-              }}
-            />
-            <Stack.Screen
-              name="new"
-              options={{
-                /* headerShown: true,
-                headerTintColor: colorScheme === 'dark' ? 'white' : 'black',
-                headerStyle: {
-                  backgroundColor: colorScheme === 'dark' ? 'black' : 'white',
-                }, */
-                /* presentation: "transparentModal", */
-              }}
-            />
+            }}>
+            <Stack.Screen name="auth/sign-in" />
+            <Stack.Screen name="auth/sign-up" />
           </Stack>
         </SafeAreaProvider>
       </UserProvider>

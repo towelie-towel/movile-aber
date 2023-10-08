@@ -1,383 +1,203 @@
-import {
-    Image,
-    Dimensions,
-    ActivityIndicator,
-} from "react-native";
-import {
-    DrawerContentScrollView,
-    DrawerItem,
-    createDrawerNavigator
-} from '@react-navigation/drawer';
-import { AntDesign, FontAwesome, FontAwesome5, Ionicons, MaterialIcons } from '@expo/vector-icons';
-import { useColorScheme } from 'nativewind';
-import NetInfo from '@react-native-community/netinfo';
-import { useAtom, } from 'jotai';
-import { useRouter } from "expo-router";
+import { type BottomSheetModal, BottomSheetModalProvider } from '@gorhom/bottom-sheet';
+import { useKeepAwake } from 'expo-keep-awake';
+import { Accuracy, getCurrentPositionAsync } from 'expo-location';
+import React, { useCallback, useRef, useState } from 'react';
+import { Animated, StatusBar, LayoutAnimation, Keyboard, useColorScheme } from 'react-native';
+import MapView, { type LatLng, PROVIDER_GOOGLE, Polyline } from 'react-native-maps';
+// import NetInfo from '@react-native-community/netinfo';
 
-import { View, Text } from '~/components/shared/Themed';
-import { PressBtn } from '~/components/shared/PressBtn';
-import Colors from '~/constants/Colors';
-
-import SignIn from "~/components/screens/Sign-in";
-import SignUp from "~/components/screens/Sign-up";
-import MapViewScreen from '~/components/screens/MapView';
-import HistoryScreen from '~/components/screens/History';
-import ConfigScreen from '~/components/screens/Config';
-import CustomServiceScreen from '~/components/screens/CustomService';
-import DeviceScreen from "~/components/screens/Device";
-import PaymentScreen from '~/components/screens/Payment';
-import NetworkScreen from "~/components/screens/Network";
-import AdminScreen from "~/components/screens/Admin";
-
-import { useUser, isFirstTimeAtom } from "~/context/UserContext";
-
-const isAdmin = true;
-
-// eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-export type DrawerParamList = {
-    "Sign-In": undefined;
-    "Sign-Up": undefined;
-    "Map": undefined;
-    "History": undefined;
-    "Config": undefined;
-    "Network": undefined;
-    "Admin": undefined;
-    "Device": undefined;
-    "Service": undefined;
-    "Payment": undefined;
-};
-
-const Drawer = createDrawerNavigator<DrawerParamList>();
-
+import AnimatedRouteMarker from '~/components/AnimatedRouteMarker';
+import TaxisMarkers from '~/components/TaxiMarkers';
+import { NightMap } from '~/constants/NightMap';
+import BottomSheet from '~/containers/BottomSheeetModal';
+import SearchBar from '~/containers/SearchBar';
+import { GooglePlacesAutocompleteRef } from '~/lib/GooglePlacesAutocomplete';
+import { polylineDecode } from '~/utils/helpers';
 
 export default function Home() {
+  useKeepAwake();
+  console.log('Map re-rendered');
+  const colorScheme = useColorScheme();
+  // const { width, height } = Dimensions.get('window');
+  // const { isConnected, isInternetReachable } = NetInfo.useNetInfo();
 
-    const { width } = Dimensions.get("window");
-    const isLargeScreen = width >= 768;
-    const isSmallScreen = width <= 400;
-    const drawerWidth = isLargeScreen
-        ? (width / 4)
-        : isSmallScreen ? 200 : (width / 2)
-    const { isConnected, isInternetReachable, type: connectionType } = NetInfo.useNetInfo()
-    const { colorScheme } = useColorScheme();
-    const { push } = useRouter();
+  // navigator bubbles
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  // const [isMenuVisible, setIsMenuVisible] = useState(true)
+  const navigationAnimValue = useRef(new Animated.Value(0)).current;
 
-    const [isFirstTime, _] = useAtom(isFirstTimeAtom);
+  // const [isAddingMarker, setIsAddingMarker] = useState(false);
 
-    const { session, user, isSignedIn, isLoading } = useUser()
+  // map & markers
+  const mapViewRef = useRef<MapView>(null);
 
-    return (
-        <Drawer.Navigator
-            initialRouteName="Map"
-            screenOptions={{
+  // bottom sheet
+  const [userSelected, _setUserSelected] = useState(true);
+  const [selectedTaxiId, _setSelectedTaxiId] = useState<string | null>(null);
+  const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+  const [isModalVisible, setIsModalVisible] = useState(false);
 
-                drawerStyle: [{
-                    width: drawerWidth,
-                    borderRightColor: colorScheme === 'dark' ? '#333333' : '#888888',
-                    borderRightWidth: 1,
-                }],
-                drawerType: 'back',
-                overlayColor: 'transparent',
-                headerShown: false,
+  // search bar
+  const placesInputViewRef = useRef<GooglePlacesAutocompleteRef | null>(null);
+  const [activeRoute, setActiveRoute] = useState<LatLng[] | null | undefined>(null);
 
-            }}
-            drawerContent={(props) => {
-                const { navigation } = props;
-                return (
-                    <DrawerContentScrollView
-                        contentContainerStyle={{
-                            position: 'relative',
-                            width: '100%',
-                            height: '100%',
-                            backgroundColor: colorScheme === 'dark' ? 'black' : 'white',
-                        }} {...props}
-                    >
+  const onSearchBarFocus = () => {
+    console.log('places input focus');
+    LayoutAnimation.linear();
+    // setIsMenuVisible(false)
+    if (isMenuOpen) {
+      Animated.spring(navigationAnimValue, {
+        toValue: 0,
+        friction: 5,
+        useNativeDriver: true,
+      }).start();
+    }
+  };
 
-                        <DrawerItem style={{
-                            width: '100%',
-                            marginHorizontal: 0,
-                            marginVertical: 0,
-                            borderRadius: 0
-                        }} labelStyle={{
-                            width: '100%',
-                        }} pressColor={colorScheme === 'dark' ? 'white' : 'black'} icon={() => {
+  const onSearchBarBlur = () => {
+    console.log('places input blur');
+    LayoutAnimation.linear();
+    // setIsMenuVisible(true)
+  };
 
-                            if (isLoading) {
-                                return (
-                                    <View className={'w-full flex-row justify-start items-center bg-transparent px-5 max-[376px]:px-3 max-[376px]:my-0'}>
-                                        <ActivityIndicator
-                                            size={'large'}
-                                            animating
-                                            color={colorScheme === 'dark' ? 'white' : 'black'}
-                                        />
-                                    </View>
-                                )
-                            }
+  const toggleNavMenu = useCallback(() => {
+    const toValue = isMenuOpen ? 0 : 1;
+    setIsMenuOpen(!isMenuOpen);
+    Keyboard.dismiss();
 
-                            if (!isSignedIn) {
-                                return (
-                                    <View className={'w-full flex-row justify-start items-center bg-transparent px-5 max-[376px]:px-3 max-[376px]:my-0'}>
-                                        <FontAwesome
-                                            name={colorScheme === 'light' ? 'user-circle' : 'user-circle-o'}
-                                            size={30}
-                                            color={Colors[colorScheme ?? 'light'].text}
-                                        />
-                                        <PressBtn onPress={() => {
-                                            navigation.navigate(isFirstTime ? "Sign-Up" : "Sign-In")
-                                        }} className={`w-[60px] max-w-[120px] ml-5 bg-slate-500 dark:bg-slate-700 rounded h-8 justify-center items-center`} >
-                                            <Text className={`text-white`}>{isFirstTime ? "Sign Up" : "Sign In"}</Text>
-                                        </PressBtn>
-                                    </View>
-                                )
-                            }
+    Animated.spring(navigationAnimValue, {
+      toValue,
+      friction: 5,
+      useNativeDriver: true,
+    }).start();
+  }, [isMenuOpen, navigationAnimValue]);
 
-                            return (
-                                <View className={`w-full justify-between flex-row items-center bg-transparent px-5 max-[376px]:px-3 max-[376px]:my-0`}>
+  // Add marker functionality
+  /* const addMarkerHandler = useCallback(() => {
+        LayoutAnimation.linear()
+        setIsMenuVisible(false)
+        setIsAddingMarker(!isAddingMarker)
+        if (isMenuOpen) {
+            toggleNavMenu()
+        }
+    }, [isAddingMarker, isMenuOpen, toggleNavMenu])
 
-                                    <View className="w-full bg-transparent flex-row items-center">
-                                        <Image
-                                            source={{
-                                                uri: "https://lh3.googleusercontent.com/a/AAcHTtfPgVic8qF8hDw_WPE80JpGOkKASohxkUA8y272Ow=s1000-c"
-                                            }}
-                                            alt="Profile Image"
-                                            className={`w-8 h-8 rounded-full`}
-                                        />
-                                        <Text className="ml-5">{user?.username}</Text>
-                                    </View>
-                                    <View className="absolute items-center justify-center bg-transparent top-0 right-1 flex-row gap-2">
-                                        <View style={{
-                                            backgroundColor: isConnected && isInternetReachable ? 'rgb(74 222 128)' : 'rgb(248 113 113)'
-                                        }} className="w-2 h-2 rounded-full"></View>
-                                        {
-                                            connectionType.includes('wifi')
-                                                ? (
-                                                    <MaterialIcons
-                                                        name='wifi'
-                                                        size={10}
-                                                        color={Colors[colorScheme ?? 'light'].text}
-                                                    />
-                                                )
-                                                : (
-                                                    <MaterialIcons
-                                                        name='network-cell'
-                                                        size={10}
-                                                        color={Colors[colorScheme ?? 'light'].text}
-                                                    />
-                                                )
-                                        }
-                                    </View>
+    const openUserProfileHandler = useCallback(() => {
+        bottomSheetModalRef.current?.present();
+        console.log("aaa");
+        setUserSelected(true)
+        setIsModalVisible(true);
+        setSelectedTaxiId(null);
+        if (isMenuOpen) {
+            toggleNavMenu()
+        }
+    }, [isMenuOpen, toggleNavMenu])
 
-                                </View>
+    const touchTaxiHandler = useCallback((userId: string) => {
+        bottomSheetModalRef.current?.present();
+        setUserSelected(false)
+        setIsModalVisible(true);
+        setSelectedTaxiId(userId);
+        if (isMenuOpen) {
+            toggleNavMenu()
+        }
+    }, [isMenuOpen, toggleNavMenu])
 
-                            )
+    const taxiBtnHandler = useCallback(async () => {
+        console.log({ isConnected, isInternetReachable })
+    }, [isConnected, isInternetReachable]) */
 
-                        }} label={'Sign-In'} onPress={() => { }} />
+  return (
+    <BottomSheetModalProvider>
+      <MapView
+        style={{
+          height: '100%',
+          width: '100%',
+        }}
+        onTouchMove={() => {
+          // _fadeOutNav()
+        }}
+        onTouchStart={() => {
+          placesInputViewRef.current?.blur();
+          bottomSheetModalRef.current?.present();
+        }}
+        onTouchEnd={() => {
+          // _fadeInNav()
+        }}
+        onPress={() => {
+          if (isMenuOpen) {
+            toggleNavMenu();
+          }
+        }}
+        initialRegion={{
+          latitude: 23.118644,
+          longitude: -82.3806211,
+          latitudeDelta: 0.0322,
+          longitudeDelta: 0.0221,
+        }}
+        /* showsMyLocationButton
+                showsUserLocation */
+        showsCompass={false}
+        toolbarEnabled={false}
+        ref={mapViewRef}
+        provider={PROVIDER_GOOGLE}
+        customMapStyle={colorScheme === 'dark' ? NightMap : undefined}>
+        <Polyline
+          coordinates={activeRoute ?? []}
+          /* strokeColor="white" */
+          /* strokeWidth={5} */
+          strokeColor="#000" // fallback for when `strokeColors` is not supported by the map-provider
+          strokeColors={[
+            '#7F0000',
+            '#00000000', // no color, creates a "long" gradient between the previous and next coordinate
+            '#B24112',
+            '#E5845C',
+            '#238C23',
+            '#7F0000',
+          ]}
+          strokeWidth={6}
+        />
 
-                        <DrawerItem style={{
-                            width: '100%',
-                            marginHorizontal: 0,
-                            marginVertical: 0,
-                            borderRadius: 0
-                        }} pressColor={colorScheme === 'dark' ? 'white' : 'black'} icon={() => {
-                            return (
-                                <View className={`w-full my-2 flex-row justify-start items-center bg-transparent px-5 max-[376px]:px-3 max-[376px]:my-0`}>
-                                    <Ionicons
-                                        name={colorScheme === 'light' ? 'md-map-outline' : 'md-map'}
-                                        size={30}
-                                        color={Colors[colorScheme ?? 'light'].text}
-                                    />
-                                    <Text className="ml-5">Mapa</Text>
-                                </View>
-                            )
-                        }} label={'Mapa'} onPress={() => { navigation.navigate('Map') }} />
+        <TaxisMarkers onSelectTaxi={() => {}} />
+        <AnimatedRouteMarker key={2} />
+      </MapView>
+      <SearchBar
+        refFor={(ref) => (placesInputViewRef.current = ref)}
+        onFocus={onSearchBarFocus}
+        onBlur={onSearchBarBlur}
+        onPlacePress={async (_, details) => {
+          if (!details) {
+            return;
+          }
+          const position = await getCurrentPositionAsync({
+            accuracy: Accuracy.Highest,
+          });
+          try {
+            const resp = await fetch(
+              `http://192.168.1.103:6942/route?from=${position.coords.latitude},${position.coords.longitude}&to=${details.geometry.location.lat},${details.geometry.location.lng}`
+            );
+            const respJson = await resp.json();
+            const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map(
+              (point) => ({ latitude: point[0]!, longitude: point[1]! })
+            );
+            setActiveRoute(decodedCoords);
+          } catch (error) {
+            if (error instanceof Error) {
+              console.error(error.message);
+            }
+          }
+        }}
+      />
 
-                        <DrawerItem style={{
-                            width: '100%',
-                            marginHorizontal: 0,
-                            marginVertical: 0,
-                            borderRadius: 0,
-                        }} pressColor={colorScheme === 'dark' ? 'white' : 'black'} icon={() => {
-                            return (
-                                <View className={`w-full my-2 flex-row justify-start items-center bg-transparent px-5 max-[376px]:px-3 max-[376px]:my-0`}>
-                                    <MaterialIcons
-                                        name='history'
-                                        size={30}
-                                        color={Colors[colorScheme ?? 'light'].text}
-                                    />
-                                    <Text className="ml-5">History</Text>
-                                </View>
-                            )
-                        }} label={'History'} onPress={() => { navigation.navigate('History') }} />
+      <BottomSheet
+        bottomSheetModalRef={bottomSheetModalRef}
+        userSelected={userSelected}
+        selectedTaxiId={selectedTaxiId}
+        isVisible={isModalVisible}
+        setIsVisible={setIsModalVisible}
+      />
 
-                        <DrawerItem style={{
-                            width: '100%',
-                            marginHorizontal: 0,
-                            marginVertical: 0,
-                            borderRadius: 0
-                        }} pressColor={colorScheme === 'dark' ? 'white' : 'black'} icon={() => {
-                            return (
-                                <View className={`w-full my-2 flex-row justify-start items-center bg-transparent px-5 max-[376px]:px-3 max-[376px]:my-0`}>
-                                    <FontAwesome
-                                        name='gear'
-                                        size={30}
-                                        color={Colors[colorScheme ?? 'light'].text}
-                                    />
-                                    <Text className="ml-6">Config</Text>
-                                </View>
-                            )
-                        }} label={'Config'} onPress={() => { navigation.navigate('Config') }} />
-
-                        <DrawerItem style={{
-                            width: '100%',
-                            marginHorizontal: 0,
-                            marginVertical: 0,
-                            borderRadius: 0
-                        }} pressColor={colorScheme === 'dark' ? 'white' : 'black'} icon={() => {
-                            return (
-                                <View className={`w-full my-2 flex-row justify-start items-center bg-transparent px-5 max-[376px]:px-3 max-[376px]:my-0`}>
-                                    <AntDesign
-                                        name='customerservice'
-                                        size={30}
-                                        color={Colors[colorScheme ?? 'light'].text}
-                                    />
-                                    <Text className="ml-5">Service</Text>
-                                </View>
-                            )
-                        }} label={'Service'} onPress={() => { navigation.navigate('Service') }} />
-
-                        <DrawerItem style={{
-                            width: '100%',
-                            marginHorizontal: 0,
-                            marginVertical: 0,
-                            borderRadius: 0
-                        }} pressColor={colorScheme === 'dark' ? 'white' : 'black'} icon={() => {
-                            return (
-                                <View className={`w-full my-2 flex-row justify-start items-center bg-transparent px-5 max-[376px]:px-3 max-[376px]:my-0`}>
-                                    <FontAwesome5
-                                        name='money-check'
-                                        size={24}
-                                        color={Colors[colorScheme ?? 'light'].text}
-                                    />
-                                    <Text className="ml-5">Payment</Text>
-                                </View>
-                            )
-                        }} label={'Payment'} onPress={() => { navigation.navigate('Payment') }} />
-
-                        {
-                            isAdmin &&
-                            <>
-                                <DrawerItem style={{
-                                    width: '100%',
-                                    marginHorizontal: 0,
-                                    marginVertical: 0,
-                                    borderRadius: 0
-                                }} pressColor={colorScheme === 'dark' ? 'white' : 'black'} icon={() => {
-                                    return (
-                                        <View className={`w-full my-2 flex-row justify-start items-center bg-transparent px-5 max-[376px]:px-3 max-[376px]:my-0`}>
-                                            <MaterialIcons
-                                                onPress={() => {
-                                                    push("new")
-                                                }}
-                                                name='admin-panel-settings'
-                                                size={30}
-                                                color={Colors[colorScheme ?? 'light'].text}
-                                            />
-                                            <Text className="ml-5">Admin Info</Text>
-                                        </View>
-                                    )
-                                }} label={'Admin'} onPress={() => { navigation.navigate('Admin') }} />
-
-                                <DrawerItem style={{
-                                    width: '100%',
-                                    marginHorizontal: 0,
-                                    marginVertical: 0,
-                                    borderRadius: 0
-                                }} pressColor={colorScheme === 'dark' ? 'white' : 'black'} icon={() => {
-                                    return (
-                                        <View className={`w-full my-2 flex-row justify-start items-center bg-transparent px-5 max-[376px]:px-3 max-[376px]:my-0`}>
-                                            <MaterialIcons
-                                                name='perm-device-information'
-                                                size={30}
-                                                color={Colors[colorScheme ?? 'light'].text}
-                                            />
-                                            <Text className="ml-5">Device Info</Text>
-                                        </View>
-                                    )
-                                }} label={'Device'} onPress={() => { navigation.navigate('Device') }} />
-
-                                <DrawerItem style={{
-                                    width: '100%',
-                                    marginHorizontal: 0,
-                                    marginVertical: 0,
-                                    borderRadius: 0
-                                }} pressColor={colorScheme === 'dark' ? 'white' : 'black'} icon={() => {
-                                    return (
-                                        <View className={`w-full my-2 flex-row justify-start items-center bg-transparent px-5 max-[376px]:px-3 max-[376px]:my-0`}>
-                                            <MaterialIcons
-                                                name='network-cell'
-                                                size={30}
-                                                color={Colors[colorScheme ?? 'light'].text}
-                                            />
-                                            <Text className="ml-5">Network</Text>
-                                        </View>
-                                    )
-                                }} label={'Network'} onPress={() => { navigation.navigate('Network') }} />
-
-                            </>
-                        }
-
-
-                        <DrawerItem style={{
-                            width: '100%',
-                            marginHorizontal: 0,
-                            marginVertical: 0,
-                            position: 'absolute',
-                            bottom: 0,
-                            borderRadius: 0
-                        }} pressColor={colorScheme === 'dark' ? 'white' : 'black'} icon={() => (
-                            <View className="w-full flex-row justify-around items-center bg-transparent">
-                                <PressBtn onPress={() => {
-                                    console.log(JSON.stringify({ session, user }, null, 2))
-                                }}>
-                                    <AntDesign
-                                        name='instagram'
-                                        size={25}
-                                        color={Colors[colorScheme ?? 'light'].text}
-                                    />
-                                </PressBtn>
-                                <PressBtn>
-                                    <AntDesign
-                                        name='facebook-square'
-                                        size={25}
-                                        color={Colors[colorScheme ?? 'light'].text}
-                                    />
-                                </PressBtn>
-                                <PressBtn>
-                                    <AntDesign
-                                        name='twitter'
-                                        size={25}
-                                        color={Colors[colorScheme ?? 'light'].text}
-                                    />
-                                </PressBtn>
-                            </View>
-                        )} label={'Social Networks'} onPress={() => { console.log("nothing") }} />
-
-                    </DrawerContentScrollView>
-                )
-            }}
-        >
-
-            <Drawer.Screen name="Sign-In" component={SignIn} />
-            <Drawer.Screen name="Sign-Up" component={SignUp} />
-            <Drawer.Screen name="Map" component={MapViewScreen} />
-            <Drawer.Screen name="History" component={HistoryScreen} />
-            <Drawer.Screen name="Config" component={ConfigScreen} />
-            <Drawer.Screen name="Network" component={NetworkScreen} />
-            <Drawer.Screen name="Admin" component={AdminScreen} />
-            <Drawer.Screen name="Device" component={DeviceScreen} />
-            <Drawer.Screen name="Service" component={CustomServiceScreen} />
-            <Drawer.Screen name="Payment" component={PaymentScreen} />
-
-        </Drawer.Navigator>
-    );
+      <StatusBar barStyle={colorScheme === 'dark' ? 'light-content' : 'dark-content'} />
+    </BottomSheetModalProvider>
+  );
 }
