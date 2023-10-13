@@ -5,33 +5,19 @@ import React, { useState } from 'react';
 import { LayoutAnimation, TextInput, useColorScheme, ActivityIndicator, Text } from 'react-native';
 import Popover from 'react-native-popover-view';
 
+import { PressBtn } from '~/components/PressBtn';
+import { View } from '~/components/Themed';
 import Colors from '~/constants/Colors';
 import { useUser } from '~/context/UserContext';
-import { PressBtn } from '~/shared/PressBtn';
-import { View } from '~/shared/Themed';
-import { supabase } from '~/supabase';
+import { supabase } from '~/lib/supabase';
 import { isValidPassword, isValidPhone, isValidUsername } from '~/utils/validators';
 
-export default function SignUp() {
+export default function Code({ phone }: { phone: string }) {
   const colorScheme = useColorScheme();
-  const pathName = usePathname();
   const { replace } = useRouter();
   const { isSignedIn, isLoading: isAuthLoading } = useUser();
-  const isOnSignUpRoute = pathName.includes('sign-up');
 
   const [isLoading, setIsLoading] = useState(false);
-
-  const [phone, setPhone] = useState('');
-  const [pendingVerification, setPendingVerification] = useState(false);
-  const [isPhoneVerified, setIsPhoneVerified] = useState(false);
-  const [phoneError, setPhoneError] = useState('');
-
-  const [password, setPassword] = useState('');
-  const [passwordError, setPasswordError] = useState('');
-
-  const [username, setUsername] = useState('');
-  const [usernameError, setUsernameError] = useState('');
-
   const [otpTimer, setOtpTimer] = useState(60);
 
   const [otpToken, setOtpToken] = useState('');
@@ -59,53 +45,6 @@ export default function SignUp() {
     }, 1000);
   };
 
-  const sendOTP = async () => {
-    setIsLoading(true);
-    const [phoneOk, phoneErr] = isValidPhone(phone.trim());
-    const [passwordOk, passwordErr] = isValidPassword(password);
-    const [usernameOk, usernameErr] = isValidUsername(username);
-
-    if (!phoneOk || !passwordOk || !usernameOk) {
-      if (!phoneOk) {
-        setPhoneError(phoneErr);
-        console.error('invalid phone: ' + phoneErr);
-      }
-      if (!passwordOk) {
-        setPasswordError(passwordErr);
-        console.error('invalid password: ' + passwordErr);
-      }
-      if (!usernameOk) {
-        setUsernameError(usernameErr);
-        console.error('invalid username: ' + usernameErr);
-      }
-      setIsLoading(false);
-      return;
-    }
-
-    console.log('Sending OTP Code');
-    const { error } = await supabase.auth.signUp({
-      phone: '+53' + phone.trim(),
-      password,
-      options: {
-        data: {
-          username,
-          role: 'client',
-        },
-      },
-    });
-    if (error) {
-      console.error(JSON.stringify(error, null, 2));
-      setIsLoading(false);
-      return;
-    }
-
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setPendingVerification(true);
-
-    startTimer();
-    setIsLoading(false);
-  };
-
   const verifyOtp = async () => {
     setIsLoading(true);
     const { error, data } = await supabase.auth.verifyOtp({
@@ -122,8 +61,6 @@ export default function SignUp() {
     console.log('User Signed In', JSON.stringify(data, null, 2));
 
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setIsPhoneVerified(true);
-    setPendingVerification(false);
     setIsLoading(false);
   };
 
@@ -142,115 +79,33 @@ export default function SignUp() {
         </Text>
       </View>
 
-      {!pendingVerification && !isPhoneVerified && (
+      <View>
         <View>
           <View>
-            <View>
-              <Text>+53</Text>
-            </View>
-            <TextInput
-              placeholder="Número de Móvil"
-              autoCapitalize="none"
-              keyboardType="numeric"
-              placeholderTextColor={
-                colorScheme === 'dark' ? 'rgb(107 114 128)' : 'rgb(100 116 139)'
-              }
-              onChangeText={setPhone}
-              value={phone}
-              onFocus={() => {
-                reduceLogo();
-              }}
-            />
-            {phoneError && (
-              <View>
-                <Popover
-                  from={
-                    <MaterialIcons
-                      name="error"
-                      size={24}
-                      color={Colors[colorScheme ?? 'light'].text}
-                    />
-                  }>
-                  <Text>{phoneError}</Text>
-                </Popover>
-              </View>
-            )}
-          </View>
-          <View>
-            <TextInput
-              placeholder="Nombre de Usuario"
-              autoCapitalize="none"
-              placeholderTextColor={
-                colorScheme === 'dark' ? 'rgb(107 114 128)' : 'rgb(100 116 139)'
-              }
-              onChangeText={setUsername}
-              value={username}
-              onFocus={() => {
-                reduceLogo();
-              }}
-            />
-            {usernameError && (
-              <View>
-                <MaterialIcons name="error" size={24} color={Colors[colorScheme ?? 'light'].text} />
-              </View>
-            )}
-          </View>
-          <View>
-            <TextInput
-              placeholder="Contraseña"
-              autoCapitalize="none"
-              placeholderTextColor={
-                colorScheme === 'dark' ? 'rgb(107 114 128)' : 'rgb(100 116 139)'
-              }
-              onChangeText={setPassword}
-              value={password}
-              onFocus={() => {
-                reduceLogo();
-              }}
-            />
-            {passwordError && (
-              <View>
-                <MaterialIcons name="error" size={24} color={Colors[colorScheme ?? 'light'].text} />
-              </View>
-            )}
-          </View>
-        </View>
-      )}
-
-      {pendingVerification && (
-        <View>
-          <View>
+            <Text numberOfLines={1} adjustsFontSizeToFit>
+              No Te Ha Llegado?
+            </Text>
             <View>
               <Text numberOfLines={1} adjustsFontSizeToFit>
-                No Te Ha Llegado?
+                Intenta de nuevo en {otpTimer}.
               </Text>
-              <View>
-                <Text numberOfLines={1} adjustsFontSizeToFit>
-                  Intenta de nuevo en {otpTimer}.
-                </Text>
-                <PressBtn disabled={otpTimer !== 0} onPress={() => sendOTP()}>
-                  <Text>Enviar</Text>
-                </PressBtn>
-              </View>
             </View>
-            <TextInput
-              placeholderTextColor={
-                colorScheme === 'dark' ? 'rgb(107 114 128)' : 'rgb(100 116 139)'
-              }
-              placeholder="Codigo"
-              onChangeText={(code) => setOtpToken(code)}
-              onFocus={() => {
-                reduceLogo();
-              }}
-            />
-            {otpTokenError && (
-              <View>
-                <MaterialIcons name="error" size={24} color={Colors[colorScheme ?? 'light'].text} />
-              </View>
-            )}
           </View>
+          <TextInput
+            placeholderTextColor={colorScheme === 'dark' ? 'rgb(107 114 128)' : 'rgb(100 116 139)'}
+            placeholder="Codigo"
+            onChangeText={(code) => setOtpToken(code)}
+            onFocus={() => {
+              reduceLogo();
+            }}
+          />
+          {otpTokenError && (
+            <View>
+              <MaterialIcons name="error" size={24} color={Colors[colorScheme ?? 'light'].text} />
+            </View>
+          )}
         </View>
-      )}
+      </View>
 
       {isSignedIn && <></>}
 
@@ -266,10 +121,8 @@ export default function SignUp() {
 
       {!isSignedIn && (
         <>
-          <PressBtn
-            disabled={(otpToken.length < 5 && pendingVerification) || isLoading}
-            onPress={() => (pendingVerification ? verifyOtp() : sendOTP())}>
-            <Text>{pendingVerification ? 'Verificar' : 'Registrar'}</Text>
+          <PressBtn disabled={isLoading} onPress={() => verifyOtp()}>
+            <Text>Registrar</Text>
             {isLoading && (
               <ActivityIndicator
                 size="small"
@@ -278,18 +131,215 @@ export default function SignUp() {
               />
             )}
           </PressBtn>
-
-          <PressBtn
-            onPress={() => {
-              if (isOnSignUpRoute) {
-                replace('sign-in');
-              }
-            }}>
-            <Text>Ya Tienes Cuenta?</Text>
-            <Text>Inicia Sesión</Text>
-          </PressBtn>
         </>
       )}
+
+      <View
+        style={{
+          height: '100%',
+          padding: 40,
+          backgroundColor: Colors[colorScheme ?? 'light'].background,
+        }}>
+        <AbsoluteLoading visible={isLoading} />
+        <View
+          style={{
+            flexDirection: 'row',
+          }}>
+          <View
+            style={{
+              flex: 1,
+              flexDirection: 'row',
+              height: 45,
+              borderWidth: 1,
+              borderColor: Colors[colorScheme ?? 'light'].border,
+              borderStyle: 'solid',
+              justifyContent: 'center',
+              alignItems: 'center',
+              borderRadius: 8,
+            }}>
+            <View
+              style={{
+                height: 43,
+                width: '20%',
+                borderRightWidth: 1,
+                borderStyle: 'solid',
+                backgroundColor: 'transparent',
+                borderColor: Colors[colorScheme ?? 'light'].border,
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}>
+              <Text
+                style={{
+                  color: Colors[colorScheme ?? 'light'].text_dark,
+                  fontSize: 17,
+                  fontWeight: '400',
+                }}>
+                +53
+              </Text>
+            </View>
+            <TextInput
+              style={{
+                height: 43,
+                width: '80%',
+                paddingLeft: 10,
+                fontSize: 17,
+                color: Colors[colorScheme ?? 'light'].text_dark,
+              }}
+              placeholder="Número de Móvil"
+              autoCapitalize="none"
+              keyboardType="numeric"
+              placeholderTextColor={Colors[colorScheme ?? 'light'].text_light}
+              onChangeText={(text) => {
+                setInputCronemberg({
+                  ...inputCronemberg,
+                  phone: text,
+                  phoneError: '',
+                  passwordError: '',
+                });
+              }}
+              value={inputCronemberg.phone}
+            />
+            {inputCronemberg.phoneError && (
+              <View
+                style={{
+                  position: 'absolute',
+                  right: 8,
+                }}>
+                <Popover
+                  verticalOffset={-32}
+                  mode={PopoverMode.RN_MODAL}
+                  placement={PopoverPlacement.LEFT}
+                  isVisible={inputCronemberg.showPhonePopover}
+                  onRequestClose={() => {
+                    setInputCronemberg({
+                      ...inputCronemberg,
+                      showPhonePopover: false,
+                    });
+                  }}
+                  from={
+                    <TouchableOpacity
+                      onPress={() => {
+                        setInputCronemberg({
+                          ...inputCronemberg,
+                          showPhonePopover: true,
+                        });
+                        console.log(inputCronemberg);
+                      }}>
+                      <MaterialIcons
+                        name="error"
+                        size={24}
+                        color={Colors[colorScheme ?? 'light'].text}
+                      />
+                    </TouchableOpacity>
+                  }>
+                  <Text
+                    numberOfLines={2}
+                    style={{
+                      padding: 8,
+                    }}>
+                    {inputCronemberg.phoneError}
+                  </Text>
+                </Popover>
+              </View>
+            )}
+          </View>
+        </View>
+
+        <View
+          style={{
+            position: 'relative',
+            marginTop: 24,
+            marginBottom: 32,
+            height: 45,
+            width: '100%',
+            borderWidth: 1,
+            borderColor: Colors[colorScheme ?? 'light'].border,
+            borderStyle: 'solid',
+            justifyContent: 'center',
+            alignItems: 'center',
+            borderRadius: 8,
+          }}>
+          <TextInput
+            style={{
+              height: 43,
+              width: '100%',
+              paddingLeft: 20,
+              fontSize: 17,
+              color: Colors[colorScheme ?? 'light'].text_dark,
+            }}
+            placeholder="Contraseña"
+            autoCapitalize="none"
+            keyboardType="default"
+            secureTextEntry
+            placeholderTextColor={Colors[colorScheme ?? 'light'].text_light}
+            onChangeText={(text) => {
+              setInputCronemberg({
+                ...inputCronemberg,
+                password: text,
+                phoneError: '',
+                passwordError: '',
+              });
+            }}
+            value={inputCronemberg.password}
+          />
+          {inputCronemberg.passwordError && (
+            <View
+              style={{
+                position: 'absolute',
+                right: 8,
+              }}>
+              <Popover
+                verticalOffset={-32}
+                mode={PopoverMode.RN_MODAL}
+                placement={PopoverPlacement.LEFT}
+                isVisible={inputCronemberg.showPasswordPopover}
+                onRequestClose={() => {
+                  setInputCronemberg({
+                    ...inputCronemberg,
+                    showPasswordPopover: false,
+                  });
+                }}
+                from={
+                  <TouchableOpacity
+                    onPress={() => {
+                      setInputCronemberg({
+                        ...inputCronemberg,
+                        showPasswordPopover: true,
+                      });
+                    }}>
+                    <MaterialIcons
+                      name="error"
+                      size={24}
+                      color={Colors[colorScheme ?? 'light'].text}
+                    />
+                  </TouchableOpacity>
+                }>
+                <Text
+                  numberOfLines={2}
+                  style={{
+                    backgroundColor: Colors[colorScheme ?? 'light'].secondary,
+                    padding: 8,
+                  }}>
+                  {inputCronemberg.passwordError}
+                </Text>
+              </Popover>
+            </View>
+          )}
+        </View>
+
+        <View
+          style={{
+            overflow: 'hidden',
+            borderRadius: 8,
+          }}>
+          <Button
+            disabled={inputCronemberg.phoneError !== '' || inputCronemberg.passwordError !== ''}
+            color={Colors[colorScheme ?? 'light'].primary}
+            title="Sign In"
+            onPress={handleSignIn}
+          />
+        </View>
+      </View>
     </View>
   );
 }
