@@ -1,7 +1,8 @@
 import { type Session } from '@supabase/supabase-js';
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import NetInfo from '@react-native-community/netinfo';
 
-import { supabase } from '~/supabase';
+import { supabase } from '~/lib/supabase';
 
 interface UserContext {
   session: Session | null | undefined;
@@ -63,6 +64,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [sessionExpired, setSessionExpired] = useState<boolean>();
   const [error, setError] = useState<Error | null>();
   const [user, setUser] = useState<User | null>();
+  const { isConnected, isInternetReachable } = NetInfo.useNetInfo();
 
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [isError, setIsError] = useState(false);
@@ -205,6 +207,11 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     const expired = session?.expires_at && new Date(session.expires_at) < new Date();
     setSessionExpired(Boolean(expired));
 
+    if (!isInternetReachable) {
+      console.log('Internet is not reachable');
+      return;
+    }
+
     if (!session || expired) {
       void getSession();
     }
@@ -218,7 +225,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         void getSession();
       }
     });
-  }, []);
+  }, [isConnected]);
 
   return (
     <UserContext.Provider

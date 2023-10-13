@@ -1,5 +1,5 @@
 import { BlurView } from 'expo-blur';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import type { ViewProps } from 'react-native';
 import {
   ActivityIndicator,
@@ -26,7 +26,6 @@ const AbsoluteLoading = ({
   ...restProps
 }: Params) => {
   const colorScheme = useColorScheme();
-  const [open, setOpen] = useState(visible);
 
   useEffect(() => {
     if (visible) {
@@ -45,7 +44,6 @@ const AbsoluteLoading = ({
           property: 'opacity',
         },
       });
-      setOpen(true);
     } else {
       LayoutAnimation.configureNext({
         duration: 200,
@@ -62,7 +60,6 @@ const AbsoluteLoading = ({
           property: 'opacity',
         },
       });
-      setOpen(false);
     }
   }, [visible]);
 
@@ -70,13 +67,13 @@ const AbsoluteLoading = ({
     <BlurView
       style={[
         {
-          display: open ? 'flex' : 'none',
+          display: visible ? 'flex' : 'none',
         },
         style,
       ]}
       {...restProps}
       intensity={intensity}>
-      {open && (
+      {visible && (
         <View>
           <ActivityIndicator
             size={size}

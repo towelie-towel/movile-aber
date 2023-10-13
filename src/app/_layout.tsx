@@ -45,8 +45,8 @@ const RootLayout = () => {
             screenOptions={{
               headerShown: false,
             }}>
-            <Stack.Screen name="auth/sign-in" />
-            <Stack.Screen name="auth/sign-up" />
+            <Stack.Screen name="auth/code" />
+            <Stack.Screen name="auth/sign" />
           </Stack>
         </SafeAreaProvider>
       </UserProvider>

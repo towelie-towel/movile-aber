@@ -8,11 +8,11 @@ import {
   useColorScheme,
 } from 'react-native';
 
+import { PressBtn } from '~/components/PressBtn';
+import { View, Text } from '~/components/Themed';
 import Colors from '~/constants/Colors';
-import { MarkerData } from '~/constants/Markers';
-import { PressBtn } from '~/shared/PressBtn';
-import { View, Text } from '~/shared/Themed';
-import { getData } from '~/utils/storage';
+import { IMarker } from '~/constants/Markers';
+import { getData } from '~/lib/storage';
 
 const selectableMarkerIcons = [
   {
@@ -71,7 +71,7 @@ const AddUserMarker: React.FC<{
   const { width, height } = Dimensions.get('window');
   const colorScheme = useColorScheme();
 
-  const [userMarkers, setUserMarkers] = useState<MarkerData[]>([]);
+  const [userMarkers, setUserMarkers] = useState<IMarker[]>([]);
 
   const [isAddUserMarkerOpen, setIsAddUserMarkerOpen] = useState(false);
   const [selectMarkerWidth, setSelectMarkerWidth] = useState(96);

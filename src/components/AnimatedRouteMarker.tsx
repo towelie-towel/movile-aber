@@ -4,7 +4,7 @@ import { type LatLng } from 'react-native-maps';
 
 import TaxiMarker from './TaxiMarker';
 
-import { getDirections } from '~/utils/helpers';
+import { getDirections } from '~/utils/directions';
 
 const AnimatedRouteMarker = () => {
   // const colorScheme = useColorScheme();
@@ -62,8 +62,16 @@ const AnimatedRouteMarker = () => {
         // @ts-ignore
         anim_route_ref.current.length > 0 && (
           <TaxiMarker
-            index={""}
-            onPress={() => { }}
+            id="1345678"
+            taxi={{
+              coordinate: {
+                latitude: current_coords.latitude,
+                longitude: current_coords.longitude,
+              },
+            }}
+            onPress={() => {
+              console.log('🚀 ~ file: AnimatedRouteMarker.tsx:69 ~ onPress ~ onPress');
+            }}
             latitude={current_coords.latitude}
             longitude={current_coords.longitude}
             heading={0}

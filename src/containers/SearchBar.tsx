@@ -2,13 +2,13 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React, { useEffect, useRef } from 'react';
 import { Keyboard /* , useWindowDimensions */, useColorScheme } from 'react-native';
 
+import { View } from '../components/Themed';
 import {
   type GooglePlacesAutocompleteRef,
   GooglePlacesAutocomplete,
   type GooglePlaceData,
   type GooglePlaceDetail,
-} from '../lib/GooglePlacesAutocomplete';
-import { View } from '../shared/Themed';
+} from '../lib/google-places-autocomplete/GooglePlacesAutocomplete';
 // import Colors from '~/constants/Colors';
 
 /* 

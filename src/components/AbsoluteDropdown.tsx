@@ -3,8 +3,8 @@ import { BlurView } from 'expo-blur';
 import { useState } from 'react';
 import { LayoutAnimation, Pressable, View, useColorScheme } from 'react-native';
 
+import { Text } from '~/components/Themed';
 import Colors from '~/constants/Colors';
-import { Text } from '~/shared/Themed';
 
 interface Action {
   onPress: () => void;

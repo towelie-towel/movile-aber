@@ -2,7 +2,8 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { type BottomSheetModalMethods } from '@gorhom/bottom-sheet/lib/typescript/types';
 import { Accuracy, getCurrentPositionAsync } from 'expo-location';
-import React, { memo, useEffect, useRef, useState } from 'react';
+import { useRouter } from 'expo-router';
+import React, { memo, useRef, useState } from 'react';
 import {
   Image,
   Animated,
@@ -19,14 +20,13 @@ import { LatLng } from 'react-native-maps';
 import { TabView, SceneMap, TabBar } from 'react-native-tab-view';
 
 import SearchBar from './SearchBar';
-import { GooglePlacesAutocompleteRef } from '../lib/GooglePlacesAutocomplete';
+import { GooglePlacesAutocompleteRef } from '../lib/google-places-autocomplete/GooglePlacesAutocomplete';
 
+import AbsoluteDropdown from '~/components/AbsoluteDropdown';
+import AbsoluteLoading from '~/components/AbsoluteLoading';
 import Colors from '~/constants/Colors';
 import { useUser } from '~/context/UserContext';
-import AbsoluteDropdown from '~/shared/AbsoluteDropdown';
-import AbsoluteLoading from '~/shared/AbsoluteLoading';
-import { polylineDecode } from '~/utils/helpers';
-// import { MarkerData } from '~/constants/Markers';
+import { polylineDecode } from '~/utils/directions';
 
 void Image.prefetch(
   'https://lh3.googleusercontent.com/a/AAcHTtfPgVic8qF8hDw_WPE80JpGOkKASohxkUA8y272Ow=s1000-c'
@@ -47,38 +47,38 @@ const MarkersProfileTab = () => {
         flex: 1,
       }}>
       {/* <FlatList
-                    style={{
-                        width: '100%'
-                    }}
-                    data={userMarkers}
-                    renderItem={({ item }) => (
+            style={{
+                width: '100%'
+            }}
+            data={userMarkers}
+            renderItem={({ item }) => (
+                <View>
+                    <MaterialCommunityIcons
+                        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                        // @ts-ignore
+                        name={item.icon.name}
+                        size={28}
+                        color={Colors[colorScheme ?? 'light'].text}
+                    />
+                    <Text>
+                        {item.name}
+                    </Text>
+                    <TouchableOpacity
+                        onPress={() => {
+                            // void setUserMarkers(userMarkers.filter(marker => marker.id !== item.id))
+                        }}
+                    >
                         <View>
                             <MaterialCommunityIcons
-                                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                                // @ts-ignore
-                                name={item.icon.name}
+                                name={'trash-can'}
                                 size={28}
                                 color={Colors[colorScheme ?? 'light'].text}
                             />
-                            <Text>
-                                {item.name}
-                            </Text>
-                            <TouchableOpacity
-                                onPress={() => {
-                                    // void setUserMarkers(userMarkers.filter(marker => marker.id !== item.id))
-                                }}
-                            >
-                                <View>
-                                    <MaterialCommunityIcons
-                                        name={'trash-can'}
-                                        size={28}
-                                        color={Colors[colorScheme ?? 'light'].text}
-                                    />
-                                </View>
-                            </TouchableOpacity>
                         </View>
-                    )}
-                /> */}
+                    </TouchableOpacity>
+                </View>
+            )}
+        /> */}
     </View>
   );
 };
@@ -103,6 +103,7 @@ const BottomSheet = ({
   const colorScheme = useColorScheme();
   const { user, signOut, isLoading, isLoaded, isSignedIn } = useUser();
   const { width } = Dimensions.get('window');
+  const router = useRouter();
 
   // const [isFirstTime, _] = useAtom(isFirstTimeAtom);
   const [sheetCurrentSnap, setSheetCurrentSnap] = useState(-1);
@@ -124,14 +125,14 @@ const BottomSheet = ({
     console.log('places input blur');
   };
 
-  useEffect(() => {
+  /* useEffect(() => {
     const fetchTaxi = async () => {
       const resp = await fetch(`http://192.168.1.103:6942/profile?id=${selectedTaxiId}`);
       const respJson = await resp.json();
       console.log(respJson);
     };
     void fetchTaxi();
-  }, []);
+  }, []); */
 
   return (
     <BottomSheetModal
@@ -315,7 +316,10 @@ const BottomSheet = ({
                 <Text numberOfLines={2}>
                   Inicie sesión o seleccione un taxi para ver su información
                 </Text>
-                <TouchableOpacity onPress={() => {}}>
+                <TouchableOpacity
+                  onPress={() => {
+                    router.push('auth/sign');
+                  }}>
                   <Text>Sign In</Text>
                 </TouchableOpacity>
               </>

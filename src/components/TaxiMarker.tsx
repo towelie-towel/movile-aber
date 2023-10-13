@@ -2,8 +2,11 @@ import { memo, useCallback, useEffect, useRef } from 'react';
 import { Animated, Dimensions, Easing, Platform } from 'react-native';
 import { AnimatedRegion, MapMarker, Marker } from 'react-native-maps';
 
+import { IMarker } from '~/constants/Markers';
+
 type AnimatedMarkerParams = {
-  index: string;
+  id: string;
+  taxi?: IMarker;
   onPress: () => void;
   longitude: number;
   latitude: number;
@@ -12,7 +15,8 @@ type AnimatedMarkerParams = {
 };
 
 function TaxiMarker({
-  index,
+  id,
+  taxi,
   onPress,
   latitude,
   longitude,
@@ -79,12 +83,13 @@ function TaxiMarker({
 
   return (
     <Marker.Animated
+      key={id}
+      // @ts-ignore
+      coordinate={anim_marker_coords_ref.current}
+      // @ts-ignore
+      ref={(_ref) => (anim_marker_ref.current = _ref)}
       renderToHardwareTextureAndroid
       shouldRasterizeIOS
-      key={index}
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      coordinate={anim_marker_coords_ref.current} ref={(_ref) => (anim_marker_ref.current = _ref)}
       tracksViewChanges={false}
       onPress={onPress}
       anchor={{ x: 0.5, y: 0.5 }}

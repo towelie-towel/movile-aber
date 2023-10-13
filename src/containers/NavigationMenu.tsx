@@ -8,9 +8,9 @@ import {
   useColorScheme,
 } from 'react-native';
 
+import { PressBtn } from '~/components/PressBtn';
 import Colors from '~/constants/Colors';
 import { useWSConnection } from '~/context/WSContext';
-import { PressBtn } from '~/shared/PressBtn';
 
 interface NavigationMenuParams {
   navigationAnimValue: Animated.Value;

@@ -1,4 +1,4 @@
-export interface MarkerData {
+export interface IMarker {
   coordinate: {
     latitude: number;
     longitude: number;
@@ -18,13 +18,7 @@ export interface MarkerData {
   icon?: string;
 }
 
-export interface WSTaxi {
-  latitude: number;
-  longitude: number;
-  userId: string;
-}
-
-export const initialMarkers: MarkerData[] = [
+export const initialMarkers: IMarker[] = [
   {
     coordinate: {
       latitude: 23.1218644,

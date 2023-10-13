@@ -3,9 +3,9 @@ import { useColorScheme } from 'nativewind';
 import React, { memo } from 'react';
 import { Animated, Dimensions, Pressable, TouchableWithoutFeedback } from 'react-native';
 
+import { PressBtn } from '~/components/PressBtn';
 import Colors from '~/constants/Colors';
 import { useWSConnection } from '~/context/WSContext';
-import { PressBtn } from '~/shared/PressBtn';
 
 interface NavigationMenuParams {
   navigationAnimValue: Animated.Value;

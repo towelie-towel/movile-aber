@@ -11,11 +11,11 @@ import {
 } from 'react-native';
 import Popover, { PopoverMode, PopoverPlacement } from 'react-native-popover-view';
 
+import { PressBtn } from '~/components/PressBtn';
+import { View, Text } from '~/components/Themed';
 import Colors from '~/constants/Colors';
 import type { SignInConfig } from '~/constants/Configs';
-import { PressBtn } from '~/shared/PressBtn';
-import { View, Text } from '~/shared/Themed';
-import { supabase } from '~/supabase';
+import { supabase } from '~/lib/supabase';
 import { isValidPassword, isValidPhone } from '~/utils/validators';
 
 export default function SignIn() {
