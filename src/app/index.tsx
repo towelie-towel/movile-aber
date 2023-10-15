@@ -1,6 +1,7 @@
 import { type BottomSheetModal, BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { useKeepAwake } from 'expo-keep-awake';
 import { Accuracy, getCurrentPositionAsync } from 'expo-location';
+import { router } from 'expo-router';
 import React, { useCallback, useRef, useState } from 'react';
 import {
   Animated,
@@ -10,6 +11,7 @@ import {
   useColorScheme,
   Button,
   Text,
+  View,
 } from 'react-native';
 import { Drawer } from 'react-native-drawer-layout';
 import MapView, { type LatLng, PROVIDER_GOOGLE, Polyline } from 'react-native-maps';
@@ -153,8 +155,8 @@ export default function Home() {
             latitudeDelta: 0.0322,
             longitudeDelta: 0.0221,
           }}
-          /* showsMyLocationButton
-                                showsUserLocation */
+          showsMyLocationButton
+          showsUserLocation
           showsCompass={false}
           toolbarEnabled={false}
           ref={mapViewRef}
@@ -162,9 +164,9 @@ export default function Home() {
           customMapStyle={colorScheme === 'dark' ? NightMap : undefined}>
           <Polyline
             coordinates={activeRoute ?? []}
-            /* strokeColor="white" */
-            /* strokeWidth={5} */
-            strokeColor="#000" // fallback for when `strokeColors` is not supported by the map-provider
+            strokeColor="white"
+            strokeWidth={5}
+            // strokeColor="#000" // fallback for when `strokeColors` is not supported by the map-provider
             strokeColors={[
               '#7F0000',
               '#00000000', // no color, creates a "long" gradient between the previous and next coordinate
@@ -173,12 +175,49 @@ export default function Home() {
               '#238C23',
               '#7F0000',
             ]}
-            strokeWidth={6}
+            // strokeWidth={6}
           />
 
           <TaxisMarkers onPressTaxi={() => {}} />
           <AnimatedRouteMarker key={2} />
         </MapView>
+
+        <View
+          style={{
+            position: 'absolute',
+            top: 60,
+            width: '100%',
+            zIndex: 10,
+          }}>
+          <SearchBar
+            refFor={(ref) => (placesInputViewRef.current = ref)}
+            onFocus={onSearchBarFocus}
+            onBlur={onSearchBarBlur}
+            onProfilePicPress={() => {}}
+            onPlacePress={async (_, details) => {
+              if (!details) {
+                return;
+              }
+              const position = await getCurrentPositionAsync({
+                accuracy: Accuracy.Highest,
+              });
+              try {
+                const resp = await fetch(
+                  `http://192.168.1.103:6942/route?from=${position.coords.latitude},${position.coords.longitude}&to=${details.geometry.location.lat},${details.geometry.location.lng}`
+                );
+                const respJson = await resp.json();
+                const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map(
+                  (point) => ({ latitude: point[0]!, longitude: point[1]! })
+                );
+                setActiveRoute(decodedCoords);
+              } catch (error) {
+                if (error instanceof Error) {
+                  console.error(error.message);
+                }
+              }
+            }}
+          />
+        </View>
 
         <BottomSheet
           bottomSheetModalRef={bottomSheetModalRef}

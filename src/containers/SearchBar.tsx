@@ -1,6 +1,10 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React, { useEffect, useRef } from 'react';
-import { Keyboard /* , useWindowDimensions */, useColorScheme } from 'react-native';
+import {
+  Keyboard /* , useWindowDimensions */,
+  TouchableOpacity,
+  useColorScheme,
+} from 'react-native';
 
 import { View } from '../components/Themed';
 import {
@@ -19,12 +23,13 @@ https://maps.googleapis.com/maps/api/place/textsearch/json?query=23%20y%2025&loc
 
 interface Params {
   onPlacePress: (data: GooglePlaceData, details: GooglePlaceDetail | null) => void | Promise<void>;
+  onProfilePicPress: () => void | Promise<void>;
   onFocus: () => void;
   onBlur: () => void;
   refFor?: (r: GooglePlacesAutocompleteRef | null) => void;
 }
 
-const SearchBar = ({ onPlacePress, onFocus, onBlur, refFor }: Params) => {
+const SearchBar = ({ onProfilePicPress, onPlacePress, onFocus, onBlur, refFor }: Params) => {
   const colorScheme = useColorScheme();
   // const { colorScheme } = useColorScheme()
 
@@ -57,12 +62,9 @@ const SearchBar = ({ onPlacePress, onFocus, onBlur, refFor }: Params) => {
             alignItems: 'center',
 
             backgroundColor: 'transparent',
-
-            /* borderColor: "red",
-                        borderWidth: 1,
-                        borderStyle: "solid", */
           }}>
           <MaterialCommunityIcons
+            onPress={onProfilePicPress}
             name="magnify"
             size={26}
             color={colorScheme === 'light' ? '#6C6C6C' : 'black'}
@@ -86,7 +88,8 @@ const SearchBar = ({ onPlacePress, onFocus, onBlur, refFor }: Params) => {
       }}
       onPress={(data, details) => void onPlacePress(data, details)}
       renderRightButton={() => (
-        <View
+        <TouchableOpacity
+          onPress={onProfilePicPress}
           style={{
             width: 45,
 
@@ -94,31 +97,16 @@ const SearchBar = ({ onPlacePress, onFocus, onBlur, refFor }: Params) => {
             alignItems: 'flex-end',
 
             backgroundColor: 'transparent',
-
-            /*  borderColor: "red",
-                         borderWidth: 1,
-                         borderStyle: "solid", */
           }}>
           <MaterialCommunityIcons
             name="account-circle"
             size={38}
             color={colorScheme === 'light' ? '#BEBFC0' : 'black'}
-            style={
-              {
-                /*  borderColor: "red",
-                             borderWidth: 1,
-                             borderStyle: "solid", */
-              }
-            }
           />
-        </View>
+        </TouchableOpacity>
       )}
       styles={{
-        textInputContainer: {
-          /* borderColor: "yellow",
-                    borderWidth: 1,
-                    borderStyle: "solid", */
-        },
+        textInputContainer: {},
         textInput: {
           height: '100%',
           backgroundColor: colorScheme === 'light' ? '#E9E9E9' : 'black',
@@ -141,7 +129,7 @@ const SearchBar = ({ onPlacePress, onFocus, onBlur, refFor }: Params) => {
         location: '23.11848,-82.38052',
         radius: 100,
       }}
-      /* nearbyPlacesAPI='GooglePlacesSearch' */
+      // nearbyPlacesAPI='GooglePlacesSearch'
       currentLocation
       currentLocationLabel="My Location"
     />

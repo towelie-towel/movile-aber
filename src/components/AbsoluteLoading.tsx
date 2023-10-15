@@ -21,7 +21,7 @@ const AbsoluteLoading = ({
   onCancel,
   size,
   visible,
-  intensity = 5,
+  intensity = 0,
   style,
   ...restProps
 }: Params) => {
@@ -67,7 +67,11 @@ const AbsoluteLoading = ({
     <BlurView
       style={[
         {
+          position: 'absolute',
+          justifyContent: 'center',
           display: visible ? 'flex' : 'none',
+          width: '100%',
+          height: '100%',
         },
         style,
       ]}

@@ -18,7 +18,7 @@ const defineConfig = (): ExpoConfig => ({
   assetBundlePatterns: ['**/*'],
   ios: {
     config: {
-      googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY,
+      googleMapsApiKey: 'AIzaSyAtcwUbA0jjJ6ARXl5_FqIqYcGbTI_XZEE',
     },
     supportsTablet: true,
     googleServicesFile: './GoogleService-Info.plist',
@@ -35,7 +35,7 @@ const defineConfig = (): ExpoConfig => ({
     },
     config: {
       googleMaps: {
-        apiKey: process.env.GOOGLE_MAPS_API_KEY,
+        apiKey: 'AIzaSyAtcwUbA0jjJ6ARXl5_FqIqYcGbTI_XZEE',
       },
     },
     package: 'com.cubastore.laruta',

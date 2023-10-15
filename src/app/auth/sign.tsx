@@ -1,5 +1,12 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import { Stack /* , useRouter */, router } from 'expo-router';
+import { Bar } from 'react-native-progress';
+import {
+  Stack /* , useRouter */,
+  router,
+  useRouter,
+  useNavigation,
+  useLocalSearchParams,
+} from 'expo-router';
 import { useState } from 'react';
 import {
   TextInput,
@@ -14,15 +21,16 @@ import Popover, { PopoverMode, PopoverPlacement } from 'react-native-popover-vie
 import { Path, Svg } from 'react-native-svg';
 import { SceneMap, TabBar, TabView } from 'react-native-tab-view';
 
-import AbsoluteLoading from '~/components/AbsoluteLoading';
 import { View } from '~/components/Themed';
 import Colors from '~/constants/Colors';
 import useKeyboard from '~/hooks/useKeyboard';
 import { supabase } from '~/lib/supabase';
 import { isValidPassword, isValidPhone } from '~/utils/validators';
 
-export default function Sign() {
+export default function Sign(params: any) {
   const colorScheme = useColorScheme();
+  const item = useLocalSearchParams();
+  console.log('phone-Sign', item);
   const { width, height } = useWindowDimensions();
   // const router = useRouter();
   const { keyboardHeight } = useKeyboard();
@@ -34,9 +42,7 @@ export default function Sign() {
   ]);
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: Colors[colorScheme ?? 'light'].secondary }}
-      behavior="padding">
+    <View style={{ flex: 1, backgroundColor: Colors[colorScheme ?? 'light'].secondary }}>
       <View
         style={{
           width: '100%',
@@ -138,7 +144,7 @@ export default function Sign() {
           />
         </View>
       </View>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 
@@ -188,25 +194,144 @@ const SignInTab = () => {
       return;
     }
     setIsLoading(false);
+    router.replace('/');
   };
 
   return (
     <View
       style={{
-        height: '100%',
-        padding: 40,
-        backgroundColor: Colors[colorScheme ?? 'light'].background,
+        borderColor: Colors[colorScheme ?? 'light'].border,
+        borderStyle: 'solid',
       }}>
-      <AbsoluteLoading visible={isLoading} />
+      {isLoading ? (
+        <Bar
+          indeterminate
+          color={Colors[colorScheme ?? 'light'].primary}
+          width={370}
+          height={2}
+          borderRadius={0}
+          borderWidth={0}
+        />
+      ) : (
+        <View style={{ height: 2 }} />
+      )}
       <View
         style={{
-          flexDirection: 'row',
+          height: '100%',
+          padding: 40,
+          backgroundColor: Colors[colorScheme ?? 'light'].background,
         }}>
         <View
           style={{
-            flex: 1,
             flexDirection: 'row',
+          }}>
+          <View
+            style={{
+              flex: 1,
+              flexDirection: 'row',
+              height: 45,
+              borderWidth: 1,
+              borderColor: Colors[colorScheme ?? 'light'].border,
+              borderStyle: 'solid',
+              justifyContent: 'center',
+              alignItems: 'center',
+              borderRadius: 8,
+            }}>
+            <View
+              style={{
+                height: 43,
+                width: '20%',
+                borderRightWidth: 1,
+                borderStyle: 'solid',
+                backgroundColor: 'transparent',
+                borderColor: Colors[colorScheme ?? 'light'].border,
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}>
+              <Text
+                style={{
+                  color: Colors[colorScheme ?? 'light'].text_dark,
+                  fontSize: 17,
+                  fontWeight: '400',
+                }}>
+                +53
+              </Text>
+            </View>
+            <TextInput
+              style={{
+                height: 43,
+                width: '80%',
+                paddingLeft: 10,
+                fontSize: 17,
+                color: Colors[colorScheme ?? 'light'].text_dark,
+              }}
+              placeholder="Número de Móvil"
+              autoCapitalize="none"
+              keyboardType="numeric"
+              placeholderTextColor={Colors[colorScheme ?? 'light'].text_light}
+              onChangeText={(text) => {
+                setInputCronemberg({
+                  ...inputCronemberg,
+                  phone: text,
+                  phoneError: '',
+                  passwordError: '',
+                });
+              }}
+              value={inputCronemberg.phone}
+            />
+            {inputCronemberg.phoneError && (
+              <View
+                style={{
+                  position: 'absolute',
+                  right: 8,
+                }}>
+                <Popover
+                  verticalOffset={-32}
+                  mode={PopoverMode.RN_MODAL}
+                  placement={PopoverPlacement.LEFT}
+                  isVisible={inputCronemberg.showPhonePopover}
+                  onRequestClose={() => {
+                    setInputCronemberg({
+                      ...inputCronemberg,
+                      showPhonePopover: false,
+                    });
+                  }}
+                  from={
+                    <TouchableOpacity
+                      onPress={() => {
+                        setInputCronemberg({
+                          ...inputCronemberg,
+                          showPhonePopover: true,
+                        });
+                        console.log(inputCronemberg);
+                      }}>
+                      <MaterialIcons
+                        name="error"
+                        size={24}
+                        color={Colors[colorScheme ?? 'light'].text}
+                      />
+                    </TouchableOpacity>
+                  }>
+                  <Text
+                    numberOfLines={2}
+                    style={{
+                      padding: 8,
+                    }}>
+                    {inputCronemberg.phoneError}
+                  </Text>
+                </Popover>
+              </View>
+            )}
+          </View>
+        </View>
+
+        <View
+          style={{
+            position: 'relative',
+            marginTop: 24,
+            marginBottom: 32,
             height: 45,
+            width: '100%',
             borderWidth: 1,
             borderColor: Colors[colorScheme ?? 'light'].border,
             borderStyle: 'solid',
@@ -214,49 +339,30 @@ const SignInTab = () => {
             alignItems: 'center',
             borderRadius: 8,
           }}>
-          <View
-            style={{
-              height: 43,
-              width: '20%',
-              borderRightWidth: 1,
-              borderStyle: 'solid',
-              backgroundColor: 'transparent',
-              borderColor: Colors[colorScheme ?? 'light'].border,
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}>
-            <Text
-              style={{
-                color: Colors[colorScheme ?? 'light'].text_dark,
-                fontSize: 17,
-                fontWeight: '400',
-              }}>
-              +53
-            </Text>
-          </View>
           <TextInput
             style={{
               height: 43,
-              width: '80%',
-              paddingLeft: 10,
+              width: '100%',
+              paddingLeft: 20,
               fontSize: 17,
               color: Colors[colorScheme ?? 'light'].text_dark,
             }}
-            placeholder="Número de Móvil"
+            placeholder="Contraseña"
             autoCapitalize="none"
-            keyboardType="numeric"
+            keyboardType="default"
+            secureTextEntry
             placeholderTextColor={Colors[colorScheme ?? 'light'].text_light}
             onChangeText={(text) => {
               setInputCronemberg({
                 ...inputCronemberg,
-                phone: text,
+                password: text,
                 phoneError: '',
                 passwordError: '',
               });
             }}
-            value={inputCronemberg.phone}
+            value={inputCronemberg.password}
           />
-          {inputCronemberg.phoneError && (
+          {inputCronemberg.passwordError && (
             <View
               style={{
                 position: 'absolute',
@@ -266,11 +372,11 @@ const SignInTab = () => {
                 verticalOffset={-32}
                 mode={PopoverMode.RN_MODAL}
                 placement={PopoverPlacement.LEFT}
-                isVisible={inputCronemberg.showPhonePopover}
+                isVisible={inputCronemberg.showPasswordPopover}
                 onRequestClose={() => {
                   setInputCronemberg({
                     ...inputCronemberg,
-                    showPhonePopover: false,
+                    showPasswordPopover: false,
                   });
                 }}
                 from={
@@ -278,9 +384,8 @@ const SignInTab = () => {
                     onPress={() => {
                       setInputCronemberg({
                         ...inputCronemberg,
-                        showPhonePopover: true,
+                        showPasswordPopover: true,
                       });
-                      console.log(inputCronemberg);
                     }}>
                     <MaterialIcons
                       name="error"
@@ -292,109 +397,28 @@ const SignInTab = () => {
                 <Text
                   numberOfLines={2}
                   style={{
+                    backgroundColor: Colors[colorScheme ?? 'light'].secondary,
                     padding: 8,
                   }}>
-                  {inputCronemberg.phoneError}
+                  {inputCronemberg.passwordError}
                 </Text>
               </Popover>
             </View>
           )}
         </View>
-      </View>
 
-      <View
-        style={{
-          position: 'relative',
-          marginTop: 24,
-          marginBottom: 32,
-          height: 45,
-          width: '100%',
-          borderWidth: 1,
-          borderColor: Colors[colorScheme ?? 'light'].border,
-          borderStyle: 'solid',
-          justifyContent: 'center',
-          alignItems: 'center',
-          borderRadius: 8,
-        }}>
-        <TextInput
+        <View
           style={{
-            height: 43,
-            width: '100%',
-            paddingLeft: 20,
-            fontSize: 17,
-            color: Colors[colorScheme ?? 'light'].text_dark,
-          }}
-          placeholder="Contraseña"
-          autoCapitalize="none"
-          keyboardType="default"
-          secureTextEntry
-          placeholderTextColor={Colors[colorScheme ?? 'light'].text_light}
-          onChangeText={(text) => {
-            setInputCronemberg({
-              ...inputCronemberg,
-              password: text,
-              phoneError: '',
-              passwordError: '',
-            });
-          }}
-          value={inputCronemberg.password}
-        />
-        {inputCronemberg.passwordError && (
-          <View
-            style={{
-              position: 'absolute',
-              right: 8,
-            }}>
-            <Popover
-              verticalOffset={-32}
-              mode={PopoverMode.RN_MODAL}
-              placement={PopoverPlacement.LEFT}
-              isVisible={inputCronemberg.showPasswordPopover}
-              onRequestClose={() => {
-                setInputCronemberg({
-                  ...inputCronemberg,
-                  showPasswordPopover: false,
-                });
-              }}
-              from={
-                <TouchableOpacity
-                  onPress={() => {
-                    setInputCronemberg({
-                      ...inputCronemberg,
-                      showPasswordPopover: true,
-                    });
-                  }}>
-                  <MaterialIcons
-                    name="error"
-                    size={24}
-                    color={Colors[colorScheme ?? 'light'].text}
-                  />
-                </TouchableOpacity>
-              }>
-              <Text
-                numberOfLines={2}
-                style={{
-                  backgroundColor: Colors[colorScheme ?? 'light'].secondary,
-                  padding: 8,
-                }}>
-                {inputCronemberg.passwordError}
-              </Text>
-            </Popover>
-          </View>
-        )}
-      </View>
-
-      <View
-        style={{
-          overflow: 'hidden',
-          borderRadius: 8,
-        }}>
-        <Button
-          disabled={inputCronemberg.phoneError !== '' || inputCronemberg.passwordError !== ''}
-          color={Colors[colorScheme ?? 'light'].primary}
-          title="Sign In"
-          onPress={handleSignIn}
-        />
+            overflow: 'hidden',
+            borderRadius: 8,
+          }}>
+          <Button
+            disabled={inputCronemberg.phoneError !== '' || inputCronemberg.passwordError !== ''}
+            color={Colors[colorScheme ?? 'light'].primary}
+            title="Sign In"
+            onPress={handleSignIn}
+          />
+        </View>
       </View>
     </View>
   );
@@ -402,6 +426,7 @@ const SignInTab = () => {
 
 const SignUpTab = () => {
   const colorScheme = useColorScheme();
+  const navigation = useNavigation();
 
   const [inputCronemberg, setInputCronemberg] = useState({
     phone: '',
@@ -450,6 +475,7 @@ const SignUpTab = () => {
       options: {
         data: {
           role: 'client',
+          username: 'username',
         },
       },
     });
@@ -468,27 +494,143 @@ const SignUpTab = () => {
     router.setParams({
       phone: inputCronemberg.phone.trim(),
     });
-    router.push('code');
+    router.push({ pathname: 'auth/code', params: { phone: inputCronemberg.phone.trim() } });
   };
 
   return (
     <View
       style={{
-        height: '100%',
-        paddingHorizontal: 40,
-        paddingVertical: 20,
-        backgroundColor: Colors[colorScheme ?? 'light'].background,
+        borderColor: Colors[colorScheme ?? 'light'].border,
+        borderStyle: 'solid',
       }}>
-      <AbsoluteLoading visible={isLoading} />
+      {isLoading ? (
+        <Bar
+          indeterminate
+          color={Colors[colorScheme ?? 'light'].primary}
+          width={370}
+          height={2}
+          borderRadius={0}
+          borderWidth={0}
+        />
+      ) : (
+        <View style={{ height: 2 }} />
+      )}
       <View
         style={{
-          flexDirection: 'row',
+          height: '100%',
+          paddingHorizontal: 40,
+          paddingVertical: 20,
+          backgroundColor: Colors[colorScheme ?? 'light'].background,
         }}>
         <View
           style={{
-            flex: 1,
             flexDirection: 'row',
+          }}>
+          <View
+            style={{
+              flex: 1,
+              flexDirection: 'row',
+              height: 45,
+              borderWidth: 1,
+              borderColor: Colors[colorScheme ?? 'light'].border,
+              borderStyle: 'solid',
+              justifyContent: 'center',
+              alignItems: 'center',
+              borderRadius: 8,
+            }}>
+            <View
+              style={{
+                height: 43,
+                width: '20%',
+                borderRightWidth: 1,
+                borderStyle: 'solid',
+                backgroundColor: 'transparent',
+                borderColor: Colors[colorScheme ?? 'light'].border,
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}>
+              <Text
+                style={{
+                  color: Colors[colorScheme ?? 'light'].text_dark,
+                  fontSize: 17,
+                  fontWeight: '400',
+                }}>
+                +53
+              </Text>
+            </View>
+            <TextInput
+              style={{
+                height: 43,
+                width: '80%',
+                paddingLeft: 10,
+                fontSize: 17,
+                color: Colors[colorScheme ?? 'light'].text_dark,
+              }}
+              placeholder="Número de Móvil"
+              autoCapitalize="none"
+              keyboardType="numeric"
+              placeholderTextColor={Colors[colorScheme ?? 'light'].text_light}
+              onChangeText={(text) => {
+                setInputCronemberg({
+                  ...inputCronemberg,
+                  phone: text,
+                  phoneError: '',
+                });
+              }}
+              value={inputCronemberg.phone}
+            />
+            {inputCronemberg.phoneError && (
+              <View
+                style={{
+                  position: 'absolute',
+                  right: 8,
+                }}>
+                <Popover
+                  verticalOffset={-32}
+                  mode={PopoverMode.RN_MODAL}
+                  placement={PopoverPlacement.LEFT}
+                  isVisible={inputCronemberg.showPhonePopover}
+                  onRequestClose={() => {
+                    setInputCronemberg({
+                      ...inputCronemberg,
+                      showPhonePopover: false,
+                    });
+                  }}
+                  from={
+                    <TouchableOpacity
+                      onPress={() => {
+                        setInputCronemberg({
+                          ...inputCronemberg,
+                          showPhonePopover: true,
+                        });
+                        console.log(inputCronemberg);
+                      }}>
+                      <MaterialIcons
+                        name="error"
+                        size={24}
+                        color={Colors[colorScheme ?? 'light'].text}
+                      />
+                    </TouchableOpacity>
+                  }>
+                  <Text
+                    numberOfLines={2}
+                    style={{
+                      padding: 8,
+                    }}>
+                    {inputCronemberg.phoneError}
+                  </Text>
+                </Popover>
+              </View>
+            )}
+          </View>
+        </View>
+
+        <View
+          style={{
+            position: 'relative',
+            marginTop: 12,
             height: 45,
+            width: '100%',
             borderWidth: 1,
             borderColor: Colors[colorScheme ?? 'light'].border,
             borderStyle: 'solid',
@@ -496,48 +638,29 @@ const SignUpTab = () => {
             alignItems: 'center',
             borderRadius: 8,
           }}>
-          <View
-            style={{
-              height: 43,
-              width: '20%',
-              borderRightWidth: 1,
-              borderStyle: 'solid',
-              backgroundColor: 'transparent',
-              borderColor: Colors[colorScheme ?? 'light'].border,
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}>
-            <Text
-              style={{
-                color: Colors[colorScheme ?? 'light'].text_dark,
-                fontSize: 17,
-                fontWeight: '400',
-              }}>
-              +53
-            </Text>
-          </View>
           <TextInput
             style={{
               height: 43,
-              width: '80%',
-              paddingLeft: 10,
+              width: '100%',
+              paddingLeft: 20,
               fontSize: 17,
               color: Colors[colorScheme ?? 'light'].text_dark,
             }}
-            placeholder="Número de Móvil"
+            placeholder="Contraseña"
             autoCapitalize="none"
-            keyboardType="numeric"
+            keyboardType="default"
+            secureTextEntry
             placeholderTextColor={Colors[colorScheme ?? 'light'].text_light}
             onChangeText={(text) => {
               setInputCronemberg({
                 ...inputCronemberg,
-                phone: text,
-                phoneError: '',
+                password: text,
+                passwordError: '',
               });
             }}
-            value={inputCronemberg.phone}
+            value={inputCronemberg.password}
           />
-          {inputCronemberg.phoneError && (
+          {inputCronemberg.passwordError && (
             <View
               style={{
                 position: 'absolute',
@@ -547,11 +670,11 @@ const SignUpTab = () => {
                 verticalOffset={-32}
                 mode={PopoverMode.RN_MODAL}
                 placement={PopoverPlacement.LEFT}
-                isVisible={inputCronemberg.showPhonePopover}
+                isVisible={inputCronemberg.showPasswordPopover}
                 onRequestClose={() => {
                   setInputCronemberg({
                     ...inputCronemberg,
-                    showPhonePopover: false,
+                    showPasswordPopover: false,
                   });
                 }}
                 from={
@@ -559,9 +682,8 @@ const SignUpTab = () => {
                     onPress={() => {
                       setInputCronemberg({
                         ...inputCronemberg,
-                        showPhonePopover: true,
+                        showPasswordPopover: true,
                       });
-                      console.log(inputCronemberg);
                     }}>
                     <MaterialIcons
                       name="error"
@@ -573,192 +695,113 @@ const SignUpTab = () => {
                 <Text
                   numberOfLines={2}
                   style={{
+                    backgroundColor: Colors[colorScheme ?? 'light'].secondary,
                     padding: 8,
                   }}>
-                  {inputCronemberg.phoneError}
+                  {inputCronemberg.passwordError}
                 </Text>
               </Popover>
             </View>
           )}
         </View>
-      </View>
 
-      <View
-        style={{
-          position: 'relative',
-          marginTop: 12,
-          height: 45,
-          width: '100%',
-          borderWidth: 1,
-          borderColor: Colors[colorScheme ?? 'light'].border,
-          borderStyle: 'solid',
-          justifyContent: 'center',
-          alignItems: 'center',
-          borderRadius: 8,
-        }}>
-        <TextInput
+        <View
           style={{
-            height: 43,
+            position: 'relative',
+            marginTop: 12,
+            marginBottom: 16,
+            height: 45,
             width: '100%',
-            paddingLeft: 20,
-            fontSize: 17,
-            color: Colors[colorScheme ?? 'light'].text_dark,
-          }}
-          placeholder="Contraseña"
-          autoCapitalize="none"
-          keyboardType="default"
-          secureTextEntry
-          placeholderTextColor={Colors[colorScheme ?? 'light'].text_light}
-          onChangeText={(text) => {
-            setInputCronemberg({
-              ...inputCronemberg,
-              password: text,
-              passwordError: '',
-            });
-          }}
-          value={inputCronemberg.password}
-        />
-        {inputCronemberg.passwordError && (
-          <View
+            borderWidth: 1,
+            borderColor: Colors[colorScheme ?? 'light'].border,
+            borderStyle: 'solid',
+            justifyContent: 'center',
+            alignItems: 'center',
+            borderRadius: 8,
+          }}>
+          <TextInput
             style={{
-              position: 'absolute',
-              right: 8,
-            }}>
-            <Popover
-              verticalOffset={-32}
-              mode={PopoverMode.RN_MODAL}
-              placement={PopoverPlacement.LEFT}
-              isVisible={inputCronemberg.showPasswordPopover}
-              onRequestClose={() => {
-                setInputCronemberg({
-                  ...inputCronemberg,
-                  showPasswordPopover: false,
-                });
-              }}
-              from={
-                <TouchableOpacity
-                  onPress={() => {
-                    setInputCronemberg({
-                      ...inputCronemberg,
-                      showPasswordPopover: true,
-                    });
+              height: 43,
+              width: '100%',
+              paddingLeft: 20,
+              fontSize: 17,
+              color: Colors[colorScheme ?? 'light'].text_dark,
+            }}
+            placeholder="Confirmar Contraseña"
+            autoCapitalize="none"
+            keyboardType="default"
+            secureTextEntry
+            placeholderTextColor={Colors[colorScheme ?? 'light'].text_light}
+            onChangeText={(text) => {
+              setInputCronemberg({
+                ...inputCronemberg,
+                consfirmPassword: text,
+                confirmPasswordError: '',
+              });
+            }}
+            value={inputCronemberg.consfirmPassword}
+          />
+          {inputCronemberg.confirmPasswordError && (
+            <View
+              style={{
+                position: 'absolute',
+                right: 8,
+              }}>
+              <Popover
+                verticalOffset={-32}
+                mode={PopoverMode.RN_MODAL}
+                placement={PopoverPlacement.LEFT}
+                isVisible={inputCronemberg.consfirmShowPasswordPopover}
+                onRequestClose={() => {
+                  setInputCronemberg({
+                    ...inputCronemberg,
+                    consfirmShowPasswordPopover: false,
+                  });
+                }}
+                from={
+                  <TouchableOpacity
+                    onPress={() => {
+                      setInputCronemberg({
+                        ...inputCronemberg,
+                        consfirmShowPasswordPopover: true,
+                      });
+                    }}>
+                    <MaterialIcons
+                      name="error"
+                      size={24}
+                      color={Colors[colorScheme ?? 'light'].text}
+                    />
+                  </TouchableOpacity>
+                }>
+                <Text
+                  numberOfLines={2}
+                  style={{
+                    backgroundColor: Colors[colorScheme ?? 'light'].secondary,
+                    padding: 8,
                   }}>
-                  <MaterialIcons
-                    name="error"
-                    size={24}
-                    color={Colors[colorScheme ?? 'light'].text}
-                  />
-                </TouchableOpacity>
-              }>
-              <Text
-                numberOfLines={2}
-                style={{
-                  backgroundColor: Colors[colorScheme ?? 'light'].secondary,
-                  padding: 8,
-                }}>
-                {inputCronemberg.passwordError}
-              </Text>
-            </Popover>
-          </View>
-        )}
-      </View>
+                  {inputCronemberg.confirmPasswordError}
+                </Text>
+              </Popover>
+            </View>
+          )}
+        </View>
 
-      <View
-        style={{
-          position: 'relative',
-          marginTop: 12,
-          marginBottom: 16,
-          height: 45,
-          width: '100%',
-          borderWidth: 1,
-          borderColor: Colors[colorScheme ?? 'light'].border,
-          borderStyle: 'solid',
-          justifyContent: 'center',
-          alignItems: 'center',
-          borderRadius: 8,
-        }}>
-        <TextInput
+        <View
           style={{
-            height: 43,
-            width: '100%',
-            paddingLeft: 20,
-            fontSize: 17,
-            color: Colors[colorScheme ?? 'light'].text_dark,
-          }}
-          placeholder="Confirmar Contraseña"
-          autoCapitalize="none"
-          keyboardType="default"
-          secureTextEntry
-          placeholderTextColor={Colors[colorScheme ?? 'light'].text_light}
-          onChangeText={(text) => {
-            setInputCronemberg({
-              ...inputCronemberg,
-              consfirmPassword: text,
-              confirmPasswordError: '',
-            });
-          }}
-          value={inputCronemberg.consfirmPassword}
-        />
-        {inputCronemberg.confirmPasswordError && (
-          <View
-            style={{
-              position: 'absolute',
-              right: 8,
-            }}>
-            <Popover
-              verticalOffset={-32}
-              mode={PopoverMode.RN_MODAL}
-              placement={PopoverPlacement.LEFT}
-              isVisible={inputCronemberg.consfirmShowPasswordPopover}
-              onRequestClose={() => {
-                setInputCronemberg({
-                  ...inputCronemberg,
-                  consfirmShowPasswordPopover: false,
-                });
-              }}
-              from={
-                <TouchableOpacity
-                  onPress={() => {
-                    setInputCronemberg({
-                      ...inputCronemberg,
-                      consfirmShowPasswordPopover: true,
-                    });
-                  }}>
-                  <MaterialIcons
-                    name="error"
-                    size={24}
-                    color={Colors[colorScheme ?? 'light'].text}
-                  />
-                </TouchableOpacity>
-              }>
-              <Text
-                numberOfLines={2}
-                style={{
-                  backgroundColor: Colors[colorScheme ?? 'light'].secondary,
-                  padding: 8,
-                }}>
-                {inputCronemberg.confirmPasswordError}
-              </Text>
-            </Popover>
-          </View>
-        )}
-      </View>
-
-      <View
-        style={{
-          overflow: 'hidden',
-          borderRadius: 8,
-        }}>
-        <Button
-          disabled={
-            inputCronemberg.phoneError !== '' ||
-            inputCronemberg.passwordError !== '' ||
-            inputCronemberg.confirmPasswordError !== ''
-          }
-          color={Colors[colorScheme ?? 'light'].primary}
-          title="Sign Up"
-          onPress={handleSignUp}
-        />
+            overflow: 'hidden',
+            borderRadius: 8,
+          }}>
+          <Button
+            disabled={
+              inputCronemberg.phoneError !== '' ||
+              inputCronemberg.passwordError !== '' ||
+              inputCronemberg.confirmPasswordError !== ''
+            }
+            color={Colors[colorScheme ?? 'light'].primary}
+            title="Sign Up"
+            onPress={handleSignUp}
+          />
+        </View>
       </View>
     </View>
   );
