@@ -1,7 +1,7 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { Stack, usePathname, router, useLocalSearchParams } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   LayoutAnimation,
   TextInput,
@@ -12,13 +12,14 @@ import {
   Button,
   KeyboardAvoidingView,
   useWindowDimensions,
+  Keyboard,
 } from 'react-native';
+import OTPTextInput from 'react-native-otp-textinput';
 import Popover, { PopoverMode, PopoverPlacement } from 'react-native-popover-view';
 import Svg, { Path } from 'react-native-svg';
-import OTPTextInput from 'react-native-otp-textinput';
 
 import AbsoluteLoading from '~/components/AbsoluteLoading';
-import { PressBtn } from '~/components/PressBtn';
+import { ScaleBtn } from '~/components/ScaleBtn';
 import { View } from '~/components/Themed';
 import Colors from '~/constants/Colors';
 import { useUser } from '~/context/UserContext';
@@ -30,7 +31,7 @@ export default function Code() {
   const { phone } = useLocalSearchParams();
   console.log('phone-Code', phone);
   const colorScheme = useColorScheme();
-  const { width, height } = useWindowDimensions();
+  // const { width, height } = useWindowDimensions();
   const { keyboardHeight } = useKeyboard();
   // const { isSignedIn, isLoading: isAuthLoading } = useUser();
 
@@ -38,13 +39,12 @@ export default function Code() {
 
   const [otpTimer, setOtpTimer] = useState(60);
 
-  const [otpToken, setOtpToken] = useState('');
-
   const [inputCronemberg, setInputCronemberg] = useState({
     otpToken: '',
     showOtpTokenError: false,
     otpTokenError: '',
   });
+  const otpInputRef = useRef<OTPTextInput>(null);
 
   const startTimer = () => {
     setOtpTimer(60);
@@ -61,8 +61,9 @@ export default function Code() {
     }, 1000);
   };
 
-  const verifyOtp = async () => {
+  const verifyOtp = async (otpToken: string) => {
     setIsLoading(true);
+    console.log('otpToken', otpToken);
     const { error, data } = await supabase.auth.verifyOtp({
       phone: '+53' + phone,
       token: otpToken,
@@ -73,7 +74,6 @@ export default function Code() {
       setIsLoading(false);
       return;
     }
-
     console.log('User Signed In', JSON.stringify(data, null, 2));
 
     setIsLoading(false);
@@ -83,222 +83,76 @@ export default function Code() {
   return (
     <View style={{ flex: 1, backgroundColor: Colors[colorScheme ?? 'light'].secondary }}>
       <Stack.Screen
-        options={{
-          statusBarColor: Colors[colorScheme ?? 'light'].primary,
-          navigationBarColor: 'transparent',
-        }}
+        options={
+          {
+            // statusBarColor: Colors[colorScheme ?? 'light'].primary,
+            // navigationBarColor: 'transparent',
+          }
+        }
       />
       <View
         style={{
           backgroundColor: Colors[colorScheme ?? 'light'].primary,
-          height: '30%',
           paddingTop: 80,
+          paddingHorizontal: 20,
         }}>
-        <Text>
-          Ingresa el código que te enviamos a tu celular: {phone}{' '}
-          {otpTimer > 0 ? (
-            <Text style={{ color: Colors[colorScheme ?? 'light'].text_light }}>{otpTimer}</Text>
-          ) : (
-            <PressBtn onPress={startTimer}>Reenviar código</PressBtn>
-          )}{' '}
+        <TouchableOpacity
+          onPress={() => {
+            router.back();
+          }}>
+          <MaterialIcons
+            style={{ marginBottom: 15 }}
+            color={Colors[colorScheme ?? 'light'].text_light2}
+            name="arrow-back-ios"
+            size={32}
+          />
+        </TouchableOpacity>
+        <Text
+          style={{
+            fontSize: 28,
+            fontWeight: 'bold',
+            color: Colors[colorScheme ?? 'light'].text_light2,
+          }}>
+          Verifica tu Teléfono
+        </Text>
+        <Text
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          style={{
+            marginVertical: 18,
+            fontWeight: '500',
+            color: Colors[colorScheme ?? 'light'].text_light2,
+          }}>
+          Introduce el código que te enviamos via sms
         </Text>
       </View>
       <View
         style={{
           backgroundColor: Colors[colorScheme ?? 'light'].secondary,
-          position: 'absolute',
-          top: (height - keyboardHeight) / 2 - 90,
           width: '100%',
-          paddingHorizontal: 40,
-          marginTop: 24,
+          justifyContent: 'center',
+          alignContent: 'center',
           marginBottom: 32,
         }}>
-        <OTPTextInput />
-        <View
-          style={{
-            backgroundColor: Colors[colorScheme ?? 'light'].secondary,
-            flexDirection: 'row',
-            marginTop: 24,
-            marginBottom: 32,
-            justifyContent: 'center',
-            alignItems: 'center',
-            gap: 20,
-          }}>
-          <TextInput
-            style={{
-              height: 60,
-              width: 40,
-              paddingLeft: 12,
-              textDecorationColor: 'red',
-              fontSize: 25,
-              color: Colors[colorScheme ?? 'light'].text_dark,
-
-              borderBottomWidth: 4,
-              borderColor: Colors[colorScheme ?? 'light'].border,
-              borderStyle: 'solid',
-            }}
-            autoCapitalize="none"
-            keyboardType="default"
-            secureTextEntry
-            placeholderTextColor={Colors[colorScheme ?? 'light'].text_light}
-            onChangeText={(text) => {
-              setInputCronemberg({
-                ...inputCronemberg,
-                otpToken: text,
-                otpTokenError: '',
-              });
-            }}
-            value={inputCronemberg.otpToken}
-          />
-          <TextInput
-            style={{
-              height: 60,
-              width: 40,
-              paddingLeft: 12,
-              textDecorationColor: 'red',
-              fontSize: 25,
-              color: Colors[colorScheme ?? 'light'].text_dark,
-
-              borderBottomWidth: 4,
-              borderColor: Colors[colorScheme ?? 'light'].border,
-              borderStyle: 'solid',
-            }}
-            autoCapitalize="none"
-            keyboardType="default"
-            secureTextEntry
-            placeholderTextColor={Colors[colorScheme ?? 'light'].text_light}
-            onChangeText={(text) => {
-              setInputCronemberg({
-                ...inputCronemberg,
-                otpToken: text,
-                otpTokenError: '',
-              });
-            }}
-            value={inputCronemberg.otpToken}
-          />
-
-          <TextInput
-            style={{
-              height: 60,
-              width: 40,
-              paddingLeft: 12,
-              textDecorationColor: 'red',
-              fontSize: 25,
-              color: Colors[colorScheme ?? 'light'].text_dark,
-
-              borderBottomWidth: 4,
-              borderColor: Colors[colorScheme ?? 'light'].border,
-              borderStyle: 'solid',
-            }}
-            autoCapitalize="none"
-            keyboardType="default"
-            secureTextEntry
-            placeholderTextColor={Colors[colorScheme ?? 'light'].text_light}
-            onChangeText={(text) => {
-              setInputCronemberg({
-                ...inputCronemberg,
-                otpToken: text,
-                otpTokenError: '',
-              });
-            }}
-            value={inputCronemberg.otpToken}
-          />
-
-          <TextInput
-            style={{
-              height: 60,
-              width: 40,
-              paddingLeft: 12,
-              textDecorationColor: 'red',
-              fontSize: 25,
-              color: Colors[colorScheme ?? 'light'].text_dark,
-
-              borderBottomWidth: 4,
-              borderColor: Colors[colorScheme ?? 'light'].border,
-              borderStyle: 'solid',
-            }}
-            autoCapitalize="none"
-            keyboardType="default"
-            secureTextEntry
-            placeholderTextColor={Colors[colorScheme ?? 'light'].text_light}
-            onChangeText={(text) => {
-              setInputCronemberg({
-                ...inputCronemberg,
-                otpToken: text,
-                otpTokenError: '',
-              });
-            }}
-            value={inputCronemberg.otpToken}
-          />
-
-          <TextInput
-            style={{
-              height: 60,
-              width: 40,
-              paddingLeft: 12,
-              textDecorationColor: 'red',
-              fontSize: 25,
-              color: Colors[colorScheme ?? 'light'].text_dark,
-
-              borderBottomWidth: 4,
-              borderColor: Colors[colorScheme ?? 'light'].border,
-              borderStyle: 'solid',
-            }}
-            autoCapitalize="none"
-            keyboardType="default"
-            secureTextEntry
-            placeholderTextColor={Colors[colorScheme ?? 'light'].text_light}
-            onChangeText={(text) => {
-              setInputCronemberg({
-                ...inputCronemberg,
-                otpToken: text,
-                otpTokenError: '',
-              });
-            }}
-            value={inputCronemberg.otpToken}
-          />
-
-          <TextInput
-            style={{
-              height: 60,
-              width: 40,
-              paddingLeft: 12,
-              textDecorationColor: 'red',
-              fontSize: 25,
-              color: Colors[colorScheme ?? 'light'].text_dark,
-
-              borderBottomWidth: 4,
-              borderColor: Colors[colorScheme ?? 'light'].border,
-              borderStyle: 'solid',
-            }}
-            autoCapitalize="none"
-            keyboardType="default"
-            secureTextEntry
-            placeholderTextColor={Colors[colorScheme ?? 'light'].text_light}
-            onChangeText={(text) => {
-              setInputCronemberg({
-                ...inputCronemberg,
-                otpToken: text,
-                otpTokenError: '',
-              });
-            }}
-            value={inputCronemberg.otpToken}
-          />
-        </View>
-        <View
-          style={{
-            overflow: 'hidden',
-            borderRadius: 8,
+        <OTPTextInput
+          inputCount={6}
+          textInputStyle={{
+            width: 40,
+          }}
+          handleTextChange={(text) => {
+            setInputCronemberg((prev) => ({ ...prev, otpToken: text }));
+            if (text.length === 6) {
+              verifyOtp(text);
+              Keyboard.dismiss();
+            }
+          }}
+          ref={otpInputRef}
+          containerStyle={{
+            width: '80%',
             alignSelf: 'center',
-            width: 260,
-          }}>
-          <Button
-            disabled={inputCronemberg.otpToken !== '' || inputCronemberg.otpTokenError !== ''}
-            color={Colors[colorScheme ?? 'light'].primary}
-            title="Verify"
-            onPress={verifyOtp}
-          />
-        </View>
+            marginVertical: 40,
+          }}
+        />
       </View>
     </View>
   );

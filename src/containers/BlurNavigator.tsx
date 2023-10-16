@@ -3,7 +3,7 @@ import { useColorScheme } from 'nativewind';
 import React, { memo } from 'react';
 import { Animated, Dimensions, Pressable, TouchableWithoutFeedback } from 'react-native';
 
-import { PressBtn } from '~/components/PressBtn';
+import { ScaleBtn } from '~/components/ScaleBtn';
 import Colors from '~/constants/Colors';
 import { useWSConnection } from '~/context/WSContext';
 
@@ -49,7 +49,7 @@ const NavigationMenu: React.FC<NavigationMenuParams> = ({
               },
             ],
           }}>
-          <PressBtn
+          <ScaleBtn
             onPress={() => {
               void resetConnection();
               void trackPosition();
@@ -61,7 +61,7 @@ const NavigationMenu: React.FC<NavigationMenuParams> = ({
               size={40}
               color={Colors[colorScheme ?? 'light'].text}
             />
-          </PressBtn>
+          </ScaleBtn>
         </Animated.View>
       </TouchableWithoutFeedback>
 
@@ -81,7 +81,7 @@ const NavigationMenu: React.FC<NavigationMenuParams> = ({
               },
             ],
           }}>
-          <PressBtn
+          <ScaleBtn
             className="h-14 w-14 justify-center items-center rounded-full border-[1.5px] border-zinc-500"
             callback={openUserProfileHandler}>
             <MaterialIcons
@@ -89,7 +89,7 @@ const NavigationMenu: React.FC<NavigationMenuParams> = ({
               size={40}
               color={Colors[colorScheme ?? 'light'].text}
             />
-          </PressBtn>
+          </ScaleBtn>
         </Animated.View>
       </TouchableWithoutFeedback>
 
@@ -109,7 +109,7 @@ const NavigationMenu: React.FC<NavigationMenuParams> = ({
               },
             ],
           }}>
-          <PressBtn
+          <ScaleBtn
             onPress={addMarkerHandler}
             className="h-14 w-14 justify-center items-center rounded-full border-[1.5px] border-zinc-500">
             <MaterialIcons
@@ -117,7 +117,7 @@ const NavigationMenu: React.FC<NavigationMenuParams> = ({
               size={40}
               color={Colors[colorScheme ?? 'light'].text}
             />
-          </PressBtn>
+          </ScaleBtn>
         </Animated.View>
       </TouchableWithoutFeedback>
 

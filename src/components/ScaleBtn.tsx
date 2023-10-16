@@ -1,19 +1,20 @@
 import React, { useRef } from 'react';
-import { Animated, Pressable, type ViewProps } from 'react-native';
+import { Animated, Pressable, StyleProp, ViewStyle } from 'react-native';
 
 type PressBtnProps = {
   onPress?: () => void;
   callback?: () => void;
   disabled?: boolean;
-} & Animated.AnimatedProps<ViewProps>;
+  style: StyleProp<ViewStyle>;
+  children: React.ReactNode;
+};
 
-export const PressBtn: React.FC<PressBtnProps> = ({
+export const ScaleBtn: React.FC<PressBtnProps> = ({
   onPress,
   style,
   children,
   callback,
   disabled = false,
-  ...otherProps
 }) => {
   const animatedValue = useRef(new Animated.Value(1)).current;
 
@@ -38,16 +39,13 @@ export const PressBtn: React.FC<PressBtnProps> = ({
       disabled={disabled}
       onPress={callback}
       onPressIn={handlePressIn}
-      onPressOut={handlePressOut}>
+      onPressOut={handlePressOut}
+      style={style}>
       <Animated.View
-        {...otherProps}
-        style={[
-          style,
-          {
-            transform: [{ scale: animatedValue }],
-            opacity: disabled ? 0.6 : 1,
-          },
-        ]}>
+        style={{
+          transform: [{ scale: animatedValue }],
+          opacity: disabled ? 0.6 : 1,
+        }}>
         {children}
       </Animated.View>
     </Pressable>

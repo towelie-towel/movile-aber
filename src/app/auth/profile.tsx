@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import Popover, { PopoverMode, PopoverPlacement } from 'react-native-popover-view';
 
-import { PressBtn } from '~/components/PressBtn';
+import { ScaleBtn } from '~/components/ScaleBtn';
 import { View, Text } from '~/components/Themed';
 import Colors from '~/constants/Colors';
 import type { SignInConfig } from '~/constants/Configs';
@@ -207,7 +207,7 @@ export default function SignIn() {
             </View>
           )}
         </View>
-        <PressBtn
+        <ScaleBtn
           onPress={() => {
             void handleSignIn();
           }}>
@@ -219,8 +219,8 @@ export default function SignIn() {
               color={colorScheme === 'light' ? 'white' : 'black'}
             />
           )}
-        </PressBtn>
-        <PressBtn
+        </ScaleBtn>
+        <ScaleBtn
           onPress={() => {
             if (isOnSignInRoute) {
               replace('auth/sign-up');
@@ -228,7 +228,7 @@ export default function SignIn() {
           }}>
           <Text>No Tienes Cuenta?</Text>
           <Text>Crear Cuenta</Text>
-        </PressBtn>
+        </ScaleBtn>
       </View>
     </View>
   );

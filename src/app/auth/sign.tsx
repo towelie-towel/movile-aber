@@ -1,5 +1,4 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import { Bar } from 'react-native-progress';
 import {
   Stack /* , useRouter */,
   router,
@@ -18,6 +17,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import Popover, { PopoverMode, PopoverPlacement } from 'react-native-popover-view';
+import { Bar } from 'react-native-progress';
 import { Path, Svg } from 'react-native-svg';
 import { SceneMap, TabBar, TabView } from 'react-native-tab-view';
 
@@ -37,8 +37,8 @@ export default function Sign(params: any) {
 
   const [tabsIndex, setTabsIndex] = useState(0);
   const [tabsRoutes] = useState([
-    { key: 'sign-in', title: 'Sign In' },
-    { key: 'sign-up', title: 'Sign Up' },
+    { key: 'sign-in', title: 'Penetrar' },
+    { key: 'sign-up', title: 'Crear Cuenta' },
   ]);
 
   return (
@@ -50,10 +50,12 @@ export default function Sign(params: any) {
           backgroundColor: Colors[colorScheme ?? 'light'].secondary,
         }}>
         <Stack.Screen
-          options={{
-            statusBarColor: Colors[colorScheme ?? 'light'].primary,
-            navigationBarColor: 'transparent',
-          }}
+          options={
+            {
+              // statusBarColor: Colors[colorScheme ?? 'light'].primary,
+              // navigationBarColor: 'transparent',
+            }
+          }
         />
         <View
           style={{
@@ -489,8 +491,8 @@ const SignUpTab = () => {
       setIsLoading(false);
       return;
     }
-    setIsLoading(false);
     console.log('User Signed Up', JSON.stringify(data, null, 2));
+    setIsLoading(false);
     router.setParams({
       phone: inputCronemberg.phone.trim(),
     });

@@ -8,7 +8,7 @@ import {
   useColorScheme,
 } from 'react-native';
 
-import { PressBtn } from '~/components/PressBtn';
+import { ScaleBtn } from '~/components/ScaleBtn';
 import Colors from '~/constants/Colors';
 import { useWSConnection } from '~/context/WSContext';
 
@@ -53,7 +53,7 @@ const NavigationMenu: React.FC<NavigationMenuParams> = ({
               },
             ],
           }}>
-          <PressBtn
+          <ScaleBtn
             onPress={() => {
               void resetConnection();
               void trackPosition();
@@ -64,7 +64,7 @@ const NavigationMenu: React.FC<NavigationMenuParams> = ({
               size={40}
               color={Colors[colorScheme ?? 'light'].text}
             />
-          </PressBtn>
+          </ScaleBtn>
         </Animated.View>
       </TouchableWithoutFeedback>
 
@@ -84,13 +84,13 @@ const NavigationMenu: React.FC<NavigationMenuParams> = ({
               },
             ],
           }}>
-          <PressBtn callback={openUserProfileHandler}>
+          <ScaleBtn callback={openUserProfileHandler}>
             <MaterialIcons
               name="account-circle"
               size={40}
               color={Colors[colorScheme ?? 'light'].text}
             />
-          </PressBtn>
+          </ScaleBtn>
         </Animated.View>
       </TouchableWithoutFeedback>
 
@@ -110,13 +110,13 @@ const NavigationMenu: React.FC<NavigationMenuParams> = ({
               },
             ],
           }}>
-          <PressBtn onPress={addMarkerHandler}>
+          <ScaleBtn onPress={addMarkerHandler}>
             <MaterialIcons
               name="add-location-alt"
               size={40}
               color={Colors[colorScheme ?? 'light'].text}
             />
-          </PressBtn>
+          </ScaleBtn>
         </Animated.View>
       </TouchableWithoutFeedback>
 

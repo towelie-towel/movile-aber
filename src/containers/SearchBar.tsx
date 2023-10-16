@@ -13,6 +13,7 @@ import {
   type GooglePlaceData,
   type GooglePlaceDetail,
 } from '../lib/google-places-autocomplete/GooglePlacesAutocomplete';
+import Colors from '~/constants/Colors';
 // import Colors from '~/constants/Colors';
 
 /* 
@@ -66,7 +67,7 @@ const SearchBar = ({ onProfilePicPress, onPlacePress, onFocus, onBlur, refFor }:
           <MaterialCommunityIcons
             onPress={onProfilePicPress}
             name="magnify"
-            size={26}
+            size={32}
             color={colorScheme === 'light' ? '#6C6C6C' : 'black'}
           />
         </View>
@@ -87,38 +88,28 @@ const SearchBar = ({ onProfilePicPress, onPlacePress, onFocus, onBlur, refFor }:
         placeholderTextColor: colorScheme === 'light' ? '#6C6C6C' : 'black',
       }}
       onPress={(data, details) => void onPlacePress(data, details)}
-      renderRightButton={() => (
-        <TouchableOpacity
-          onPress={onProfilePicPress}
-          style={{
-            width: 45,
-
-            justifyContent: 'center',
-            alignItems: 'flex-end',
-
-            backgroundColor: 'transparent',
-          }}>
-          <MaterialCommunityIcons
-            name="account-circle"
-            size={38}
-            color={colorScheme === 'light' ? '#BEBFC0' : 'black'}
-          />
-        </TouchableOpacity>
-      )}
       styles={{
         textInputContainer: {},
         textInput: {
-          height: '100%',
-          backgroundColor: colorScheme === 'light' ? '#E9E9E9' : 'black',
+          height: 50,
+          backgroundColor: Colors[colorScheme ?? 'light'].background,
           borderRadius: 30,
-          paddingHorizontal: 50,
-          fontWeight: '500',
-          fontSize: 16,
+          paddingLeft: 60,
+          fontWeight: '400',
+          fontSize: 20,
           color: colorScheme === 'light' ? '#6C6C6C' : 'black',
           textAlignVertical: 'center',
+          shadowColor: Colors[colorScheme ?? 'light'].shadow,
+          shadowOffset: {
+            width: 0,
+            height: -5,
+          },
+          shadowOpacity: 0.3,
+          shadowRadius: 2,
+          elevation: 2, // required for Android
         },
         container: {
-          paddingHorizontal: 10,
+          paddingHorizontal: 20,
         },
       }}
       fetchDetails

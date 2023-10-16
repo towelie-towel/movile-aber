@@ -1,6 +1,6 @@
+import NetInfo from '@react-native-community/netinfo';
 import { type Session } from '@supabase/supabase-js';
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import NetInfo from '@react-native-community/netinfo';
 
 import { supabase } from '~/lib/supabase';
 

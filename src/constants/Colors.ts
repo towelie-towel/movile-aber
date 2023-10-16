@@ -2,6 +2,7 @@ export default {
   light: {
     text: '#000',
     text_light: '#C8C7CC',
+    text_light2: '#FFFFFF',
     text_dark: '#242E42',
     background: '#FFFFFF',
     background_light: '#F8F8F8',
@@ -14,6 +15,7 @@ export default {
   dark: {
     text: '#fff',
     text_light: '#fff',
+    text_light2: '#FFFFFF',
     text_dark: '#fff',
     background: '#000',
     background_light: '#000',

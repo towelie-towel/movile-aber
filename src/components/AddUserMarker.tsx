@@ -8,7 +8,7 @@ import {
   useColorScheme,
 } from 'react-native';
 
-import { PressBtn } from '~/components/PressBtn';
+import { ScaleBtn } from '~/components/ScaleBtn';
 import { View, Text } from '~/components/Themed';
 import Colors from '~/constants/Colors';
 import { IMarker } from '~/constants/Markers';
@@ -201,7 +201,7 @@ const AddUserMarker: React.FC<{
         </Pressable>
       </TouchableWithoutFeedback>
 
-      <PressBtn
+      <ScaleBtn
         onPress={onConfirmInternal}
         style={{
           position: 'absolute',
@@ -210,7 +210,7 @@ const AddUserMarker: React.FC<{
           bottom: 20,
         }}>
         <Text darkColor="black">Confirmar</Text>
-      </PressBtn>
+      </ScaleBtn>
     </>
   );
 };
