@@ -1,12 +1,20 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import { type BottomSheetModal, BottomSheetModalProvider } from '@gorhom/bottom-sheet';
+import {
+  BottomSheetBackdrop,
+  BottomSheetBackdropProps,
+  BottomSheetFlatList,
+  useScrollEventsHandlersDefault,
+  BottomSheetModal,
+  BottomSheetModalProvider,
+  BottomSheetScrollView,
+} from '@gorhom/bottom-sheet';
 import { Image } from 'expo-image';
 import { useKeepAwake } from 'expo-keep-awake';
 import { Accuracy, getCurrentPositionAsync } from 'expo-location';
+import * as NavigationBar from 'expo-navigation-bar';
 import { router } from 'expo-router';
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
-  Animated,
   StatusBar,
   LayoutAnimation,
   Keyboard,
@@ -15,9 +23,16 @@ import {
   Text,
   View,
   TouchableOpacity,
+  Dimensions,
 } from 'react-native';
 import { Drawer } from 'react-native-drawer-layout';
 import MapView, { type LatLng, PROVIDER_GOOGLE, Polyline } from 'react-native-maps';
+import Animated, {
+  Extrapolate,
+  interpolate,
+  useAnimatedStyle,
+  useSharedValue,
+} from 'react-native-reanimated';
 // import NetInfo from '@react-native-community/netinfo';
 
 import Svg, { Circle, Defs, G, Path, RadialGradient, Stop } from 'react-native-svg';
@@ -26,25 +41,31 @@ import AnimatedRouteMarker from '~/components/AnimatedRouteMarker';
 import { ScaleBtn } from '~/components/ScaleBtn';
 import TaxisMarkers from '~/components/TaxiMarkers';
 import Colors from '~/constants/Colors';
+import { MarkerCloudSVG } from '~/constants/Icons';
 import { NightMap } from '~/constants/NightMap';
-import BottomSheet from '~/containers/BottomSheeetModal';
-import SearchBar from '~/containers/SearchBar';
 import { useUser } from '~/context/UserContext';
-import { GooglePlacesAutocompleteRef } from '~/lib/google-places-autocomplete/GooglePlacesAutocomplete';
+import { useWSConnection } from '~/context/WSContext';
+import { BottomSheetContent } from '~/hooks/CustomGestureHandling';
+import { GestureTranslationProvider } from '~/hooks/GestureTranslationContext';
+import {
+  GooglePlaceData,
+  GooglePlaceDetail,
+  GooglePlacesAutocomplete,
+  GooglePlacesAutocompleteRef,
+} from '~/lib/google-places-autocomplete/GooglePlacesAutocomplete';
 import { polylineDecode } from '~/utils/directions';
 
 export default function Home() {
   useKeepAwake();
   console.log('Map re-rendered');
   const colorScheme = useColorScheme();
+  // NavigationBar.setBackgroundColorAsync(Colors[colorScheme ?? 'light'].background);
+  NavigationBar.setBackgroundColorAsync('transparent');
+  NavigationBar.setButtonStyleAsync('dark');
   // const { width, height } = Dimensions.get('window');
   // const { isConnected, isInternetReachable } = NetInfo.useNetInfo();
   const { session, user, isSignedIn, isLoading, signOut } = useUser();
-
-  // navigator bubbles
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  // const [isMenuVisible, setIsMenuVisible] = useState(true)
-  const navigationAnimValue = useRef(new Animated.Value(0)).current;
+  // const { wsTaxis } = useWSConnection();
 
   // const [isAddingMarker, setIsAddingMarker] = useState(false);
 
@@ -54,45 +75,54 @@ export default function Home() {
   // bottom sheet
   const [userSelected, _setUserSelected] = useState(true);
   const [selectedTaxiId, _setSelectedTaxiId] = useState<string | null>(null);
-  const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
 
   // search bar
   const placesInputViewRef = useRef<GooglePlacesAutocompleteRef | null>(null);
   const [activeRoute, setActiveRoute] = useState<LatLng[] | null | undefined>(null);
 
-  const [open, setOpen] = React.useState(true);
+  // bottom sheet
+  const [sheetCurrentSnap, setSheetCurrentSnap] = useState(1);
+  const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+  const [drawerOpen, setDrawerOpen] = React.useState(true);
+  const [backdropPressBehavior, setBackdropPressBehavior] = useState<'none' | 'close' | 'collapse'>(
+    'collapse'
+  );
+  const [keyboardBehavior, setKeyboardBehavior] = useState<'extend' | 'fillParent' | 'interactive'>(
+    'interactive'
+  );
+  const [keyboardBlurBehavior, setKeyboardBlurBehavior] = useState<'none' | 'restore'>('none');
+  const snapPoints = useMemo(() => ['25%', '75%', '100%'], []);
+  const gestureTranslationY = useSharedValue(0);
+
+  // renders
+  const renderBackdrop = useCallback(
+    (props: BottomSheetBackdropProps) => (
+      <BottomSheetBackdrop
+        {...props}
+        appearsOnIndex={2}
+        disappearsOnIndex={1}
+        opacity={1}
+        pressBehavior={backdropPressBehavior}
+        style={[
+          {
+            backgroundColor: 'white',
+          },
+          props.style,
+        ]}
+      />
+    ),
+    [backdropPressBehavior]
+  );
 
   const onSearchBarFocus = () => {
     console.log('places input focus');
-    LayoutAnimation.linear();
-    // setIsMenuVisible(false)
-    if (isMenuOpen) {
-      Animated.spring(navigationAnimValue, {
-        toValue: 0,
-        friction: 5,
-        useNativeDriver: true,
-      }).start();
-    }
+    // bottomSheetModalRef.current?.snapToIndex(2);
   };
 
   const onSearchBarBlur = () => {
     console.log('places input blur');
-    LayoutAnimation.linear();
-    // setIsMenuVisible(true)
   };
-
-  const toggleNavMenu = useCallback(() => {
-    const toValue = isMenuOpen ? 0 : 1;
-    setIsMenuOpen(!isMenuOpen);
-    Keyboard.dismiss();
-
-    Animated.spring(navigationAnimValue, {
-      toValue,
-      friction: 5,
-      useNativeDriver: true,
-    }).start();
-  }, [isMenuOpen, navigationAnimValue]);
 
   // Add marker functionality
   /* const addMarkerHandler = useCallback(() => {
@@ -129,11 +159,48 @@ export default function Home() {
             console.log({ isConnected, isInternetReachable })
         }, [isConnected, isInternetReachable]) */
 
+  const handleToggleKeyboardBehavior = useCallback(() => {
+    setKeyboardBehavior((state) => {
+      switch (state) {
+        case 'interactive':
+          return 'extend';
+        case 'extend':
+          return 'fillParent';
+        case 'fillParent':
+          return 'interactive';
+      }
+    });
+  }, []);
+  const handleToggleKeyboardBlurBehavior = useCallback(() => {
+    setKeyboardBlurBehavior((state) => {
+      switch (state) {
+        case 'none':
+          return 'restore';
+        case 'restore':
+          return 'none';
+      }
+    });
+  }, []);
+
+  const renderBottomSheetItem = useCallback(
+    ({ item }) => (
+      <View
+        style={{
+          padding: 6,
+          margin: 6,
+          backgroundColor: '#eee',
+        }}>
+        <Text>{item.userId}</Text>
+      </View>
+    ),
+    []
+  );
+
   return (
     <Drawer
-      open={open}
-      onOpen={() => setOpen(true)}
-      onClose={() => setOpen(false)}
+      open={drawerOpen}
+      onOpen={() => setDrawerOpen(true)}
+      onClose={() => setDrawerOpen(false)}
       renderDrawerContent={() => {
         return (
           <View
@@ -528,34 +595,22 @@ export default function Home() {
       <BottomSheetModalProvider>
         <MapView
           style={{
-            height: '100%',
             width: '100%',
+            height: '100%',
           }}
-          onTouchMove={() => {
-            // _fadeOutNav()
-          }}
+          onTouchMove={() => {}}
           onTouchStart={() => {
             placesInputViewRef.current?.blur();
             bottomSheetModalRef.current?.present();
           }}
-          onTouchEnd={() => {
-            // _fadeInNav()
-          }}
-          onPress={() => {
-            if (isMenuOpen) {
-              toggleNavMenu();
-            }
-          }}
+          onTouchEnd={() => {}}
+          onPress={() => {}}
           initialRegion={{
             latitude: 23.118644,
             longitude: -82.3806211,
             latitudeDelta: 0.0322,
             longitudeDelta: 0.0221,
           }}
-          showsMyLocationButton
-          showsUserLocation
-          showsCompass={false}
-          toolbarEnabled={false}
           ref={mapViewRef}
           provider={PROVIDER_GOOGLE}
           customMapStyle={colorScheme === 'dark' ? NightMap : undefined}>
@@ -582,49 +637,245 @@ export default function Home() {
         <View
           style={{
             position: 'absolute',
-            top: 60,
+            top: 0,
             width: '100%',
             zIndex: 10,
           }}>
-          <SearchBar
-            refFor={(ref) => (placesInputViewRef.current = ref)}
-            onFocus={onSearchBarFocus}
-            onBlur={onSearchBarBlur}
-            onProfilePicPress={() => {}}
-            onPlacePress={async (_, details) => {
-              if (!details) {
-                return;
-              }
-              const position = await getCurrentPositionAsync({
-                accuracy: Accuracy.Highest,
-              });
-              try {
-                const resp = await fetch(
-                  `http://192.168.1.103:6942/route?from=${position.coords.latitude},${position.coords.longitude}&to=${details.geometry.location.lat},${details.geometry.location.lng}`
-                );
-                const respJson = await resp.json();
-                const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map(
-                  (point) => ({ latitude: point[0]!, longitude: point[1]! })
-                );
-                setActiveRoute(decodedCoords);
-              } catch (error) {
-                if (error instanceof Error) {
-                  console.error(error.message);
+          <GooglePlacesAutocomplete
+            ref={placesInputViewRef}
+            renderLeftButton={() => (
+              <ScaleBtn
+                onPress={() => {
+                  setDrawerOpen(true);
+                }}
+                style={{
+                  zIndex: 100,
+
+                  width: 50,
+                  height: '100%',
+                  // borderTopLeftRadius: 30,
+                  // borderBottomLeftRadius: 30,
+
+                  justifyContent: 'center',
+                  alignItems: 'center',
+
+                  backgroundColor: Colors[colorScheme ?? 'light'].background,
+                }}>
+                <MaterialIcons
+                  name="menu"
+                  size={30}
+                  color={Colors[colorScheme ?? 'light'].text_dark}
+                />
+              </ScaleBtn>
+            )}
+            renderRightButton={() => (
+              <View
+                style={{
+                  zIndex: 100,
+
+                  width: 60,
+                  height: '100%',
+                  // borderTopRightRadius: 30,
+                  // borderBottomRightRadius: 30,
+
+                  justifyContent: 'center',
+                  alignItems: 'center',
+
+                  backgroundColor: Colors[colorScheme ?? 'light'].background,
+                }}>
+                <MarkerCloudSVG width={45} height={45} />
+              </View>
+            )}
+            /* predefinedPlaces={userMarkers.map(marker => ({
+                description: marker.name,
+                geometry: {
+                    location: {
+                        lat: marker.coords.latitude,
+                        lng: marker.coords.longitude
+                    }
                 }
-              }
+            }))} */
+            placeholder="Buscar Lugar"
+            textInputProps={{
+              onFocus: onSearchBarFocus,
+              onBlur: onSearchBarBlur,
+              placeholderTextColor: colorScheme === 'light' ? '#6C6C6C' : 'black',
             }}
+            enablePoweredByContainer={false}
+            onPress={(data, details) => {
+              const tokio = async (data: GooglePlaceData, details: GooglePlaceDetail | null) => {
+                if (!details) {
+                  return;
+                }
+                const position = await getCurrentPositionAsync({
+                  accuracy: Accuracy.Highest,
+                });
+                try {
+                  const resp = await fetch(
+                    `http://192.168.1.103:6942/route?from=${position.coords.latitude},${position.coords.longitude}&to=${details.geometry.location.lat},${details.geometry.location.lng}`
+                  );
+                  const respJson = await resp.json();
+                  const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map(
+                    (point) => ({ latitude: point[0]!, longitude: point[1]! })
+                  );
+                  setActiveRoute(decodedCoords);
+                } catch (error) {
+                  if (error instanceof Error) {
+                    console.error(error.message);
+                  }
+                }
+              };
+              tokio(data, details);
+            }}
+            styles={{
+              textInputContainer: {
+                margin: 40,
+                marginHorizontal: 30,
+                marginBottom: 0,
+                position: 'relative',
+                overflow: 'hidden',
+                height: 55,
+                borderRadius: 10,
+                shadowColor: Colors[colorScheme ?? 'light'].shadow,
+                shadowOffset: {
+                  width: 0,
+                  height: 2,
+                },
+                shadowOpacity: 0.6,
+                shadowRadius: 4,
+                elevation: 2, // required for Android
+              },
+              textInput: {
+                height: '100%',
+                paddingLeft: 5,
+                fontWeight: '400',
+                fontSize: 20,
+                textAlignVertical: 'center',
+                backgroundColor: Colors[colorScheme ?? 'light'].background,
+                borderRadius: 0,
+                color: colorScheme === 'light' ? '#6C6C6C' : 'black',
+              },
+              container: {
+                position: 'relative',
+                borderRadius: 30,
+              },
+              listView: {
+                padding: 12,
+                backgroundColor: Colors[colorScheme ?? 'light'].background,
+                borderRadius: 30,
+                marginHorizontal: 30,
+                marginTop: 12,
+                overflow: 'hidden',
+
+                shadowColor: Colors[colorScheme ?? 'light'].shadow,
+                shadowOffset: {
+                  width: 0,
+                  height: 2,
+                },
+                shadowOpacity: 0.6,
+                shadowRadius: 4,
+                elevation: 2, // required for Android
+              },
+              row: {
+                backgroundColor: 'transparent',
+              },
+            }}
+            fetchDetails
+            query={{
+              key: 'AIzaSyAtcwUbA0jjJ6ARXl5_FqIqYcGbTI_XZEE',
+              language: 'es',
+              components: 'country:cu',
+              location: '23.11848,-82.38052',
+              radius: 100,
+            }}
+            // nearbyPlacesAPI='GooglePlacesSearch'
+            currentLocation
+            currentLocationLabel="My Location"
           />
         </View>
 
-        <BottomSheet
-          bottomSheetModalRef={bottomSheetModalRef}
-          userSelected={userSelected}
-          selectedTaxiId={selectedTaxiId}
-          isVisible={isModalVisible}
-          setIsVisible={setIsModalVisible}
-        />
+        <GestureTranslationProvider value={gestureTranslationY}></GestureTranslationProvider>
+        <BottomSheetModal
+          // stackBehavior="push"
+          ref={bottomSheetModalRef}
+          overDragResistanceFactor={2}
+          index={1}
+          onChange={(e) => {
+            LayoutAnimation.configureNext(LayoutAnimation.Presets.linear);
+            console.log(e);
+            setSheetCurrentSnap(e);
+            // if (sheetCurrentSnap === 2) placesInputViewRef.current?.blur();
+            console.log(sheetCurrentSnap);
+          }}
+          android_keyboardInputMode="adjustResize"
+          keyboardBehavior={keyboardBehavior}
+          keyboardBlurBehavior={keyboardBlurBehavior}
+          // enableContentPanningGesture={false}
+          // enableHandlePanningGesture={false}
+          enablePanDownToClose={false}
+          snapPoints={['10%', '50%', '75%']}
+          backgroundStyle={{
+            borderRadius: 15,
+            backgroundColor: 'transparent',
+          }}
+          handleIndicatorStyle={{
+            backgroundColor:
+              /* sheetCurrentSnap === 2 ? 'transparent' :  */ Colors[colorScheme ?? 'light'].border,
+          }}
+          handleStyle={{
+            backgroundColor: 'transparent',
+            // backgroundColor: 'black',
+            borderTopRightRadius: 30,
+            borderTopLeftRadius: 30,
+          }}
+          containerStyle={{
+            backgroundColor: 'transparent',
+          }}
+          style={{
+            // backgroundColor: Colors[colorScheme ?? 'light'].background,
+            backgroundColor: 'rgba(50, 50, 50, 0.5)',
+            borderTopRightRadius: 30,
+            borderTopLeftRadius: 30,
+          }}
+          backdropComponent={renderBackdrop}
+          onDismiss={() => {
+            setIsModalVisible(false);
+          }}>
+          {/* {!isModalVisible && (
+            <View
+              style={{
+                // borderTopRightRadius: 30,
+                // borderTopLeftRadius: 30,
+                position: 'absolute',
+                backgroundColor: Colors[colorScheme ?? 'light'].background,
+                top: 0,
+                width: '100%',
+                height: 60,
+                zIndex: 10,
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}>
+              <View
+                style={{
+                  overflow: 'hidden',
+                  borderRadius: 8,
+                  width: '50%',
+                }}>
+                <Button
+                  color={Colors[colorScheme ?? 'light'].primary}
+                  title="Pedir Taxi"
+                  onPress={() => {}}
+                />
+              </View>
+            </View>
+          )} */}
+          <BottomSheetContent />
+        </BottomSheetModal>
 
-        <StatusBar barStyle={colorScheme === 'dark' ? 'light-content' : 'dark-content'} />
+        <StatusBar
+          backgroundColor="transparent"
+          barStyle={colorScheme === 'dark' ? 'light-content' : 'dark-content'}
+        />
       </BottomSheetModalProvider>
     </Drawer>
   );
