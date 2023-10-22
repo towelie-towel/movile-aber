@@ -794,7 +794,7 @@ export default function Home() {
           />
         </View>
 
-        <GestureTranslationProvider value={gestureTranslationY}></GestureTranslationProvider>
+        {/* <GestureTranslationProvider value={gestureTranslationY}></GestureTranslationProvider> */}
         <BottomSheetModal
           // stackBehavior="push"
           ref={bottomSheetModalRef}
@@ -807,9 +807,9 @@ export default function Home() {
             // if (sheetCurrentSnap === 2) placesInputViewRef.current?.blur();
             console.log(sheetCurrentSnap);
           }}
-          android_keyboardInputMode="adjustResize"
-          keyboardBehavior={keyboardBehavior}
-          keyboardBlurBehavior={keyboardBlurBehavior}
+          // android_keyboardInputMode="adjustResize"
+          // keyboardBehavior={keyboardBehavior}
+          // keyboardBlurBehavior={keyboardBlurBehavior}
           // enableContentPanningGesture={false}
           // enableHandlePanningGesture={false}
           enablePanDownToClose={false}
