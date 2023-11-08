@@ -2,57 +2,50 @@ import { MaterialIcons } from '@expo/vector-icons';
 import {
   BottomSheetBackdrop,
   BottomSheetBackdropProps,
-  BottomSheetFlatList,
-  useScrollEventsHandlersDefault,
   BottomSheetModal,
   BottomSheetModalProvider,
-  BottomSheetScrollView,
+  BottomSheetHandleProps,
 } from '@gorhom/bottom-sheet';
 import { Image } from 'expo-image';
 import { useKeepAwake } from 'expo-keep-awake';
 import { Accuracy, getCurrentPositionAsync } from 'expo-location';
 import * as NavigationBar from 'expo-navigation-bar';
-import { router } from 'expo-router';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import { Link } from 'expo-router';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   StatusBar,
   LayoutAnimation,
-  Keyboard,
   useColorScheme,
-  Button,
   Text,
   View,
   TouchableOpacity,
-  Dimensions,
 } from 'react-native';
 import { Drawer } from 'react-native-drawer-layout';
 import MapView, { type LatLng, PROVIDER_GOOGLE, Polyline } from 'react-native-maps';
-import Animated, {
-  Extrapolate,
-  interpolate,
-  useAnimatedStyle,
-  useSharedValue,
-} from 'react-native-reanimated';
 // import NetInfo from '@react-native-community/netinfo';
 
 import Svg, { Circle, Defs, G, Path, RadialGradient, Stop } from 'react-native-svg';
+import { UserMarkerIconType } from '~/components/AddUserMarker';
 
 import AnimatedRouteMarker from '~/components/AnimatedRouteMarker';
+import Ripple from '~/components/RippleBtn';
 import { ScaleBtn } from '~/components/ScaleBtn';
 import TaxisMarkers from '~/components/TaxiMarkers';
+import UserMarker from '~/components/UserMarker';
 import Colors from '~/constants/Colors';
 import { MarkerCloudSVG } from '~/constants/Icons';
 import { NightMap } from '~/constants/NightMap';
 import { useUser } from '~/context/UserContext';
 import { useWSConnection } from '~/context/WSContext';
 import { BottomSheetContent } from '~/hooks/CustomGestureHandling';
-import { GestureTranslationProvider } from '~/hooks/GestureTranslationContext';
+import { CustomHandle } from '~/hooks/CustomHandle';
 import {
   GooglePlaceData,
   GooglePlaceDetail,
   GooglePlacesAutocomplete,
   GooglePlacesAutocompleteRef,
 } from '~/lib/google-places-autocomplete/GooglePlacesAutocomplete';
+import { getData } from '~/lib/storage';
 import { polylineDecode } from '~/utils/directions';
 
 export default function Home() {
@@ -67,33 +60,38 @@ export default function Home() {
   const { session, user, isSignedIn, isLoading, signOut } = useUser();
   // const { wsTaxis } = useWSConnection();
 
+  const [userMarkers, setUserMarkers] = useState<UserMarkerIconType[]>([]);
+
   // const [isAddingMarker, setIsAddingMarker] = useState(false);
 
   // map & markers
   const mapViewRef = useRef<MapView>(null);
 
   // bottom sheet
-  const [userSelected, _setUserSelected] = useState(true);
   const [selectedTaxiId, _setSelectedTaxiId] = useState<string | null>(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
 
   // search bar
   const placesInputViewRef = useRef<GooglePlacesAutocompleteRef | null>(null);
-  const [activeRoute, setActiveRoute] = useState<LatLng[] | null | undefined>(null);
+  const [activeRoute, setActiveRoute] = useState<{ coords: LatLng[] } | null | undefined>(null);
 
   // bottom sheet
   const [sheetCurrentSnap, setSheetCurrentSnap] = useState(1);
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const [drawerOpen, setDrawerOpen] = React.useState(true);
-  const [backdropPressBehavior, setBackdropPressBehavior] = useState<'none' | 'close' | 'collapse'>(
-    'collapse'
+  const snapPoints = useMemo(() => [120, '50%'], []);
+
+  useEffect(() => {
+    getData('user_markers').then((data) => {
+      setUserMarkers(data ?? []);
+    });
+  }, []);
+
+  // renders
+  const renderCustomHandle = useCallback(
+    (props: BottomSheetHandleProps) => <CustomHandle title="Custom Handle Example" {...props} />,
+    []
   );
-  const [keyboardBehavior, setKeyboardBehavior] = useState<'extend' | 'fillParent' | 'interactive'>(
-    'interactive'
-  );
-  const [keyboardBlurBehavior, setKeyboardBlurBehavior] = useState<'none' | 'restore'>('none');
-  const snapPoints = useMemo(() => ['25%', '75%', '100%'], []);
-  const gestureTranslationY = useSharedValue(0);
 
   // renders
   const renderBackdrop = useCallback(
@@ -103,7 +101,7 @@ export default function Home() {
         appearsOnIndex={2}
         disappearsOnIndex={1}
         opacity={1}
-        pressBehavior={backdropPressBehavior}
+        pressBehavior="collapse"
         style={[
           {
             backgroundColor: 'white',
@@ -112,7 +110,7 @@ export default function Home() {
         ]}
       />
     ),
-    [backdropPressBehavior]
+    []
   );
 
   const onSearchBarFocus = () => {
@@ -123,78 +121,6 @@ export default function Home() {
   const onSearchBarBlur = () => {
     console.log('places input blur');
   };
-
-  // Add marker functionality
-  /* const addMarkerHandler = useCallback(() => {
-            LayoutAnimation.linear()
-            setIsMenuVisible(false)
-            setIsAddingMarker(!isAddingMarker)
-            if (isMenuOpen) {
-                toggleNavMenu()
-            }
-        }, [isAddingMarker, isMenuOpen, toggleNavMenu])
-    
-        const openUserProfileHandler = useCallback(() => {
-            bottomSheetModalRef.current?.present();
-            console.log("aaa");
-            setUserSelected(true)
-            setIsModalVisible(true);
-            setSelectedTaxiId(null);
-            if (isMenuOpen) {
-                toggleNavMenu()
-            }
-        }, [isMenuOpen, toggleNavMenu])
-    
-        const touchTaxiHandler = useCallback((userId: string) => {
-            bottomSheetModalRef.current?.present();
-            setUserSelected(false)
-            setIsModalVisible(true);
-            setSelectedTaxiId(userId);
-            if (isMenuOpen) {
-                toggleNavMenu()
-            }
-        }, [isMenuOpen, toggleNavMenu])
-    
-        const taxiBtnHandler = useCallback(async () => {
-            console.log({ isConnected, isInternetReachable })
-        }, [isConnected, isInternetReachable]) */
-
-  const handleToggleKeyboardBehavior = useCallback(() => {
-    setKeyboardBehavior((state) => {
-      switch (state) {
-        case 'interactive':
-          return 'extend';
-        case 'extend':
-          return 'fillParent';
-        case 'fillParent':
-          return 'interactive';
-      }
-    });
-  }, []);
-  const handleToggleKeyboardBlurBehavior = useCallback(() => {
-    setKeyboardBlurBehavior((state) => {
-      switch (state) {
-        case 'none':
-          return 'restore';
-        case 'restore':
-          return 'none';
-      }
-    });
-  }, []);
-
-  const renderBottomSheetItem = useCallback(
-    ({ item }) => (
-      <View
-        style={{
-          padding: 6,
-          margin: 6,
-          backgroundColor: '#eee',
-        }}>
-        <Text>{item.userId}</Text>
-      </View>
-    ),
-    []
-  );
 
   return (
     <Drawer
@@ -242,30 +168,41 @@ export default function Home() {
               <View
                 style={{
                   position: 'absolute',
+                  width: 80,
+                  height: 80,
                   left: 30,
                   top: 90,
                 }}>
-                <Image
-                  source={{
-                    uri: 'https://lh3.googleusercontent.com/a/AAcHTtfPgVic8qF8hDw_WPE80JpGOkKASohxkUA8y272Ow=s1000-c',
-                  }}
-                  alt="Profile Image"
-                  style={{
-                    borderRadius: 1000,
-                    width: 80,
-                    height: 80,
-                    borderColor: Colors[colorScheme ?? 'light'].secondary,
-                    borderWidth: 2,
-                  }}
-                />
+                {!isSignedIn ? (
+                  <MaterialIcons
+                    color={Colors[colorScheme ?? 'light'].text_light}
+                    name="account-circle"
+                    size={80}
+                  />
+                ) : (
+                  <Image
+                    source={{
+                      uri: 'https://lh3.googleusercontent.com/a/AAcHTtfPgVic8qF8hDw_WPE80JpGOkKASohxkUA8y272Ow=s1000-c',
+                    }}
+                    alt="Profile Image"
+                    style={{
+                      borderRadius: 1000,
+                      width: 80,
+                      height: 80,
+                      borderColor: Colors[colorScheme ?? 'light'].secondary,
+                      borderWidth: 2,
+                    }}
+                  />
+                )}
                 <Text
                   style={{
                     color: Colors[colorScheme ?? 'light'].text_light2,
-                    fontSize: 24,
+                    fontSize: 18,
                     fontWeight: '400',
                     marginTop: 10,
+                    textAlignVertical: 'center',
                   }}>
-                  {user?.username}
+                  {user?.username ?? 'Not signed'}
                 </Text>
 
                 <TouchableOpacity
@@ -273,6 +210,8 @@ export default function Home() {
                     marginTop: 15,
                     gap: 8,
                     flexDirection: 'row',
+                    width: 120,
+                    height: 34,
                     paddingHorizontal: 12,
                     paddingVertical: 4,
                     alignItems: 'center',
@@ -280,14 +219,29 @@ export default function Home() {
                     backgroundColor: Colors[colorScheme ?? 'light'].secondary,
                     borderRadius: 30,
                   }}>
-                  <Text
-                    style={{
-                      color: Colors[colorScheme ?? 'light'].text,
-                      fontSize: 14,
-                      fontWeight: '400',
-                    }}>
-                    {user?.phone}
-                  </Text>
+                  {!isSignedIn ? (
+                    <Link
+                      href="auth/sign"
+                      style={{
+                        color: Colors[colorScheme ?? 'light'].text,
+                        fontSize: 14,
+                        fontWeight: '400',
+                        textAlignVertical: 'center',
+                      }}>
+                      Sign In
+                    </Link>
+                  ) : (
+                    <Link
+                      href="auth/sign"
+                      style={{
+                        color: Colors[colorScheme ?? 'light'].text,
+                        fontSize: 14,
+                        fontWeight: '400',
+                        textAlignVertical: 'center',
+                      }}>
+                      {user?.phone}
+                    </Link>
+                  )}
                   <MaterialIcons
                     color={Colors[colorScheme ?? 'light'].text_light}
                     name="arrow-forward-ios"
@@ -354,8 +308,8 @@ export default function Home() {
                   Créditos
                 </Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={{
+              {/* <Ripple
+                contentContainerStyle={{
                   width: '100%',
                   height: 60,
                   backgroundColor: 'transparent',
@@ -379,7 +333,7 @@ export default function Home() {
                   }}>
                   Historia
                 </Text>
-              </TouchableOpacity>
+              </Ripple> */}
               <TouchableOpacity
                 style={{
                   width: '100%',
@@ -615,8 +569,8 @@ export default function Home() {
           provider={PROVIDER_GOOGLE}
           customMapStyle={colorScheme === 'dark' ? NightMap : undefined}>
           <Polyline
-            coordinates={activeRoute ?? []}
-            strokeColor="white"
+            coordinates={activeRoute?.coords ?? []}
+            strokeColor={Colors[colorScheme ?? 'light'].text_dark}
             strokeWidth={5}
             // strokeColor="#000" // fallback for when `strokeColors` is not supported by the map-provider
             strokeColors={[
@@ -644,10 +598,7 @@ export default function Home() {
           <GooglePlacesAutocomplete
             ref={placesInputViewRef}
             renderLeftButton={() => (
-              <ScaleBtn
-                onPress={() => {
-                  setDrawerOpen(true);
-                }}
+              <View
                 style={{
                   zIndex: 100,
 
@@ -661,12 +612,18 @@ export default function Home() {
 
                   backgroundColor: Colors[colorScheme ?? 'light'].background,
                 }}>
-                <MaterialIcons
-                  name="menu"
-                  size={30}
-                  color={Colors[colorScheme ?? 'light'].text_dark}
-                />
-              </ScaleBtn>
+                <ScaleBtn
+                  style={{}}
+                  onPress={() => {
+                    setDrawerOpen(true);
+                  }}>
+                  <MaterialIcons
+                    name="menu"
+                    size={35}
+                    color={Colors[colorScheme ?? 'light'].text_dark}
+                  />
+                </ScaleBtn>
+              </View>
             )}
             renderRightButton={() => (
               <View
@@ -686,15 +643,15 @@ export default function Home() {
                 <MarkerCloudSVG width={45} height={45} />
               </View>
             )}
-            /* predefinedPlaces={userMarkers.map(marker => ({
-                description: marker.name,
-                geometry: {
-                    location: {
-                        lat: marker.coords.latitude,
-                        lng: marker.coords.longitude
-                    }
-                }
-            }))} */
+            predefinedPlaces={userMarkers.map((marker) => ({
+              description: marker.name,
+              geometry: {
+                location: {
+                  lat: marker.coords.latitude,
+                  lng: marker.coords.longitude,
+                },
+              },
+            }))}
             placeholder="Buscar Lugar"
             textInputProps={{
               onFocus: onSearchBarFocus,
@@ -703,7 +660,7 @@ export default function Home() {
             }}
             enablePoweredByContainer={false}
             onPress={(data, details) => {
-              const tokio = async (data: GooglePlaceData, details: GooglePlaceDetail | null) => {
+              const tokio = async (_data: GooglePlaceData, details: GooglePlaceDetail | null) => {
                 if (!details) {
                   return;
                 }
@@ -718,7 +675,10 @@ export default function Home() {
                   const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map(
                     (point) => ({ latitude: point[0]!, longitude: point[1]! })
                   );
-                  setActiveRoute(decodedCoords);
+                  setActiveRoute({
+                    coords: decodedCoords,
+                  });
+                  console.log(JSON.stringify(decodedCoords, null, 2));
                 } catch (error) {
                   if (error instanceof Error) {
                     console.error(error.message);
@@ -794,12 +754,12 @@ export default function Home() {
           />
         </View>
 
-        {/* <GestureTranslationProvider value={gestureTranslationY}></GestureTranslationProvider> */}
         <BottomSheetModal
           // stackBehavior="push"
           ref={bottomSheetModalRef}
-          overDragResistanceFactor={2}
-          index={1}
+          overDragResistanceFactor={6}
+          handleComponent={renderCustomHandle}
+          index={0}
           onChange={(e) => {
             LayoutAnimation.configureNext(LayoutAnimation.Presets.linear);
             console.log(e);
@@ -810,12 +770,13 @@ export default function Home() {
           // android_keyboardInputMode="adjustResize"
           // keyboardBehavior={keyboardBehavior}
           // keyboardBlurBehavior={keyboardBlurBehavior}
-          // enableContentPanningGesture={false}
+          enableContentPanningGesture={false}
           // enableHandlePanningGesture={false}
-          enablePanDownToClose={false}
-          snapPoints={['10%', '50%', '75%']}
+          // enablePanDownToClose={false}
+          snapPoints={snapPoints}
           backgroundStyle={{
             borderRadius: 15,
+            // backgroundColor: Colors[colorScheme ?? 'light'].background,
             backgroundColor: 'transparent',
           }}
           handleIndicatorStyle={{
@@ -832,15 +793,13 @@ export default function Home() {
             backgroundColor: 'transparent',
           }}
           style={{
-            // backgroundColor: Colors[colorScheme ?? 'light'].background,
-            backgroundColor: 'rgba(50, 50, 50, 0.5)',
-            borderTopRightRadius: 30,
-            borderTopLeftRadius: 30,
+            backgroundColor: Colors[colorScheme ?? 'light'].background,
+            // backgroundColor: 'rgba(50, 50, 50, 0.5)',
+            // backgroundColor: 'transparent',
+            borderTopRightRadius: 12,
+            borderTopLeftRadius: 12,
           }}
-          backdropComponent={renderBackdrop}
-          onDismiss={() => {
-            setIsModalVisible(false);
-          }}>
+          backdropComponent={renderBackdrop}>
           {/* {!isModalVisible && (
             <View
               style={{
@@ -869,7 +828,7 @@ export default function Home() {
               </View>
             </View>
           )} */}
-          <BottomSheetContent />
+          <BottomSheetContent userMarkers={userMarkers} activeRoute={activeRoute} />
         </BottomSheetModal>
 
         <StatusBar

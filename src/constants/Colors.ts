@@ -11,6 +11,7 @@ export default {
     secondary: '#F8F8F8',
     border: '#D8D8D8',
     shadow: '#000',
+    btn_light_bg: '#eee',
   },
   dark: {
     text: '#fff',
@@ -24,5 +25,6 @@ export default {
     secondary: '#222222',
     border: '#A3A3A3',
     shadow: '#000',
+    btn_light_bg: '#eee',
   },
 };

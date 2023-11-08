@@ -45,7 +45,9 @@ const initialValue: UserContext = {
   updateUser: async () => {
     throw new Error('Function not initizaliced yet');
   },
-  user: undefined,
+  user: {
+    avatar_url: '',
+  },
   error: undefined,
   isSignedIn: false,
   isLoaded: false,

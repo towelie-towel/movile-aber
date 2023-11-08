@@ -65,7 +65,7 @@ export default function Code() {
     setIsLoading(true);
     console.log('otpToken', otpToken);
     const { error, data } = await supabase.auth.verifyOtp({
-      phone: '+53' + phone,
+      phone: '53' + phone,
       token: otpToken,
       type: 'sms',
     });
