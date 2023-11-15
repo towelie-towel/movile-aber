@@ -12,15 +12,9 @@ import { Accuracy, getCurrentPositionAsync } from 'expo-location';
 import * as NavigationBar from 'expo-navigation-bar';
 import { Link } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {
-  StatusBar,
-  LayoutAnimation,
-  useColorScheme,
-  Text,
-  View,
-  TouchableOpacity,
-} from 'react-native';
+import { StatusBar, LayoutAnimation, useColorScheme, Text, View } from 'react-native';
 import { Drawer } from 'react-native-drawer-layout';
+import { TouchableOpacity } from 'react-native-gesture-handler';
 import MapView, { type LatLng, PROVIDER_GOOGLE, Polyline } from 'react-native-maps';
 // import NetInfo from '@react-native-community/netinfo';
 
@@ -256,165 +250,177 @@ export default function Home() {
                 backgroundColor: Colors[colorScheme ?? 'light'].secondary,
                 paddingTop: 20,
               }}>
-              <TouchableOpacity
-                style={{
-                  width: '100%',
-                  height: 60,
-                  backgroundColor: 'transparent',
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'flex-start',
-                  paddingHorizontal: 35,
-                  paddingVertical: 10,
-                  gap: 20,
-                }}>
-                <MaterialIcons
-                  name="home"
-                  size={30}
-                  color={Colors[colorScheme ?? 'light'].text_dark}
-                />
-                <Text
+              <Ripple>
+                <View
                   style={{
-                    color: Colors[colorScheme ?? 'light'].text_dark,
-                    fontSize: 18,
-                    fontWeight: '600',
+                    width: '100%',
+                    height: 60,
+                    backgroundColor: 'transparent',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'flex-start',
+                    paddingHorizontal: 35,
+                    paddingVertical: 10,
+                    gap: 20,
                   }}>
-                  Home
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={{
-                  width: '100%',
-                  height: 60,
-                  backgroundColor: 'transparent',
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'flex-start',
-                  paddingHorizontal: 35,
-                  paddingVertical: 10,
-                  gap: 20,
-                }}>
-                <MaterialIcons
-                  name="wallet-giftcard"
-                  size={30}
-                  color={Colors[colorScheme ?? 'light'].text_dark}
-                />
-                <Text
+                  <MaterialIcons
+                    name="home"
+                    size={30}
+                    color={Colors[colorScheme ?? 'light'].text_dark}
+                  />
+                  <Text
+                    style={{
+                      color: Colors[colorScheme ?? 'light'].text_dark,
+                      fontSize: 18,
+                      fontWeight: '600',
+                    }}>
+                    Home
+                  </Text>
+                </View>
+              </Ripple>
+              <Ripple>
+                <View
                   style={{
-                    color: Colors[colorScheme ?? 'light'].text_dark,
-                    fontSize: 18,
-                    fontWeight: '600',
+                    width: '100%',
+                    height: 60,
+                    backgroundColor: 'transparent',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'flex-start',
+                    paddingHorizontal: 35,
+                    paddingVertical: 10,
+                    gap: 20,
                   }}>
-                  Créditos
-                </Text>
-              </TouchableOpacity>
-              {/* <Ripple
-                contentContainerStyle={{
-                  width: '100%',
-                  height: 60,
-                  backgroundColor: 'transparent',
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'flex-start',
-                  paddingHorizontal: 35,
-                  paddingVertical: 10,
-                  gap: 20,
-                }}>
-                <MaterialIcons
-                  name="history"
-                  size={30}
-                  color={Colors[colorScheme ?? 'light'].text_dark}
-                />
-                <Text
+                  <MaterialIcons
+                    name="wallet-giftcard"
+                    size={30}
+                    color={Colors[colorScheme ?? 'light'].text_dark}
+                  />
+                  <Text
+                    style={{
+                      color: Colors[colorScheme ?? 'light'].text_dark,
+                      fontSize: 18,
+                      fontWeight: '600',
+                    }}>
+                    Créditos
+                  </Text>
+                </View>
+              </Ripple>
+              <Ripple>
+                <View
                   style={{
-                    color: Colors[colorScheme ?? 'light'].text_dark,
-                    fontSize: 18,
-                    fontWeight: '600',
+                    width: '100%',
+                    height: 60,
+                    backgroundColor: 'transparent',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'flex-start',
+                    paddingHorizontal: 35,
+                    paddingVertical: 10,
+                    gap: 20,
                   }}>
-                  Historia
-                </Text>
-              </Ripple> */}
-              <TouchableOpacity
-                style={{
-                  width: '100%',
-                  height: 60,
-                  backgroundColor: 'transparent',
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'flex-start',
-                  paddingHorizontal: 35,
-                  paddingVertical: 10,
-                  gap: 20,
-                }}>
-                <MaterialIcons
-                  name="notifications"
-                  size={30}
-                  color={Colors[colorScheme ?? 'light'].text_dark}
-                />
-                <Text
+                  <MaterialIcons
+                    name="history"
+                    size={30}
+                    color={Colors[colorScheme ?? 'light'].text_dark}
+                  />
+                  <Text
+                    style={{
+                      color: Colors[colorScheme ?? 'light'].text_dark,
+                      fontSize: 18,
+                      fontWeight: '600',
+                    }}>
+                    Historia
+                  </Text>
+                </View>
+              </Ripple>
+              <Ripple>
+                <View
                   style={{
-                    color: Colors[colorScheme ?? 'light'].text_dark,
-                    fontSize: 18,
-                    fontWeight: '600',
+                    width: '100%',
+                    height: 60,
+                    backgroundColor: 'transparent',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'flex-start',
+                    paddingHorizontal: 35,
+                    paddingVertical: 10,
+                    gap: 20,
                   }}>
-                  Notificaciones
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={{
-                  width: '100%',
-                  height: 60,
-                  backgroundColor: 'transparent',
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'flex-start',
-                  paddingHorizontal: 35,
-                  paddingVertical: 10,
-                  gap: 20,
-                }}>
-                <MaterialIcons
-                  name="settings"
-                  size={30}
-                  color={Colors[colorScheme ?? 'light'].text_dark}
-                />
-                <Text
+                  <MaterialIcons
+                    name="notifications"
+                    size={30}
+                    color={Colors[colorScheme ?? 'light'].text_dark}
+                  />
+                  <Text
+                    style={{
+                      color: Colors[colorScheme ?? 'light'].text_dark,
+                      fontSize: 18,
+                      fontWeight: '600',
+                    }}>
+                    Notificaciones
+                  </Text>
+                </View>
+              </Ripple>
+              <Ripple>
+                <View
                   style={{
-                    color: Colors[colorScheme ?? 'light'].text_dark,
-                    fontSize: 18,
-                    fontWeight: '600',
+                    width: '100%',
+                    height: 60,
+                    backgroundColor: 'transparent',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'flex-start',
+                    paddingHorizontal: 35,
+                    paddingVertical: 10,
+                    gap: 20,
                   }}>
-                  Opciones
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
+                  <MaterialIcons
+                    name="settings"
+                    size={30}
+                    color={Colors[colorScheme ?? 'light'].text_dark}
+                  />
+                  <Text
+                    style={{
+                      color: Colors[colorScheme ?? 'light'].text_dark,
+                      fontSize: 18,
+                      fontWeight: '600',
+                    }}>
+                    Opciones
+                  </Text>
+                </View>
+              </Ripple>
+              <Ripple
                 onPress={() => {
                   signOut();
-                }}
-                style={{
-                  width: '100%',
-                  height: 60,
-                  backgroundColor: 'transparent',
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'flex-start',
-                  paddingHorizontal: 35,
-                  paddingVertical: 10,
-                  gap: 20,
                 }}>
-                <MaterialIcons
-                  name="logout"
-                  size={30}
-                  color={Colors[colorScheme ?? 'light'].text_dark}
-                />
-                <Text
+                <View
                   style={{
-                    color: Colors[colorScheme ?? 'light'].text_dark,
-                    fontSize: 18,
-                    fontWeight: '600',
+                    width: '100%',
+                    height: 60,
+                    backgroundColor: 'transparent',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'flex-start',
+                    paddingHorizontal: 35,
+                    paddingVertical: 10,
+                    gap: 20,
                   }}>
-                  Salir
-                </Text>
-              </TouchableOpacity>
+                  <MaterialIcons
+                    name="logout"
+                    size={30}
+                    color={Colors[colorScheme ?? 'light'].text_dark}
+                  />
+                  <Text
+                    style={{
+                      color: Colors[colorScheme ?? 'light'].text_dark,
+                      fontSize: 18,
+                      fontWeight: '600',
+                    }}>
+                    Salir
+                  </Text>
+                </View>
+              </Ripple>
             </View>
 
             <View
@@ -669,7 +675,7 @@ export default function Home() {
                 });
                 try {
                   const resp = await fetch(
-                    `http://192.168.1.103:6942/route?from=${position.coords.latitude},${position.coords.longitude}&to=${details.geometry.location.lat},${details.geometry.location.lng}`
+                    `http://192.168.88.191:4200/route?from=${position.coords.latitude},${position.coords.longitude}&to=${details.geometry.location.lat},${details.geometry.location.lng}`
                   );
                   const respJson = await resp.json();
                   const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map(

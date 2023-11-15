@@ -18,7 +18,7 @@ const TaxisMarkers = ({ onPressTaxi }: props) => {
   useEffect(() => {
     const fetchTaxi = async () => {
       const resp = await fetch(
-        `http://192.168.1.103:6942/taxis?ids=${wsTaxis?.map((taxi) => taxi.userId).join(',')}`,
+        `http://192.168.88.191:4200/taxis?ids=${wsTaxis?.map((taxi) => taxi.userId).join(',')}`,
         {
           method: 'GET',
           headers: {
@@ -48,8 +48,8 @@ const TaxisMarkers = ({ onPressTaxi }: props) => {
             onPress={() => {
               onPressTaxi(wsTaxi.userId);
             }}
-            heading={0}
-            headingAnimated={false}
+            heading={wsTaxi.header}
+            headingAnimated
             latitude={wsTaxi.latitude}
             longitude={wsTaxi.longitude}
           />

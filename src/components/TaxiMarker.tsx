@@ -40,42 +40,44 @@ function TaxiMarker({
     })
   );
 
-  const animateTo = useCallback(
-    (toLatitude: number, toLongitude: number, heading: number) => {
-      if (Platform.OS === 'android') {
-        if (anim_marker_ref) {
-          anim_marker_ref.current?.animateMarkerToCoordinate(
-            {
-              latitude: toLatitude,
-              longitude: toLongitude,
-            },
-            2000
-          );
-        }
-      } else {
-        anim_marker_coords_ref.current
-          .timing({
-            duration: 2000,
-            easing: Easing.linear,
-            toValue: 0,
-            useNativeDriver: false,
-            latitudeDelta: 0,
-            longitudeDelta: 0,
+  const animateTo = (toLatitude: number, toLongitude: number, heading: number) => {
+    if (Platform.OS === 'android') {
+      if (anim_marker_ref) {
+        anim_marker_ref.current?.animateMarkerToCoordinate(
+          {
             latitude: toLatitude,
             longitude: toLongitude,
-          })
-          .start();
+          },
+          2000
+        );
       }
-      if (heading) {
-        Animated.timing(animatedHeading, {
-          toValue: heading,
-          duration: 100,
-          useNativeDriver: true,
-        }).start();
-      }
-    },
-    [animatedHeading]
-  );
+    } else {
+      anim_marker_coords_ref.current
+        .timing({
+          duration: 2000,
+          easing: Easing.linear,
+          toValue: 0,
+          useNativeDriver: false,
+          latitudeDelta: 0,
+          longitudeDelta: 0,
+          latitude: toLatitude,
+          longitude: toLongitude,
+        })
+        .start();
+    }
+    // animatedHeading.interpolate({
+    //   inputRange: [0, 1],
+    //   outputRange: ['0deg', '360deg'],
+    // });
+    if (heading) {
+      Animated.timing(animatedHeading, {
+        toValue: heading,
+        duration: 300,
+        useNativeDriver: false,
+        easing: Easing.linear,
+      }).start();
+    }
+  };
 
   useEffect(() => {
     animateTo(latitude, longitude, heading);
@@ -93,7 +95,7 @@ function TaxiMarker({
       tracksViewChanges={false}
       onPress={onPress}
       anchor={{ x: 0.5, y: 0.5 }}
-      rotation={headingAnimated ? heading : undefined}
+      rotation={headingAnimated ? animatedHeading : undefined}
       icon={require('../../assets/images/Car_Black.png')}
     />
   );

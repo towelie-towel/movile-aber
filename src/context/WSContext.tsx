@@ -5,6 +5,7 @@ import React, { createContext, useContext, useEffect, useRef, useState } from 'r
 export interface WSTaxi {
   latitude: number;
   longitude: number;
+  header: number;
   userId: string;
 }
 
@@ -58,6 +59,7 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const handleWebSocketMessage = (event: MessageEvent<string>) => {
+    console.log('ws-message');
     const message = event.data;
     if (typeof message !== 'string') {
       return;
@@ -73,6 +75,7 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
         return {
           latitude: parseFloat(location[0]!),
           longitude: parseFloat(location[1]!),
+          header: parseFloat(location[2]!),
           userId: id ?? '',
         };
       });
@@ -85,7 +88,7 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
 
     console.log('🌊 asyncNewWebSocket ==> websuckItToMeBBy ', protocol);
     const suckItToMeBBy = new WebSocket(
-      `ws://192.168.1.103:6942/subscribe?id=03563972-fab9-4744-b9a7-15f8d35d38c9&lat=51.5073509&lon=-0.1277581999999997`,
+      `ws://192.168.88.191:4200/subscribe?id=03563972-fab9-4744-b9a7-15f8d35d38c9&lat=51.5073509&lon=-0.1277581999999997&head=51`,
       protocol
     );
 

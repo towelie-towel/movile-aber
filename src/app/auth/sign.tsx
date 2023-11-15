@@ -57,10 +57,10 @@ export default function Sign(params: any) {
       />
       <View
         style={{
-          position: 'absolute',
-          top: 0,
+          /* position: 'absolute',
+          top: 0, */
           backgroundColor: Colors[colorScheme ?? 'light'].primary,
-          height: '50%',
+          height: height / 2,
           paddingTop: 80,
           justifyContent: 'flex-end',
         }}>
