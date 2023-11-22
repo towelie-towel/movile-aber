@@ -12,7 +12,7 @@ import { Accuracy, getCurrentPositionAsync } from 'expo-location';
 import * as NavigationBar from 'expo-navigation-bar';
 import { Link } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { StatusBar, LayoutAnimation, useColorScheme, Text, View } from 'react-native';
+import { StatusBar, LayoutAnimation, useColorScheme, Text, View, Platform } from 'react-native';
 import { Drawer } from 'react-native-drawer-layout';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import MapView, { type LatLng, PROVIDER_GOOGLE, Polyline } from 'react-native-maps';
@@ -675,7 +675,7 @@ export default function Home() {
                 });
                 try {
                   const resp = await fetch(
-                    `http://192.168.88.191:4200/route?from=${position.coords.latitude},${position.coords.longitude}&to=${details.geometry.location.lat},${details.geometry.location.lng}`
+                    `http://192.168.78.191:4200/route?from=${position.coords.latitude},${position.coords.longitude}&to=${details.geometry.location.lat},${details.geometry.location.lng}`
                   );
                   const respJson = await resp.json();
                   const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map(
@@ -764,6 +764,8 @@ export default function Home() {
           // stackBehavior="push"
           ref={bottomSheetModalRef}
           overDragResistanceFactor={6}
+          keyboardBehavior={Platform.OS === 'ios' ? 'interactive' : 'fillParent'}
+          // keyboardBlurBehavior={keyboardBlurBehavior}
           handleComponent={renderCustomHandle}
           index={0}
           onChange={(e) => {
@@ -773,9 +775,8 @@ export default function Home() {
             // if (sheetCurrentSnap === 2) placesInputViewRef.current?.blur();
             console.log(sheetCurrentSnap);
           }}
-          // android_keyboardInputMode="adjustResize"
-          // keyboardBehavior={keyboardBehavior}
-          // keyboardBlurBehavior={keyboardBlurBehavior}
+          enableDynamicSizing
+          android_keyboardInputMode="adjustResize"
           enableContentPanningGesture={false}
           // enableHandlePanningGesture={false}
           // enablePanDownToClose={false}

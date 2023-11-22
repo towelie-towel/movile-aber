@@ -40,48 +40,56 @@ function TaxiMarker({
     })
   );
 
-  const animateTo = (toLatitude: number, toLongitude: number, heading: number) => {
-    if (Platform.OS === 'android') {
-      if (anim_marker_ref) {
-        anim_marker_ref.current?.animateMarkerToCoordinate(
-          {
-            latitude: toLatitude,
-            longitude: toLongitude,
-          },
-          2000
-        );
-      }
-    } else {
-      anim_marker_coords_ref.current
-        .timing({
-          duration: 2000,
-          easing: Easing.linear,
-          toValue: 0,
-          useNativeDriver: false,
-          latitudeDelta: 0,
-          longitudeDelta: 0,
-          latitude: toLatitude,
-          longitude: toLongitude,
-        })
-        .start();
-    }
-    // animatedHeading.interpolate({
-    //   inputRange: [0, 1],
-    //   outputRange: ['0deg', '360deg'],
-    // });
+  const animateTo = (toLatitude: number, toLongitude: number, toHeading: number) => {
     if (heading) {
       Animated.timing(animatedHeading, {
-        toValue: heading,
+        toValue: toHeading ?? 0,
         duration: 300,
         useNativeDriver: false,
         easing: Easing.linear,
-      }).start();
+      }).start(() => {
+        if (Platform.OS === 'android') {
+          if (anim_marker_ref) {
+            anim_marker_ref.current?.animateMarkerToCoordinate(
+              {
+                latitude: toLatitude,
+                longitude: toLongitude,
+              },
+              1000
+            );
+          }
+          setTimeout(() => {
+            anim_marker_coords_ref.current.setValue({
+              latitude: toLatitude,
+              longitude: toLongitude,
+              latitudeDelta: LATITUDE_DELTA,
+              longitudeDelta: LONGITUDE_DELTA,
+            });
+          }, 1000);
+        } else {
+          anim_marker_coords_ref.current
+            .timing({
+              duration: 1000,
+              easing: Easing.linear,
+              toValue: 0,
+              useNativeDriver: false,
+              latitudeDelta: 0,
+              longitudeDelta: 0,
+              latitude: toLatitude,
+              longitude: toLongitude,
+            })
+            .start();
+        }
+      });
     }
   };
 
   useEffect(() => {
     animateTo(latitude, longitude, heading);
-  }, [latitude, longitude, animateTo, heading]);
+  }, [latitude, longitude, heading]);
+  /* useEffect(() => {
+    console.log('Updated values:', latitude, longitude, heading);
+  }, [latitude, longitude, heading]); */
 
   return (
     <Marker.Animated

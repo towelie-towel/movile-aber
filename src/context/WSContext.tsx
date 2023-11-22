@@ -59,12 +59,12 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const handleWebSocketMessage = (event: MessageEvent<string>) => {
-    console.log('ws-message');
+    // console.log('ws-message');
     const message = event.data;
     if (typeof message !== 'string') {
       return;
     }
-    console.log('✅ handleWebSocketMessage ==> message = ', message);
+    // console.log('✅ handleWebSocketMessage ==> message = ', message);
     const taxis = message
       .replace('taxis-', '')
       .split('$')
@@ -79,7 +79,7 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
           userId: id ?? '',
         };
       });
-    console.log('🚀 ~ file: WSContext.tsx:79 ~ handleWebSocketMessage ~ taxis:', taxis);
+    // console.log('🚀 ~ file: WSContext.tsx:79 ~ handleWebSocketMessage ~ taxis:', taxis);
     setWsTaxis(taxis);
   };
 
@@ -88,7 +88,7 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
 
     console.log('🌊 asyncNewWebSocket ==> websuckItToMeBBy ', protocol);
     const suckItToMeBBy = new WebSocket(
-      `ws://192.168.88.191:4200/subscribe?id=03563972-fab9-4744-b9a7-15f8d35d38c9&lat=51.5073509&lon=-0.1277581999999997&head=51`,
+      `ws://192.168.78.191:4200/subscribe?id=03563972-fab9-4744-b9a7-15f8d35d38c9&lat=51.5073509&lon=-0.1277581999999997&head=51`,
       protocol
     );
 

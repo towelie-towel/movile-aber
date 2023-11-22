@@ -1,18 +1,28 @@
+import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import {
   useBottomSheetInternal,
   BottomSheetFlatList,
   BottomSheetView,
+  BottomSheetTextInput,
   TouchableOpacity,
 } from '@gorhom/bottom-sheet';
+import { getCurrentPositionAsync, Accuracy } from 'expo-location';
 import React, { useCallback, useMemo } from 'react';
 import { View, Text, useColorScheme } from 'react-native';
+import { Colors } from 'react-native/Libraries/NewAppScreen';
 import { LatLng } from 'react-native-maps';
 import { Extrapolate, interpolate, useAnimatedStyle } from 'react-native-reanimated';
-import { UserMarkerIconType } from '~/components/AddUserMarker';
-import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { ScrollView } from 'react-native-gesture-handler';
 
-import Colors from '~/constants/Colors';
+import { UserMarkerIconType } from '~/components/AddUserMarker';
 import { ScaleBtn } from '~/components/ScaleBtn';
+import { MarkerCloudSVG } from '~/constants/Icons';
+import {
+  GooglePlacesAutocomplete,
+  GooglePlaceData,
+  GooglePlaceDetail,
+} from '~/lib/google-places-autocomplete/GooglePlacesAutocomplete';
+import { polylineDecode } from '~/utils/directions';
 
 export const BottomSheetContent = ({
   activeRoute,
@@ -105,6 +115,20 @@ export const BottomSheetContent = ({
           },
           startBtnStyle,
         ]}>
+        <BottomSheetTextInput
+          style={{
+            borderColor: 'black',
+            borderWidth: 1,
+            borderStyle: 'dashed',
+            marginTop: 8,
+            marginBottom: 10,
+            borderRadius: 10,
+            fontSize: 16,
+            lineHeight: 20,
+            padding: 8,
+            backgroundColor: 'rgba(151, 151, 151, 0.25)',
+          }}
+        />
         {!activeRoute ? (
           <BottomSheetFlatList
             style={[
@@ -118,7 +142,7 @@ export const BottomSheetContent = ({
             keyExtractor={(i) => i.id}
             horizontal
             renderItem={renderMarkerBtnItems}
-            data={[].concat([
+            data={[
               {
                 id: '1',
                 name: 'house',
@@ -156,7 +180,7 @@ export const BottomSheetContent = ({
                   longitude: -82.40442767880837,
                 },
               },
-            ])}
+            ]}
           />
         ) : (
           <BottomSheetView

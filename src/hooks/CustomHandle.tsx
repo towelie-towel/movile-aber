@@ -119,8 +119,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingBottom: 12,
     paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.125)',
+    // borderBottomWidth: 1,
+    // borderBottomColor: 'rgba(0,0,0,0.125)',
     zIndex: 99999,
   },
   indicator: {
