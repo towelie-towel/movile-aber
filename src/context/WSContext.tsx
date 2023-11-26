@@ -88,7 +88,7 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
 
     console.log('🌊 asyncNewWebSocket ==> websuckItToMeBBy ', protocol);
     const suckItToMeBBy = new WebSocket(
-      `ws://192.168.78.191:4200/subscribe?id=03563972-fab9-4744-b9a7-15f8d35d38c9&lat=51.5073509&lon=-0.1277581999999997&head=51`,
+      `ws://192.168.106.192:4200/subscribe?id=03563972-fab9-4744-b9a7-15f8d35d38c9&lat=51.5073509&lon=-0.1277581999999997&head=51`,
       protocol
     );
 

@@ -73,7 +73,7 @@ export default function Home() {
   const [sheetCurrentSnap, setSheetCurrentSnap] = useState(1);
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const [drawerOpen, setDrawerOpen] = React.useState(true);
-  const snapPoints = useMemo(() => [120, '50%'], []);
+  const snapPoints = useMemo(() => [120, '35%', '75%'], []);
 
   useEffect(() => {
     getData('user_markers').then((data) => {
@@ -390,10 +390,7 @@ export default function Home() {
                   </Text>
                 </View>
               </Ripple>
-              <Ripple
-                onPress={() => {
-                  signOut();
-                }}>
+              <Ripple>
                 <View
                   style={{
                     width: '100%',
@@ -675,7 +672,7 @@ export default function Home() {
                 });
                 try {
                   const resp = await fetch(
-                    `http://192.168.78.191:4200/route?from=${position.coords.latitude},${position.coords.longitude}&to=${details.geometry.location.lat},${details.geometry.location.lng}`
+                    `http://192.168.106.192:4200/route?from=${position.coords.latitude},${position.coords.longitude}&to=${details.geometry.location.lat},${details.geometry.location.lng}`
                   );
                   const respJson = await resp.json();
                   const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map(
@@ -764,7 +761,7 @@ export default function Home() {
           // stackBehavior="push"
           ref={bottomSheetModalRef}
           overDragResistanceFactor={6}
-          keyboardBehavior={Platform.OS === 'ios' ? 'interactive' : 'fillParent'}
+          // keyboardBehavior={Platform.OS === 'ios' ? 'interactive' : 'fillParent'}
           // keyboardBlurBehavior={keyboardBlurBehavior}
           handleComponent={renderCustomHandle}
           index={0}
@@ -777,7 +774,7 @@ export default function Home() {
           }}
           enableDynamicSizing
           android_keyboardInputMode="adjustResize"
-          enableContentPanningGesture={false}
+          // enableContentPanningGesture={false}
           // enableHandlePanningGesture={false}
           // enablePanDownToClose={false}
           snapPoints={snapPoints}

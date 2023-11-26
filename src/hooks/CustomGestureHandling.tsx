@@ -5,6 +5,7 @@ import {
   BottomSheetView,
   BottomSheetTextInput,
   TouchableOpacity,
+  BottomSheetScrollView,
 } from '@gorhom/bottom-sheet';
 import { getCurrentPositionAsync, Accuracy } from 'expo-location';
 import React, { useCallback, useMemo } from 'react';
@@ -99,13 +100,31 @@ export const BottomSheetContent = ({
   );
 
   return (
-    <BottomSheetView
-      style={{
-        height: '100%',
-        width: '100%',
-        position: 'relative',
-      }}>
-      <BottomSheetView
+    <BottomSheetScrollView
+      style={[
+        {
+          flex: 1,
+          // height: '100%',
+          // width: '100%',
+          position: 'relative',
+        },
+        // listContentStyle,
+      ]}>
+      <BottomSheetTextInput
+        style={{
+          borderColor: 'black',
+          borderWidth: 1,
+          borderStyle: 'dashed',
+          marginTop: 8,
+          marginBottom: 10,
+          borderRadius: 10,
+          fontSize: 16,
+          lineHeight: 20,
+          padding: 8,
+          backgroundColor: 'rgba(151, 151, 151, 0.25)',
+        }}
+      />
+      {/* <BottomSheetView
         style={[
           {
             height: 100,
@@ -115,20 +134,6 @@ export const BottomSheetContent = ({
           },
           startBtnStyle,
         ]}>
-        <BottomSheetTextInput
-          style={{
-            borderColor: 'black',
-            borderWidth: 1,
-            borderStyle: 'dashed',
-            marginTop: 8,
-            marginBottom: 10,
-            borderRadius: 10,
-            fontSize: 16,
-            lineHeight: 20,
-            padding: 8,
-            backgroundColor: 'rgba(151, 151, 151, 0.25)',
-          }}
-        />
         {!activeRoute ? (
           <BottomSheetFlatList
             style={[
@@ -207,71 +212,81 @@ export const BottomSheetContent = ({
             </Text>
           </BottomSheetView>
         )}
-      </BottomSheetView>
-      <BottomSheetFlatList
-        style={[
-          {
-            width: '100%',
-            height: '100%',
-            flex: 1,
-            position: 'absolute',
-            top: 0,
-          },
-          listContentStyle,
-        ]}
-        keyExtractor={(i) => i.userId}
-        renderItem={renderBottomSheetItem}
-        data={[
-          {
-            userId: '1',
-          },
-          {
-            userId: '2',
-          },
-          {
-            userId: '3',
-          },
-          {
-            userId: '4',
-          },
-          {
-            userId: '5',
-          },
-          {
-            userId: '6',
-          },
-          {
-            userId: '7',
-          },
-          {
-            userId: '8',
-          },
-          {
-            userId: '9',
-          },
-          {
-            userId: '10',
-          },
-          {
-            userId: '11',
-          },
-          {
-            userId: '12',
-          },
-          {
-            userId: '13',
-          },
-          {
-            userId: '14',
-          },
-          {
-            userId: '15',
-          },
-          {
-            userId: '16',
-          },
-        ]}
-      />
-    </BottomSheetView>
+      </BottomSheetView> */}
+      {[
+        {
+          userId: '1',
+        },
+        {
+          userId: '2',
+        },
+        {
+          userId: '3',
+        },
+        {
+          userId: '4',
+        },
+        {
+          userId: '5',
+        },
+        {
+          userId: '6',
+        },
+        {
+          userId: '7',
+        },
+        {
+          userId: '8',
+        },
+        {
+          userId: '9',
+        },
+        {
+          userId: '10',
+        },
+        {
+          userId: '11',
+        },
+        {
+          userId: '12',
+        },
+        {
+          userId: '13',
+        },
+        {
+          userId: '14',
+        },
+        {
+          userId: '15',
+        },
+        {
+          userId: '16',
+        },
+        {
+          userId: '17',
+        },
+        {
+          userId: '18',
+        },
+        {
+          userId: '19',
+        },
+        {
+          userId: '20',
+        },
+        {
+          userId: '21',
+        },
+        {
+          userId: '22',
+        },
+        {
+          userId: '23',
+        },
+        {
+          userId: '24',
+        },
+      ].map((item) => renderBottomSheetItem({ item }))}
+    </BottomSheetScrollView>
   );
 };
