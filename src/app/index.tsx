@@ -12,7 +12,15 @@ import { Accuracy, getCurrentPositionAsync } from 'expo-location';
 import * as NavigationBar from 'expo-navigation-bar';
 import { Link } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { StatusBar, LayoutAnimation, useColorScheme, Text, View, Platform } from 'react-native';
+import {
+  StatusBar,
+  LayoutAnimation,
+  useColorScheme,
+  Text,
+  View,
+  Platform,
+  Keyboard,
+} from 'react-native';
 import { Drawer } from 'react-native-drawer-layout';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import MapView, { type LatLng, PROVIDER_GOOGLE, Polyline } from 'react-native-maps';
@@ -61,10 +69,6 @@ export default function Home() {
   // map & markers
   const mapViewRef = useRef<MapView>(null);
 
-  // bottom sheet
-  const [selectedTaxiId, _setSelectedTaxiId] = useState<string | null>(null);
-  const [isModalVisible, setIsModalVisible] = useState(false);
-
   // search bar
   const placesInputViewRef = useRef<GooglePlacesAutocompleteRef | null>(null);
   const [activeRoute, setActiveRoute] = useState<{ coords: LatLng[] } | null | undefined>(null);
@@ -75,10 +79,31 @@ export default function Home() {
   const [drawerOpen, setDrawerOpen] = React.useState(true);
   const snapPoints = useMemo(() => [120, '35%', '75%'], []);
 
+  // const [selectedTaxiId, _setSelectedTaxiId] = useState<string | null>(null);
+  // const [isModalVisible, setIsModalVisible] = useState(false);
+
   useEffect(() => {
     getData('user_markers').then((data) => {
       setUserMarkers(data ?? []);
     });
+    // only needed for Android because
+    // keyboardBehavior="extend" is not working properly
+    // on Android, it leaves a gap between the keyboard and the bottom sheet
+    // when the keyboard is visible
+    const showSubscription = Keyboard.addListener('keyboardDidShow', () => {
+      if (Platform.OS === 'android') {
+        bottomSheetModalRef.current?.snapToIndex(2);
+      }
+    });
+    const hideSubscription = Keyboard.addListener('keyboardDidHide', () => {
+      if (Platform.OS === 'android') {
+        bottomSheetModalRef.current?.snapToIndex(1);
+      }
+    });
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
   }, []);
 
   // renders
@@ -86,8 +111,6 @@ export default function Home() {
     (props: BottomSheetHandleProps) => <CustomHandle title="Custom Handle Example" {...props} />,
     []
   );
-
-  // renders
   const renderBackdrop = useCallback(
     (props: BottomSheetBackdropProps) => (
       <BottomSheetBackdrop
