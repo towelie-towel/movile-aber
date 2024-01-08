@@ -104,9 +104,9 @@ export const BottomSheetContent = ({
   return (
     <BottomSheetView
       style={{
-        /* borderColor: 'orange',
-          borderWidth: 2,
-          borderStyle: 'dotted', */
+        borderColor: 'orange',
+        borderWidth: 2,
+        borderStyle: 'dotted',
         width: '90%',
         alignSelf: 'center',
         height: '100%',
@@ -145,6 +145,17 @@ export const BottomSheetContent = ({
             <MaterialIcons name="supervised-user-circle" size={42} color={'#C7C7CB'} />
           </ScaleBtn>
         )}
+        renderHeaderComponent={() => (
+          <Text
+            style={{
+              fontWeight: '500',
+              fontSize: 18,
+              textAlignVertical: 'center',
+              color: colorScheme === 'light' ? '#6C6C6C' : 'black',
+            }}>
+            Siri Suggestions
+          </Text>
+        )}
         predefinedPlaces={userMarkers.map((marker) => ({
           description: marker.name,
           geometry: {
@@ -171,7 +182,7 @@ export const BottomSheetContent = ({
             });
             try {
               const resp = await fetch(
-                `http://192.168.174.191:4200/route?from=${position.coords.latitude},${position.coords.longitude}&to=${details.geometry.location.lat},${details.geometry.location.lng}`
+                `http://192.168.133.191:4200/route?from=${position.coords.latitude},${position.coords.longitude}&to=${details.geometry.location.lat},${details.geometry.location.lng}`
               );
               const respJson = await resp.json();
               const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map(
@@ -207,24 +218,26 @@ export const BottomSheetContent = ({
           },
           container: {
             position: 'relative',
-            borderRadius: 30,
-            paddingTop: 15,
+            // borderRadius: 10,
+            // paddingTop: 2,
 
-            height: 120,
+            height: 'auto',
 
-            /* borderColor: 'green',
+            borderColor: 'green',
             borderWidth: 2,
-            borderStyle: 'dotted', */
+            borderStyle: 'dotted',
           },
           listView: {
-            padding: 12,
-            backgroundColor: Colors[colorScheme ?? 'light'].background,
-            borderRadius: 30,
-            marginHorizontal: 30,
-            marginTop: 12,
+            height: 'auto',
+            // padding: 12,
+            // backgroundColor: Colors[colorScheme ?? 'light'].background,
+            // marginHorizontal: 10,
             // overflow: 'hidden',
+            borderRadius: 10,
+            marginTop: 5,
           },
           row: {
+            height: 30,
             backgroundColor: 'transparent',
           },
         }}
@@ -242,8 +255,9 @@ export const BottomSheetContent = ({
       />
       <BottomSheetView
         style={{
-          height: 65,
-          width: '100%',
+          borderColor: 'brown',
+          borderStyle: 'dotted',
+          borderWidth: 1,
         }}>
         <Text
           style={{
@@ -256,12 +270,12 @@ export const BottomSheetContent = ({
         </Text>
         <RippleBtn
           style={{
-            height: '100%',
+            height: 60,
             width: '100%',
 
-            /* borderColor: 'black',
+            borderColor: 'black',
             borderWidth: 2,
-            borderStyle: 'dotted', */
+            borderStyle: 'dotted',
           }}
           onTap={() => {}}>
           <BottomSheetView
@@ -273,11 +287,7 @@ export const BottomSheetContent = ({
               alignItems: 'center',
               alignContent: 'center',
               gap: 18,
-              paddingHorizontal: 24,
-
-              /* borderColor: 'yellow',
-              borderWidth: 2,
-              borderStyle: 'dotted', */
+              paddingHorizontal: 12,
             }}>
             <MaterialIcons name="supervised-user-circle" size={42} color={'#0C79FE'} />
             <BottomSheetView style={{}}>

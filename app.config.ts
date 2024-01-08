@@ -48,7 +48,12 @@ const defineConfig = (): ExpoConfig => ({
   experiments: {
     tsconfigPaths: true,
   },
-  plugins: ['@react-native-google-signin/google-signin', '@react-native-firebase/app'],
+  plugins: [
+    '@react-native-google-signin/google-signin',
+    '@react-native-firebase/app',
+    'expo-font',
+    'expo-secure-store',
+  ],
 });
 
 export default defineConfig;
