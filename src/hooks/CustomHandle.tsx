@@ -1,12 +1,13 @@
 import { BottomSheetHandleProps } from '@gorhom/bottom-sheet';
 import React, { memo, useMemo } from 'react';
-import { StyleProp, StyleSheet, ViewStyle } from 'react-native';
+import { StyleProp, StyleSheet, ViewStyle, useColorScheme } from 'react-native';
 import Animated, {
   Extrapolate,
   interpolate,
   useAnimatedStyle,
   useDerivedValue,
 } from 'react-native-reanimated';
+import Colors from '~/constants/Colors';
 
 const toRad = (deg: number) => {
   'worklet';
@@ -36,6 +37,7 @@ const CustomHandleComponent: React.FC<CustomHandleProps> = ({ title, style, anim
   const indicatorTransformOriginY = useDerivedValue(() =>
     interpolate(animatedIndex.value, [0, 1, 2], [-1, 0, 1], Extrapolate.CLAMP)
   );
+  const colorScheme = useColorScheme();
   //#endregion
 
   //#region styles
@@ -127,8 +129,8 @@ const styles = StyleSheet.create({
     marginTop: 10,
     position: 'absolute',
     width: 10,
+    backgroundColor: '#BEBFC0',
     height: 4,
-    backgroundColor: '#000000',
   },
   leftIndicator: {
     borderTopStartRadius: 2,

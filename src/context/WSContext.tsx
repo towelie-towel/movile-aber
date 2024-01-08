@@ -2,6 +2,8 @@ import NetInfo from '@react-native-community/netinfo';
 import * as ExpoLocation from 'expo-location';
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 
+const WS_LOGS = false;
+
 export interface WSTaxi {
   latitude: number;
   longitude: number;
@@ -59,12 +61,11 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const handleWebSocketMessage = (event: MessageEvent<string>) => {
-    // console.log('ws-message');
     const message = event.data;
     if (typeof message !== 'string') {
       return;
     }
-    // console.log('✅ handleWebSocketMessage ==> message = ', message);
+    if (WS_LOGS) console.log('✅ handleWebSocketMessage ==> message = ', message);
     const taxis = message
       .replace('taxis-', '')
       .split('$')
@@ -79,26 +80,27 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
           userId: id ?? '',
         };
       });
-    // console.log('🚀 ~ file: WSContext.tsx:79 ~ handleWebSocketMessage ~ taxis:', taxis);
+    if (WS_LOGS)
+      console.log('🚀 ~ file: WSContext.tsx:79 ~ handleWebSocketMessage ~ taxis:', taxis);
     setWsTaxis(taxis);
   };
 
   const asyncNewWebSocket = () => {
     const protocol = `map-client`;
 
-    console.log('🌊 asyncNewWebSocket ==> websuckItToMeBBy ', protocol);
+    if (WS_LOGS) console.log('🌊 asyncNewWebSocket ==> websuckItToMeBBy ', protocol);
     const suckItToMeBBy = new WebSocket(
-      `ws://192.168.106.192:4200/subscribe?id=03563972-fab9-4744-b9a7-15f8d35d38c9&lat=51.5073509&lon=-0.1277581999999997&head=51`,
+      `ws://192.168.174.191:4200/subscribe?id=03563972-fab9-4744-b9a7-15f8d35d38c9&lat=51.5073509&lon=-0.1277581999999997&head=51`,
       protocol
     );
 
     // TODO: stream depending the role
     suckItToMeBBy.addEventListener('open', (_event) => {
-      console.log('🎯 asyncNewWebSocket ==> (Connection opened)');
+      if (WS_LOGS) console.log('🎯 asyncNewWebSocket ==> (Connection opened)');
     });
 
     suckItToMeBBy.addEventListener('close', (_event) => {
-      console.log('❌ asyncNewWebSocket ==> (Connection closed)');
+      if (WS_LOGS) console.log('❌ asyncNewWebSocket ==> (Connection closed)');
 
       setTimeout(() => {
         resetConnection();
@@ -106,7 +108,8 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
     });
 
     suckItToMeBBy.addEventListener('error', (_error) => {
-      console.log('💥 asyncNewWebSocket ==> (Connection error)', JSON.stringify(_error, null, 2));
+      if (WS_LOGS)
+        console.log('💥 asyncNewWebSocket ==> (Connection error)', JSON.stringify(_error, null, 2));
     });
 
     suckItToMeBBy.addEventListener('message', handleWebSocketMessage);
@@ -118,12 +121,13 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
     const { granted: permissionGranted } = await ExpoLocation.getForegroundPermissionsAsync();
 
     if (!permissionGranted) {
-      console.log('🚫 trackPosition ==> permissionGranted = false (requesting permission)');
+      if (WS_LOGS)
+        console.log('🚫 trackPosition ==> permissionGranted = false (requesting permission)');
       await ExpoLocation.requestForegroundPermissionsAsync();
     }
 
     if (positionSubscription.current) {
-      console.log('🌬️ trackPosition ==> positionSubscription = true ');
+      if (WS_LOGS) console.log('🌬️ trackPosition ==> positionSubscription = true ');
       return;
     }
 
@@ -146,20 +150,20 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
       }
     );
 
-    console.log('📌 trackPosition ==> (Setted position subscriptions)');
+    if (WS_LOGS) console.log('📌 trackPosition ==> (Setted position subscriptions)');
     positionSubscription.current = posSubscrition;
   };
 
   const trackHeading = async () => {
     if (headingSubscription.current) {
-      console.log('🌬️ trackHeading ==> headingSubscription = true ');
+      if (WS_LOGS) console.log('🌬️ trackHeading ==> headingSubscription = true ');
       return;
     }
     const headSubscrition = await ExpoLocation.watchHeadingAsync((newHeading) => {
       setHeading(newHeading);
     });
 
-    console.log('📌 trackPosition ==> (Setted heading subscriptions)');
+    if (WS_LOGS) console.log('📌 trackPosition ==> (Setted heading subscriptions)');
     headingSubscription.current = headSubscrition;
   };
 
@@ -171,12 +175,12 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
 
     try {
       if (!ws.current) {
-        console.log('🎯 resetConnection ==> initializasing web socket');
+        if (WS_LOGS) console.log('🎯 resetConnection ==> initializasing web socket');
         ws.current = await asyncNewWebSocket();
       } else if (ws.current.readyState === WebSocket.OPEN) {
         console.warn('🌬️ resetConnection ==> a connection is already open');
       } else if (ws.current.readyState === WebSocket.CLOSED) {
-        console.log('🚿 resetConnection ==> reseting connection');
+        if (WS_LOGS) console.log('🚿 resetConnection ==> reseting connection');
         ws.current = await asyncNewWebSocket();
       } else {
         console.error(
@@ -192,18 +196,19 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     if (!positionSubscription.current) {
-      console.log('📭 <== useEffect ==> WSContext.tsx ==> [] (📌trackPosition) ');
+      if (WS_LOGS) console.log('📭 <== useEffect ==> WSContext.tsx ==> [] (📌trackPosition) ');
       void trackPosition();
     }
     if (!headingSubscription.current) {
-      console.log('📭 <== useEffect ==> WSContext.tsx ==> [] (📌trackHeading) ');
+      if (WS_LOGS) console.log('📭 <== useEffect ==> WSContext.tsx ==> [] (📌trackHeading) ');
       void trackHeading();
     }
 
     return () => {
-      console.log(
-        '📪 <== useEffect-return ==> WSContext.tsx ==> [] (🔪position/heading subscriptions)'
-      );
+      if (WS_LOGS)
+        console.log(
+          '📪 <== useEffect-return ==> WSContext.tsx ==> [] (🔪position/heading subscriptions)'
+        );
       if (positionSubscription.current) {
         positionSubscription.current.remove();
         positionSubscription.current = null;
@@ -216,7 +221,8 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   useEffect(() => {
-    console.log('📭 <== useEffect ==> WSContext.tsx ==> [isConnected] (📈resetConnection)');
+    if (WS_LOGS)
+      console.log('📭 <== useEffect ==> WSContext.tsx ==> [isConnected] (📈resetConnection)');
     void resetConnection();
   }, [isConnected]);
 

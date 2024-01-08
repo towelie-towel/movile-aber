@@ -1,11 +1,13 @@
 export default {
   light: {
     text: '#000',
-    text_light: '#C8C7CC',
+    text_light: '#6C6C6C',
+    text_light1: '#C8C7CC',
     text_light2: '#FFFFFF',
     text_dark: '#242E42',
     background: '#FFFFFF',
     background_light: '#F8F8F8',
+    background_light1: '#E9E9E9',
     background_dark: '#D8D8D8',
     primary: '#FCCB6F',
     secondary: '#F8F8F8',
@@ -16,10 +18,12 @@ export default {
   dark: {
     text: '#fff',
     text_light: '#fff',
+    text_light1: '#FFFFFF',
     text_light2: '#FFFFFF',
     text_dark: '#fff',
     background: '#000',
     background_light: '#000',
+    background_light1: '#E9E9E9',
     background_dark: '#000',
     primary: '#FCCB6F',
     secondary: '#222222',

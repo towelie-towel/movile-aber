@@ -4,6 +4,8 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 
 import { supabase } from '~/lib/supabase';
 
+const AUTH_LOGS = false;
+
 interface UserContext {
   session: Session | null | undefined;
   sessionExpired: boolean | undefined;
@@ -92,7 +94,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         setIsError(true);
         setError(new Error('Session is null'));
       } else {
-        console.log('👤 getSession ——© (fetched session succesful)');
+        if (AUTH_LOGS) console.log('👤 getSession ——© (fetched session succesful)');
         setSession(resSession);
         setSessionExpired(undefined);
         setSessionExpired(false);
@@ -134,7 +136,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         setSession(null);
       } else {
         // Case Succes
-        console.log('👤 signOut ——© (signed out succesful)');
+        if (AUTH_LOGS) console.log('👤 signOut ——© (signed out succesful)');
         setSession(null);
         setUser(null);
         setIsSignedIn(false);
@@ -182,7 +184,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         setIsError(true);
         setError({ ...error, name: 'PostgresError' });
       } else {
-        console.log('👤 signOut ——© (signed out succesful)');
+        if (AUTH_LOGS) console.log('👤 signOut ——© (signed out succesful)');
         setUser({
           ...user,
           username: username ? username : user?.username,
@@ -205,12 +207,13 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   useEffect(() => {
-    console.log('📭 ©—— useEffect ——© context/UserContext.tsx ——© [] (getSession)');
+    if (AUTH_LOGS)
+      console.log('📭 ©—— useEffect ——© context/UserContext.tsx ——© [] (getSession)');
     const expired = session?.expires_at && new Date(session.expires_at) < new Date();
     setSessionExpired(Boolean(expired));
 
     if (!isInternetReachable) {
-      console.log('Internet is not reachable');
+      if (AUTH_LOGS) console.log('Internet is not reachable');
       return;
     }
 
@@ -219,7 +222,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     supabase.auth.onAuthStateChange((_event, session) => {
-      console.log('♻️ ——© AuthState Changed ——©' + _event);
+      if (AUTH_LOGS) console.log('♻️ ——© AuthState Changed ——©' + _event);
       const expired = session?.expires_at && new Date(session.expires_at) < new Date();
       setSessionExpired(Boolean(expired));
 
