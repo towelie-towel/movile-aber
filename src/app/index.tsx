@@ -8,7 +8,7 @@ import {
 } from '@gorhom/bottom-sheet';
 import { Image } from 'expo-image';
 import { useKeepAwake } from 'expo-keep-awake';
-import { Accuracy, getCurrentPositionAsync } from 'expo-location';
+// import { Accuracy, getCurrentPositionAsync } from 'expo-location';
 import * as NavigationBar from 'expo-navigation-bar';
 import { Link } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -22,13 +22,13 @@ import {
   Keyboard,
 } from 'react-native';
 import { Drawer } from 'react-native-drawer-layout';
-import { TouchableOpacity } from 'react-native-gesture-handler';
+import { TouchableOpacity, GestureHandlerRootView } from 'react-native-gesture-handler';
 import MapView, { type LatLng, PROVIDER_GOOGLE, Polyline } from 'react-native-maps';
 // import NetInfo from '@react-native-community/netinfo';
 
 import Svg, { Circle, Defs, G, Path, RadialGradient, Stop } from 'react-native-svg';
-import { UserMarkerIconType } from '~/components/AddUserMarker';
 
+import { UserMarkerIconType } from '~/components/AddUserMarker';
 import AnimatedRouteMarker from '~/components/AnimatedRouteMarker';
 import Ripple from '~/components/RippleBtn';
 import { ScaleBtn } from '~/components/ScaleBtn';
@@ -133,109 +133,113 @@ export default function Home() {
     []
   );
 
+  console.log('aa');
+
   return (
-    <BottomSheetModalProvider>
-      <MapView
-        style={{
-          width: '100%',
-          height: '100%',
-        }}
-        onTouchMove={() => {}}
-        onTouchStart={() => {
-          placesInputViewRef.current?.blur();
-          bottomSheetModalRef.current?.present();
-        }}
-        onTouchEnd={() => {}}
-        onPress={() => {}}
-        initialRegion={{
-          latitude: 23.118644,
-          longitude: -82.3806211,
-          latitudeDelta: 0.0322,
-          longitudeDelta: 0.0221,
-        }}
-        ref={mapViewRef}
-        provider={PROVIDER_GOOGLE}
-        customMapStyle={colorScheme === 'dark' ? NightMap : undefined}>
-        <Polyline
-          coordinates={activeRoute?.coords ?? []}
-          strokeColor={Colors[colorScheme ?? 'light'].text_dark}
-          strokeWidth={5}
-          // strokeColor="#000" // fallback for when `strokeColors` is not supported by the map-provider
-          strokeColors={[
-            '#7F0000',
-            '#00000000', // no color, creates a "long" gradient between the previous and next coordinate
-            '#B24112',
-            '#E5845C',
-            '#238C23',
-            '#7F0000',
-          ]}
-          // strokeWidth={6}
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <BottomSheetModalProvider>
+        <MapView
+          style={{
+            width: '100%',
+            height: '100%',
+          }}
+          onTouchMove={() => {}}
+          onTouchStart={() => {
+            placesInputViewRef.current?.blur();
+            bottomSheetModalRef.current?.present();
+          }}
+          onTouchEnd={() => {}}
+          onPress={() => {}}
+          initialRegion={{
+            latitude: 23.118644,
+            longitude: -82.3806211,
+            latitudeDelta: 0.0322,
+            longitudeDelta: 0.0221,
+          }}
+          ref={mapViewRef}
+          provider={PROVIDER_GOOGLE}
+          customMapStyle={colorScheme === 'dark' ? NightMap : undefined}>
+          <Polyline
+            coordinates={activeRoute?.coords ?? []}
+            strokeColor={Colors[colorScheme ?? 'light'].text_dark}
+            strokeWidth={5}
+            // strokeColor="#000" // fallback for when `strokeColors` is not supported by the map-provider
+            strokeColors={[
+              '#7F0000',
+              '#00000000', // no color, creates a "long" gradient between the previous and next coordinate
+              '#B24112',
+              '#E5845C',
+              '#238C23',
+              '#7F0000',
+            ]}
+            // strokeWidth={6}
+          />
+          <TaxisMarkers onPressTaxi={() => {}} />
+          <AnimatedRouteMarker key={2} />
+          <UserMarker title="User Marker" description="User Marker Description" userId="123" />
+        </MapView>
+
+        <BottomSheetModal
+          // stackBehavior="push"
+          ref={bottomSheetModalRef}
+          overDragResistanceFactor={6}
+          // keyboardBehavior={Platform.OS === 'ios' ? 'interactive' : 'fillParent'}
+          // keyboardBlurBehavior={keyboardBlurBehavior}
+          handleComponent={renderCustomHandle}
+          index={0}
+          onChange={(e) => {
+            console.log('BottomSheetModal-onChange', e);
+            // setSheetCurrentSnap(e);
+            // if (sheetCurrentSnap === 2) placesInputViewRef.current?.blur();
+          }}
+          enableDynamicSizing
+          android_keyboardInputMode="adjustResize"
+          enableContentPanningGesture={false}
+          // enableHandlePanningGesture={false}
+          enablePanDownToClose={false}
+          snapPoints={snapPoints}
+          backgroundStyle={{
+            borderRadius: 15,
+            // backgroundColor: Colors[colorScheme ?? 'light'].background,
+            backgroundColor: 'transparent',
+          }}
+          handleIndicatorStyle={{
+            backgroundColor:
+              /* sheetCurrentSnap === 2 ? 'transparent' :  */ Colors[colorScheme ?? 'light'].border,
+          }}
+          handleStyle={{
+            backgroundColor: 'transparent',
+            // backgroundColor: 'black',
+            borderTopRightRadius: 30,
+            borderTopLeftRadius: 30,
+          }}
+          containerStyle={{
+            backgroundColor: 'transparent',
+          }}
+          style={{
+            backgroundColor: Colors[colorScheme ?? 'light'].background_light,
+            // backgroundColor: 'rgba(50, 50, 50, 0.5)',
+            borderTopRightRadius: 12,
+            borderTopLeftRadius: 12,
+
+            shadowColor: Colors[colorScheme ?? 'light'].shadow,
+            shadowOffset: {
+              width: 0,
+              height: 2,
+            },
+            shadowOpacity: 0.6,
+            shadowRadius: 4,
+            elevation: 2,
+          }}
+          backdropComponent={renderBackdrop}>
+          <BottomSheetContent userMarkers={userMarkers} activeRoute={activeRoute} />
+        </BottomSheetModal>
+
+        <StatusBar
+          backgroundColor="transparent"
+          barStyle={colorScheme === 'dark' ? 'light-content' : 'dark-content'}
         />
-
-        <TaxisMarkers onPressTaxi={() => {}} />
-        <AnimatedRouteMarker key={2} />
-      </MapView>
-
-      <BottomSheetModal
-        // stackBehavior="push"
-        ref={bottomSheetModalRef}
-        overDragResistanceFactor={6}
-        // keyboardBehavior={Platform.OS === 'ios' ? 'interactive' : 'fillParent'}
-        // keyboardBlurBehavior={keyboardBlurBehavior}
-        handleComponent={renderCustomHandle}
-        index={0}
-        onChange={(e) => {
-          console.log('BottomSheetModal-onChange', e);
-          // setSheetCurrentSnap(e);
-          // if (sheetCurrentSnap === 2) placesInputViewRef.current?.blur();
-        }}
-        enableDynamicSizing
-        android_keyboardInputMode="adjustResize"
-        enableContentPanningGesture={false}
-        // enableHandlePanningGesture={false}
-        enablePanDownToClose={false}
-        snapPoints={snapPoints}
-        backgroundStyle={{
-          borderRadius: 15,
-          // backgroundColor: Colors[colorScheme ?? 'light'].background,
-          backgroundColor: 'transparent',
-        }}
-        handleIndicatorStyle={{
-          backgroundColor:
-            /* sheetCurrentSnap === 2 ? 'transparent' :  */ Colors[colorScheme ?? 'light'].border,
-        }}
-        handleStyle={{
-          backgroundColor: 'transparent',
-          // backgroundColor: 'black',
-          borderTopRightRadius: 30,
-          borderTopLeftRadius: 30,
-        }}
-        containerStyle={{
-          backgroundColor: 'transparent',
-        }}
-        style={{
-          backgroundColor: Colors[colorScheme ?? 'light'].background_light,
-          // backgroundColor: 'rgba(50, 50, 50, 0.5)',
-          borderTopRightRadius: 12,
-          borderTopLeftRadius: 12,
-
-          shadowColor: Colors[colorScheme ?? 'light'].shadow,
-          shadowOffset: {
-            width: 0,
-            height: 2,
-          },
-          shadowOpacity: 0.6,
-          shadowRadius: 4,
-          elevation: 2,
-        }}
-        backdropComponent={renderBackdrop}>
-        <BottomSheetContent userMarkers={userMarkers} activeRoute={activeRoute} />
-      </BottomSheetModal>
-
-      <StatusBar
-        backgroundColor="transparent"
-        barStyle={colorScheme === 'dark' ? 'light-content' : 'dark-content'}
-      />
-    </BottomSheetModalProvider>
+      </BottomSheetModalProvider>
+    </GestureHandlerRootView>
   );
 }

@@ -1,11 +1,6 @@
 import React, { useRef, useCallback, useEffect, memo } from 'react';
 import { Animated, Dimensions, Easing, Platform } from 'react-native';
-import type {
-  MapMarkerProps,
-  AnimatedRegion,
-  MarkerAnimated,
-  type MapMarker,
-} from 'react-native-maps';
+import { MapMarkerProps, AnimatedRegion, MarkerAnimated, type MapMarker } from 'react-native-maps';
 
 type AnimatedMarkerParams = {
   longitude: number;

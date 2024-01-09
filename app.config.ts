@@ -26,6 +26,9 @@ const defineConfig = (): ExpoConfig => ({
     entitlements: {
       'com.apple.developer.networking.wifi-info': true, // https://docs.expo.dev/versions/latest/sdk/netinfo/
     },
+    infoPlist: {
+      UIBackgroundModes: ['location', 'fetch', 'remote-notification'],
+    },
   },
   android: {
     googleServicesFile: './google-services.json',

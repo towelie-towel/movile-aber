@@ -10,13 +10,15 @@ import {
 import { getCurrentPositionAsync, Accuracy } from 'expo-location';
 import React, { useCallback, useMemo } from 'react';
 import { View, Text, useColorScheme } from 'react-native';
-import Colors from '~/constants/Colors';
 import { LatLng } from 'react-native-maps';
 import { Extrapolate, interpolate, useAnimatedStyle } from 'react-native-reanimated';
-import { ScrollView } from 'react-native-gesture-handler';
 
 import { UserMarkerIconType } from '~/components/AddUserMarker';
+import RippleBtn from '~/components/RippleBtn';
 import { ScaleBtn } from '~/components/ScaleBtn';
+import Colors from '~/constants/Colors';
+// import { ScrollView } from 'react-native-gesture-handler';
+
 import { MarkerCloudSVG } from '~/constants/Icons';
 import {
   GooglePlacesAutocomplete,
@@ -24,8 +26,7 @@ import {
   GooglePlaceDetail,
 } from '~/lib/google-places-autocomplete/GooglePlacesAutocomplete';
 import { polylineDecode } from '~/utils/directions';
-import RippleBtn from '~/components/RippleBtn';
-import RippleCenter from '~/components/RippleCenterBtn';
+// import RippleCenter from '~/components/RippleCenterBtn';
 
 export const BottomSheetContent = ({
   activeRoute,
@@ -142,7 +143,7 @@ export const BottomSheetContent = ({
               alignItems: 'center',
             }}
             onPress={() => {}}>
-            <MaterialIcons name="supervised-user-circle" size={42} color={'#C7C7CB'} />
+            <MaterialIcons name="supervised-user-circle" size={42} color="#C7C7CB" />
           </ScaleBtn>
         )}
         renderHeaderComponent={() => (
@@ -221,14 +222,14 @@ export const BottomSheetContent = ({
             // borderRadius: 10,
             // paddingTop: 2,
 
-            height: 'auto',
+            height: 200,
 
             borderColor: 'green',
             borderWidth: 2,
             borderStyle: 'dotted',
           },
           listView: {
-            height: 'auto',
+            height: 200,
             // padding: 12,
             // backgroundColor: Colors[colorScheme ?? 'light'].background,
             // marginHorizontal: 10,
@@ -289,7 +290,7 @@ export const BottomSheetContent = ({
               gap: 18,
               paddingHorizontal: 12,
             }}>
-            <MaterialIcons name="supervised-user-circle" size={42} color={'#0C79FE'} />
+            <MaterialIcons name="supervised-user-circle" size={42} color="#0C79FE" />
             <BottomSheetView style={{}}>
               <Text>Parked Car</Text>
               <Text>A 5.2km de distancia.</Text>

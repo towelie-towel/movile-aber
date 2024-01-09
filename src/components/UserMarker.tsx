@@ -16,6 +16,7 @@ const UserMarker = ({
 }: { description: string; title: string; userId: string } & Omit<MapMarkerProps, 'coordinate'>) => {
   const colorScheme = useColorScheme();
   const { position, heading } = useWSConnection();
+  console.log(position, heading);
 
   if (!position || !heading) {
     return;

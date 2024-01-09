@@ -1,8 +1,10 @@
 import NetInfo from '@react-native-community/netinfo';
 import * as ExpoLocation from 'expo-location';
+import * as TaskManager from 'expo-task-manager';
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 
 const WS_LOGS = false;
+const LOCATION_TASK_NAME = 'background-location-task';
 
 export interface WSTaxi {
   latitude: number;
@@ -37,6 +39,18 @@ const WSContext = createContext(initialValue);
 
 export const useWSConnection = () => {
   return useContext(WSContext);
+};
+
+const requestPermissions = async () => {
+  const { status: foregroundStatus } = await ExpoLocation.requestForegroundPermissionsAsync();
+  if (foregroundStatus === 'granted') {
+    const { status: backgroundStatus } = await ExpoLocation.requestBackgroundPermissionsAsync();
+    if (backgroundStatus === 'granted') {
+      await ExpoLocation.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+        accuracy: ExpoLocation.Accuracy.Balanced,
+      });
+    }
+  }
 };
 
 export const WSProvider = ({ children }: { children: React.ReactNode }) => {
@@ -118,13 +132,7 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const trackPosition = async () => {
-    const { granted: permissionGranted } = await ExpoLocation.getForegroundPermissionsAsync();
-
-    if (!permissionGranted) {
-      if (WS_LOGS)
-        console.log('🚫 trackPosition ==> permissionGranted = false (requesting permission)');
-      await ExpoLocation.requestForegroundPermissionsAsync();
-    }
+    await requestPermissions();
 
     if (positionSubscription.current) {
       if (WS_LOGS) console.log('🌬️ trackPosition ==> positionSubscription = true ');
@@ -240,3 +248,15 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
     </WSContext.Provider>
   );
 };
+
+TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }) => {
+  if (error) {
+    // Error occurred - check `error.message` for more details.
+    return;
+  }
+  if (data) {
+    const { locations } = data;
+    // do something with the locations captured in the background
+    console.log(locations);
+  }
+});

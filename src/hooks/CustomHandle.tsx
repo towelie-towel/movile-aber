@@ -7,6 +7,7 @@ import Animated, {
   useAnimatedStyle,
   useDerivedValue,
 } from 'react-native-reanimated';
+
 import Colors from '~/constants/Colors';
 
 const toRad = (deg: number) => {
