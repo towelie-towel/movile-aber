@@ -14,7 +14,7 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@expo/metro-config": "~0.17.1",
+    "@expo/metro-config": "~0.16.0",
     "@gorhom/bottom-sheet": "4.6.0",
     "@react-native-async-storage/async-storage": "1.21.0",
     "@react-native-community/netinfo": "11.1.0",

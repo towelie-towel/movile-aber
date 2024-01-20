@@ -6,6 +6,7 @@ import {
   BottomSheetTextInput,
   TouchableOpacity,
   BottomSheetScrollView,
+  ANIMATION_SOURCE,
 } from '@gorhom/bottom-sheet';
 import { getCurrentPositionAsync, Accuracy } from 'expo-location';
 import React, { useCallback, useMemo } from 'react';
@@ -37,7 +38,7 @@ export const BottomSheetContent = ({
 }) => {
   const colorScheme = useColorScheme();
 
-  const { animatedIndex } = useBottomSheetInternal();
+  const { animatedIndex, animateToPosition } = useBottomSheetInternal();
 
   const listContentContainerStyle = useAnimatedStyle(() => ({
     // [-1, 1, 2] this first array defines the [-1, disapearPoint, aperPoint]
@@ -83,7 +84,7 @@ export const BottomSheetContent = ({
 
           // borderColor: Colors[colorScheme ?? 'light'].primary,
           // borderWidth: 2,
-          // borderStyle: 'dashed',
+          // borderStyle: 'dotted',
         }}>
         <TouchableOpacity
           onPress={() => {
@@ -105,12 +106,13 @@ export const BottomSheetContent = ({
   return (
     <BottomSheetView
       style={{
-        borderColor: 'orange',
-        borderWidth: 2,
-        borderStyle: 'dotted',
         width: '90%',
         alignSelf: 'center',
         height: '100%',
+
+        /* borderColor: 'orange',
+        borderWidth: 2,
+        borderStyle: 'dotted', */
       }}>
       <GooglePlacesAutocomplete
         // ref={placesInputViewRef}
@@ -132,6 +134,37 @@ export const BottomSheetContent = ({
               color={Colors[colorScheme ?? 'light'].text_light}
             />
           </ScaleBtn>
+        )}
+        renderRow={(data) => (
+          <RippleBtn
+            style={{
+              height: 60,
+              width: '100%',
+              borderRadius: 12,
+
+              /* borderColor: 'black',
+            borderWidth: 2,
+            borderStyle: 'dotted', */
+            }}
+            onTap={() => {}}>
+            <BottomSheetView
+              style={{
+                height: '100%',
+                width: '100%',
+                flexDirection: 'row',
+                flexWrap: 'wrap',
+                alignItems: 'center',
+                alignContent: 'center',
+                gap: 18,
+                paddingHorizontal: 12,
+              }}>
+              <MaterialIcons name="supervised-user-circle" size={42} color="#0C79FE" />
+              <BottomSheetView style={{}}>
+                <Text>{data.reference}</Text>
+                <Text>{data.description} A 5.2km de distancia.</Text>
+              </BottomSheetView>
+            </BottomSheetView>
+          </RippleBtn>
         )}
         renderRightButton={() => (
           <ScaleBtn
@@ -168,8 +201,6 @@ export const BottomSheetContent = ({
         }))}
         placeholder="Buscar Lugar"
         textInputProps={{
-          /* onFocus: onSearchBarFocus,
-          onBlur: onSearchBarBlur, */
           placeholderTextColor: colorScheme === 'light' ? '#6C6C6C' : 'black',
         }}
         enablePoweredByContainer={false}
@@ -201,6 +232,7 @@ export const BottomSheetContent = ({
           };
           tokio(data, details);
         }}
+        debounce={400}
         styles={{
           textInputContainer: {
             position: 'relative',
@@ -218,24 +250,20 @@ export const BottomSheetContent = ({
             backgroundColor: Colors[colorScheme ?? 'light'].background_light1,
           },
           container: {
-            position: 'relative',
+            // position: 'relative',
             // borderRadius: 10,
             // paddingTop: 2,
-
-            height: 200,
-
-            borderColor: 'green',
+            // height: 200,
+            /* borderColor: 'green',
             borderWidth: 2,
-            borderStyle: 'dotted',
+            borderStyle: 'dotted', */
           },
           listView: {
-            height: 200,
-            // padding: 12,
-            // backgroundColor: Colors[colorScheme ?? 'light'].background,
-            // marginHorizontal: 10,
-            // overflow: 'hidden',
-            borderRadius: 10,
-            marginTop: 5,
+            backgroundColor: 'white',
+            borderRadius: 5,
+            flex: 1,
+            elevation: 3,
+            zIndex: 10,
           },
           row: {
             height: 30,
@@ -255,11 +283,13 @@ export const BottomSheetContent = ({
         currentLocationLabel="My Location" */
       />
       <BottomSheetView
-        style={{
-          borderColor: 'brown',
+        style={
+          {
+            /* borderColor: 'brown',
           borderStyle: 'dotted',
-          borderWidth: 1,
-        }}>
+          borderWidth: 1, */
+          }
+        }>
         <Text
           style={{
             fontWeight: '500',
@@ -269,14 +299,15 @@ export const BottomSheetContent = ({
           }}>
           Siri Suggestions
         </Text>
-        <RippleBtn
+        {/* <RippleBtn
           style={{
             height: 60,
             width: '100%',
+            borderRadius: 12,
 
-            borderColor: 'black',
-            borderWidth: 2,
-            borderStyle: 'dotted',
+            // borderColor: 'black',
+            // borderWidth: 2,
+            // borderStyle: 'dotted',
           }}
           onTap={() => {}}>
           <BottomSheetView
@@ -296,7 +327,7 @@ export const BottomSheetContent = ({
               <Text>A 5.2km de distancia.</Text>
             </BottomSheetView>
           </BottomSheetView>
-        </RippleBtn>
+        </RippleBtn> */}
       </BottomSheetView>
     </BottomSheetView>
   );

@@ -50,6 +50,8 @@ import {
 import { getData } from '~/lib/storage';
 import { polylineDecode } from '~/utils/directions';
 
+const SNAP_POINTS = ['10%', '50%', '75%'];
+
 export default function Home() {
   useKeepAwake();
   console.log('Map re-rendered');
@@ -78,25 +80,22 @@ export default function Home() {
   // bottom sheet
   const [sheetCurrentSnap, setSheetCurrentSnap] = useState(1);
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
-  const snapPoints = useMemo(() => [120, '75%', '90%'], []);
+  // const snapPoints = useMemo(() => [120, '75%', '90%'], []);
 
   // const [selectedTaxiId, _setSelectedTaxiId] = useState<string | null>(null);
   // const [isModalVisible, setIsModalVisible] = useState(false);
 
   useEffect(() => {
-    getData('user_markers').then((data) => {
-      setUserMarkers(data ?? []);
-    });
     // only needed for Android because
     // keyboardBehavior="extend" is not working properly
     // on Android, it leaves a gap between the keyboard and the bottom sheet
     // when the keyboard is visible
-    const showSubscription = Keyboard.addListener('keyboardDidShow', () => {
+    /* const showSubscription = Keyboard.addListener('keyboardDidShow', () => {
       if (Platform.OS === 'android') {
         console.log('keyboardDidShow-BS-to-1');
         bottomSheetModalRef.current?.snapToIndex(1);
       }
-    });
+    }); */
     const hideSubscription = Keyboard.addListener('keyboardDidHide', () => {
       if (Platform.OS === 'android') {
         console.log('keyboardDidHide-BS-to-0');
@@ -104,10 +103,10 @@ export default function Home() {
       }
     });
     return () => {
-      showSubscription.remove();
+      // showSubscription.remove();
       hideSubscription.remove();
     };
-  }, []);
+  });
 
   // renders
   const renderCustomHandle = useCallback(
@@ -133,10 +132,15 @@ export default function Home() {
     []
   );
 
-  console.log('aa');
-
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <GestureHandlerRootView
+      onLayout={(e) => {
+        console.log(e.nativeEvent.layout);
+        getData('user_markers').then((data) => {
+          setUserMarkers(data ?? []);
+        });
+      }}
+      style={{ flex: 1 }}>
       <BottomSheetModalProvider>
         <MapView
           style={{
@@ -182,22 +186,23 @@ export default function Home() {
         <BottomSheetModal
           // stackBehavior="push"
           ref={bottomSheetModalRef}
-          overDragResistanceFactor={6}
-          // keyboardBehavior={Platform.OS === 'ios' ? 'interactive' : 'fillParent'}
-          // keyboardBlurBehavior={keyboardBlurBehavior}
+          // overDragResistanceFactor={6}
+          keyboardBehavior="extend"
+          keyboardBlurBehavior="restore"
           handleComponent={renderCustomHandle}
           index={0}
           onChange={(e) => {
             console.log('BottomSheetModal-onChange', e);
-            // setSheetCurrentSnap(e);
+            setSheetCurrentSnap(e);
             // if (sheetCurrentSnap === 2) placesInputViewRef.current?.blur();
           }}
-          enableDynamicSizing
+          // enableDynamicSizing
           android_keyboardInputMode="adjustResize"
           enableContentPanningGesture={false}
+          enableDismissOnClose={false}
           // enableHandlePanningGesture={false}
           enablePanDownToClose={false}
-          snapPoints={snapPoints}
+          snapPoints={SNAP_POINTS}
           backgroundStyle={{
             borderRadius: 15,
             // backgroundColor: Colors[colorScheme ?? 'light'].background,

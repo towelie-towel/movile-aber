@@ -3,7 +3,7 @@ import * as ExpoLocation from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 
-const WS_LOGS = false;
+const WS_LOGS = true;
 const LOCATION_TASK_NAME = 'background-location-task';
 
 export interface WSTaxi {
@@ -43,13 +43,16 @@ export const useWSConnection = () => {
 
 const requestPermissions = async () => {
   const { status: foregroundStatus } = await ExpoLocation.requestForegroundPermissionsAsync();
+
   if (foregroundStatus === 'granted') {
-    const { status: backgroundStatus } = await ExpoLocation.requestBackgroundPermissionsAsync();
+    if (WS_LOGS) console.log('✅ requestPermissions ==> foregroundStatus = granted');
+    /* const { status: backgroundStatus } = await ExpoLocation.requestBackgroundPermissionsAsync();
     if (backgroundStatus === 'granted') {
+      if (WS_LOGS) console.log('✅ requestPermissions ==> backgroundStatus = granted');
       await ExpoLocation.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
         accuracy: ExpoLocation.Accuracy.Balanced,
       });
-    }
+    } */
   }
 };
 
@@ -133,6 +136,7 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
 
   const trackPosition = async () => {
     await requestPermissions();
+    if (WS_LOGS) console.log('📌 trackPosition ');
 
     if (positionSubscription.current) {
       if (WS_LOGS) console.log('🌬️ trackPosition ==> positionSubscription = true ');
@@ -151,6 +155,7 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
           if (streamingTo) {
             sendStringToServer(`${newPosition.coords.latitude},${newPosition.coords.longitude}`);
           }
+          console.log(newPosition);
           setPosition(newPosition);
         } catch (error) {
           console.error(error);
@@ -257,6 +262,6 @@ TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }) => {
   if (data) {
     const { locations } = data;
     // do something with the locations captured in the background
-    console.log(locations);
+    if (WS_LOGS) console.log(locations);
   }
 });
