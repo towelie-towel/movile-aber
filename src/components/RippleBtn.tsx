@@ -15,7 +15,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-const RIPPLE_LOGS = false;
+const RIPPLE_LOGS = true;
 
 interface RippleProps {
   style?: StyleProp<ViewStyle>;

@@ -106,7 +106,7 @@ export default function Home() {
       // showSubscription.remove();
       hideSubscription.remove();
     };
-  });
+  }, []);
 
   // renders
   const renderCustomHandle = useCallback(

@@ -54,7 +54,7 @@ const defaultStyles = {
   listView: {},
   row: {
     backgroundColor: '#FFFFFF',
-    padding: 13,
+    // padding: 13,
     minHeight: 44,
     flexDirection: 'row',
   },
@@ -765,7 +765,10 @@ export const GooglePlacesAutocomplete = forwardRef((props, ref) => {
             {...userProps}
           />
           <RippleCenter
-            onTap={() => inputRef.current.clear()}
+            onTap={() => {
+              inputRef.current.clear();
+              inputRef.current.blur();
+            }}
             radius={18}
             style={{
               backgroundColor: props.styles.textInput?.backgroundColor ?? '#C7C7CB',

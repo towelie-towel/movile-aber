@@ -9,8 +9,9 @@ import {
   ANIMATION_SOURCE,
 } from '@gorhom/bottom-sheet';
 import { getCurrentPositionAsync, Accuracy } from 'expo-location';
-import React, { useCallback, useMemo } from 'react';
-import { View, Text, useColorScheme } from 'react-native';
+import React, { Ref, useCallback, useEffect, useMemo, useRef } from 'react';
+import { Platform } from 'react-native';
+import { View, Text, useColorScheme, Keyboard } from 'react-native';
 import { LatLng } from 'react-native-maps';
 import { Extrapolate, interpolate, useAnimatedStyle } from 'react-native-reanimated';
 
@@ -25,6 +26,7 @@ import {
   GooglePlacesAutocomplete,
   GooglePlaceData,
   GooglePlaceDetail,
+  GooglePlacesAutocompleteRef,
 } from '~/lib/google-places-autocomplete/GooglePlacesAutocomplete';
 import { polylineDecode } from '~/utils/directions';
 // import RippleCenter from '~/components/RippleCenterBtn';
@@ -37,6 +39,8 @@ export const BottomSheetContent = ({
   userMarkers: UserMarkerIconType[];
 }) => {
   const colorScheme = useColorScheme();
+
+  const placesInputViewRef = useRef<GooglePlacesAutocompleteRef>(null);
 
   const { animatedIndex, animateToPosition } = useBottomSheetInternal();
 
@@ -110,12 +114,12 @@ export const BottomSheetContent = ({
         alignSelf: 'center',
         height: '100%',
 
-        /* borderColor: 'orange',
-        borderWidth: 2,
-        borderStyle: 'dotted', */
+        // borderColor: 'orange',
+        // borderWidth: 2,
+        // borderStyle: 'dotted',
       }}>
       <GooglePlacesAutocomplete
-        // ref={placesInputViewRef}
+        ref={placesInputViewRef}
         renderLeftButton={() => (
           <ScaleBtn
             style={{
@@ -135,16 +139,29 @@ export const BottomSheetContent = ({
             />
           </ScaleBtn>
         )}
-        renderRow={(data) => (
+        renderRightButton={() => (
+          <ScaleBtn
+            style={{
+              width: 52,
+              height: '100%',
+              borderRadius: 12,
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+            onPress={() => {}}>
+            <MaterialIcons name="supervised-user-circle" size={42} color="#C7C7CB" />
+          </ScaleBtn>
+        )}
+        /* renderRow={(data) => (
           <RippleBtn
             style={{
-              height: 60,
+              height: 42,
               width: '100%',
-              borderRadius: 12,
+              // borderRadius: 12,
 
-              /* borderColor: 'black',
-            borderWidth: 2,
-            borderStyle: 'dotted', */
+              borderColor: 'black',
+              borderWidth: 2,
+              borderStyle: 'dotted',
             }}
             onTap={() => {}}>
             <BottomSheetView
@@ -165,21 +182,8 @@ export const BottomSheetContent = ({
               </BottomSheetView>
             </BottomSheetView>
           </RippleBtn>
-        )}
-        renderRightButton={() => (
-          <ScaleBtn
-            style={{
-              width: 52,
-              height: '100%',
-              borderRadius: 12,
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}
-            onPress={() => {}}>
-            <MaterialIcons name="supervised-user-circle" size={42} color="#C7C7CB" />
-          </ScaleBtn>
-        )}
-        renderHeaderComponent={() => (
+        )} */
+        /* renderHeaderComponent={() => (
           <Text
             style={{
               fontWeight: '500',
@@ -189,7 +193,7 @@ export const BottomSheetContent = ({
             }}>
             Siri Suggestions
           </Text>
-        )}
+        )} */
         predefinedPlaces={userMarkers.map((marker) => ({
           description: marker.name,
           geometry: {
@@ -235,7 +239,7 @@ export const BottomSheetContent = ({
         debounce={400}
         styles={{
           textInputContainer: {
-            position: 'relative',
+            // position: 'relative',
             // overflow: 'hidden',
             height: 42,
             borderRadius: 10,
@@ -253,10 +257,11 @@ export const BottomSheetContent = ({
             // position: 'relative',
             // borderRadius: 10,
             // paddingTop: 2,
-            // height: 200,
-            /* borderColor: 'green',
-            borderWidth: 2,
-            borderStyle: 'dotted', */
+            height: 400,
+
+            // borderColor: 'green',
+            // borderWidth: 2,
+            // borderStyle: 'dotted',
           },
           listView: {
             backgroundColor: 'white',
@@ -264,11 +269,16 @@ export const BottomSheetContent = ({
             flex: 1,
             elevation: 3,
             zIndex: 10,
+            marginTop: 12,
+
+            // borderColor: 'black',
+            // borderWidth: 2,
+            // borderStyle: 'dotted',
           },
-          row: {
+          /* row: {
             height: 30,
             backgroundColor: 'transparent',
-          },
+          }, */
         }}
         fetchDetails
         query={{
@@ -279,8 +289,8 @@ export const BottomSheetContent = ({
           radius: 100,
         }}
         // nearbyPlacesAPI='GooglePlacesSearch'
-        /* currentLocation
-        currentLocationLabel="My Location" */
+        // currentLocation
+        // currentLocationLabel="My Location"
       />
       <BottomSheetView
         style={
