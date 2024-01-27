@@ -54,7 +54,7 @@ const defaultStyles = {
   listView: {},
   row: {
     backgroundColor: '#FFFFFF',
-    // padding: 13,
+    padding: 13,
     minHeight: 44,
     flexDirection: 'row',
   },
@@ -767,7 +767,7 @@ export const GooglePlacesAutocomplete = forwardRef((props, ref) => {
           <RippleCenter
             onTap={() => {
               inputRef.current.clear();
-              inputRef.current.blur();
+              // inputRef.current.blur();
             }}
             radius={18}
             style={{

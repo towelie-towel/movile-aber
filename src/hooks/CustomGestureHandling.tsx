@@ -10,8 +10,7 @@ import {
 } from '@gorhom/bottom-sheet';
 import { getCurrentPositionAsync, Accuracy } from 'expo-location';
 import React, { Ref, useCallback, useEffect, useMemo, useRef } from 'react';
-import { Platform } from 'react-native';
-import { View, Text, useColorScheme, Keyboard } from 'react-native';
+import { View, Text, useColorScheme, Keyboard, Platform } from 'react-native';
 import { LatLng } from 'react-native-maps';
 import { Extrapolate, interpolate, useAnimatedStyle } from 'react-native-reanimated';
 
@@ -54,6 +53,29 @@ export const BottomSheetContent = ({
     opacity: interpolate(animatedIndex.value, [-1, 0, 1], [1, 1, -1], Extrapolate.CLAMP),
   }));
   const startBtnStyle = useMemo(() => [startBtnContainerStyle], [startBtnContainerStyle]);
+
+  useEffect(() => {
+    // only needed for Android because
+    // keyboardBehavior="extend" is not working properly
+    // on Android, it leaves a gap between the keyboard and the bottom sheet
+    // when the keyboard is visible
+    /* const showSubscription = Keyboard.addListener('keyboardDidShow', () => {
+      if (Platform.OS === 'android') {
+        console.log('keyboardDidShow-BS-to-1');
+        bottomSheetModalRef.current?.snapToIndex(1);
+      }
+    }); */
+    const hideSubscription = Keyboard.addListener('keyboardDidHide', () => {
+      if (Platform.OS === 'android') {
+        placesInputViewRef.current?.clear();
+        placesInputViewRef.current?.blur();
+      }
+    });
+    return () => {
+      // showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
 
   const renderBottomSheetItem = useCallback(
     ({ item }: { item: { userId: string } }) => (
@@ -254,16 +276,18 @@ export const BottomSheetContent = ({
             backgroundColor: Colors[colorScheme ?? 'light'].background_light1,
           },
           container: {
-            // position: 'relative',
+            position: 'relative',
             // borderRadius: 10,
             // paddingTop: 2,
-            height: 400,
+            // height: 400,
+            overflow: 'visible',
 
             // borderColor: 'green',
             // borderWidth: 2,
             // borderStyle: 'dotted',
           },
           listView: {
+            position: 'absolute',
             backgroundColor: 'white',
             borderRadius: 5,
             flex: 1,
@@ -271,9 +295,9 @@ export const BottomSheetContent = ({
             zIndex: 10,
             marginTop: 12,
 
-            // borderColor: 'black',
-            // borderWidth: 2,
-            // borderStyle: 'dotted',
+            borderColor: 'black',
+            borderWidth: 2,
+            borderStyle: 'dotted',
           },
           /* row: {
             height: 30,
@@ -292,12 +316,12 @@ export const BottomSheetContent = ({
         // currentLocation
         // currentLocationLabel="My Location"
       />
-      <BottomSheetView
+      {/* <BottomSheetView
         style={
           {
-            /* borderColor: 'brown',
-          borderStyle: 'dotted',
-          borderWidth: 1, */
+            // borderColor: 'brown',
+            // borderStyle: 'dotted',
+            // borderWidth: 1,
           }
         }>
         <Text
@@ -309,7 +333,7 @@ export const BottomSheetContent = ({
           }}>
           Siri Suggestions
         </Text>
-        {/* <RippleBtn
+        <RippleBtn
           style={{
             height: 60,
             width: '100%',
@@ -337,8 +361,8 @@ export const BottomSheetContent = ({
               <Text>A 5.2km de distancia.</Text>
             </BottomSheetView>
           </BottomSheetView>
-        </RippleBtn> */}
-      </BottomSheetView>
+        </RippleBtn>
+      </BottomSheetView> */}
     </BottomSheetView>
   );
 };
