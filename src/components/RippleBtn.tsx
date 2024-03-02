@@ -15,7 +15,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-const RIPPLE_LOGS = true;
+const RIPPLE_LOGS = false;
 
 interface RippleProps {
   style?: StyleProp<ViewStyle>;
@@ -78,8 +78,8 @@ const Ripple: React.FC<RippleProps> = ({ style, onTap, children, contentContaine
       //   scale.value = 0;
       // });
     },
-    onFail: () => {
-      if (RIPPLE_LOGS) console.log('onFail');
+    onFail: (e) => {
+      if (RIPPLE_LOGS) console.log('onFail', e);
       // rippleOpacity.value = withTiming(0, { duration: 1000 });
       // scale.value = withTiming(0, { duration: 1000 });
     },

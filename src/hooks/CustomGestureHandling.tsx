@@ -33,9 +33,11 @@ import { polylineDecode } from '~/utils/directions';
 export const BottomSheetContent = ({
   activeRoute,
   userMarkers,
+  setActiveRoute,
 }: {
   activeRoute: { coords: LatLng[] } | null | undefined;
   userMarkers: UserMarkerIconType[];
+  setActiveRoute: React.Dispatch<{ coords: LatLng[] } | null>;
 }) => {
   const colorScheme = useColorScheme();
 
@@ -135,6 +137,7 @@ export const BottomSheetContent = ({
         width: '90%',
         alignSelf: 'center',
         height: '100%',
+        paddingTop: 10,
 
         // borderColor: 'orange',
         // borderWidth: 2,
@@ -153,7 +156,7 @@ export const BottomSheetContent = ({
               borderBottomLeftRadius: 10,
               backgroundColor: Colors[colorScheme ?? 'light'].background_light1,
             }}
-            onPress={() => {}}>
+            onPress={() => { }}>
             <MaterialCommunityIcons
               name="magnify"
               size={28}
@@ -170,7 +173,7 @@ export const BottomSheetContent = ({
               justifyContent: 'center',
               alignItems: 'center',
             }}
-            onPress={() => {}}>
+            onPress={() => { }}>
             <MaterialIcons name="supervised-user-circle" size={42} color="#C7C7CB" />
           </ScaleBtn>
         )}
@@ -246,9 +249,9 @@ export const BottomSheetContent = ({
               const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map(
                 (point) => ({ latitude: point[0]!, longitude: point[1]! })
               );
-              /* setActiveRoute({
+              setActiveRoute({
                 coords: decodedCoords,
-              }); */
+              });
               console.log(JSON.stringify(decodedCoords, null, 2));
             } catch (error) {
               if (error instanceof Error) {
@@ -295,9 +298,9 @@ export const BottomSheetContent = ({
             zIndex: 10,
             marginTop: 12,
 
-            borderColor: 'black',
-            borderWidth: 2,
-            borderStyle: 'dotted',
+            // borderColor: 'black',
+            // borderWidth: 2,
+            // borderStyle: 'dotted',
           },
           /* row: {
             height: 30,
@@ -312,9 +315,9 @@ export const BottomSheetContent = ({
           location: '23.11848,-82.38052',
           radius: 100,
         }}
-        // nearbyPlacesAPI='GooglePlacesSearch'
-        // currentLocation
-        // currentLocationLabel="My Location"
+      // nearbyPlacesAPI='GooglePlacesSearch'
+      // currentLocation
+      // currentLocationLabel="My Location"
       />
       {/* <BottomSheetView
         style={

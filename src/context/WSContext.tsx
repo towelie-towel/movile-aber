@@ -156,6 +156,9 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
             sendStringToServer(`${newPosition.coords.latitude},${newPosition.coords.longitude}`);
           }
           console.log(newPosition);
+          // if (
+          //   (newPosition.coords.accuracy ?? 0) > (position?.coords.accuracy ?? 0)  // The time at which this position information was obtained, in milliseconds since epoch
+          // )
           setPosition(newPosition);
         } catch (error) {
           console.error(error);

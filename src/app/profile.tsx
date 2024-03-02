@@ -78,7 +78,7 @@ export default function SignIn() {
     setIsLoading(false);
   };
 
-  useEffect(() => {}, []);
+  useEffect(() => { }, []);
 
   return (
     <View>
@@ -101,7 +101,7 @@ export default function SignIn() {
           </Text>
         )}
         <Image
-          source={signInConfigs?.image ?? require('../../../assets/Logo.png')}
+          source={signInConfigs?.image ?? require('../../assets/Logo.png')}
           alt="Tu-Ruta Logo"
         />
       </View>
@@ -210,7 +210,7 @@ export default function SignIn() {
         <ScaleBtn
           onPress={() => {
             void handleSignIn();
-          }}>
+          }} style={{}}>
           <Text darkColor="black">Iniciar Sesión</Text>
           {isLoading && (
             <ActivityIndicator
@@ -223,9 +223,9 @@ export default function SignIn() {
         <ScaleBtn
           onPress={() => {
             if (isOnSignInRoute) {
-              replace('auth/sign-up');
+              replace('sign-up');
             }
-          }}>
+          }} style={{}}>
           <Text>No Tienes Cuenta?</Text>
           <Text>Crear Cuenta</Text>
         </ScaleBtn>

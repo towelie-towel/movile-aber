@@ -38,7 +38,7 @@ const UserMarker = ({
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
         }}
-        radius={position.coords.accuracy || 0}
+        radius={(position.coords.accuracy ?? 0) > 100 ? 100 : (position.coords.accuracy ?? 0)}
         strokeColor="rgba(0, 150, 255, 0.5)"
         fillColor="rgba(0, 150, 255, 0.5)"
       />

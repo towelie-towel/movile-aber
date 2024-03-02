@@ -25,7 +25,7 @@ const RootLayout = () => {
     'Inter-Regular': require('../../assets/Inter-Regular.otf'),
   });
 
-  useEffect(() => {}, []);
+  useEffect(() => { }, []);
 
   const onLayoutRootView = useCallback(async () => {
     if (fontsLoaded) {
@@ -46,8 +46,8 @@ const RootLayout = () => {
             screenOptions={{
               headerShown: false,
             }}>
-            <Stack.Screen name="auth/code" />
-            <Stack.Screen name="auth/sign" />
+            <Stack.Screen name="code" />
+            <Stack.Screen name="sign" />
           </Stack>
         </SafeAreaProvider>
       </UserProvider>

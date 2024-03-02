@@ -493,7 +493,7 @@ const SignUpTab = () => {
     router.setParams({
       phone: inputCronemberg.phone.trim(),
     });
-    router.push({ pathname: 'auth/code', params: { phone: inputCronemberg.phone.trim() } });
+    router.push({ pathname: 'code', params: { phone: inputCronemberg.phone.trim() } });
   };
 
   return (
