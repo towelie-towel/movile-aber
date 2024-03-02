@@ -15,6 +15,7 @@ import {
   KeyboardAvoidingView,
   Button,
   TouchableOpacity,
+  Keyboard,
 } from 'react-native';
 import Popover, { PopoverMode, PopoverPlacement } from 'react-native-popover-view';
 import { Bar } from 'react-native-progress';
@@ -112,8 +113,8 @@ export default function Sign(params: any) {
             <TabBar
               activeColor="#262628"
               labelStyle={{
-                fontSize: 18,
-                fontWeight: 'bold',
+                fontSize: 16,
+                fontWeight: '600',
               }}
               indicatorStyle={{
                 backgroundColor: Colors[colorScheme ?? 'light'].primary,
@@ -285,7 +286,7 @@ const SignInTab = () => {
                   right: 8,
                 }}>
                 <Popover
-                  verticalOffset={-32}
+                  /* verticalOffset={-32} */
                   mode={PopoverMode.RN_MODAL}
                   placement={PopoverPlacement.LEFT}
                   isVisible={inputCronemberg.showPhonePopover}
@@ -368,7 +369,7 @@ const SignInTab = () => {
                 right: 8,
               }}>
               <Popover
-                verticalOffset={-32}
+                /* verticalOffset={-32} */
                 mode={PopoverMode.RN_MODAL}
                 placement={PopoverPlacement.LEFT}
                 isVisible={inputCronemberg.showPasswordPopover}
@@ -585,7 +586,7 @@ const SignUpTab = () => {
                   right: 8,
                 }}>
                 <Popover
-                  verticalOffset={-32}
+                  /* verticalOffset={-32} */
                   mode={PopoverMode.RN_MODAL}
                   placement={PopoverPlacement.LEFT}
                   isVisible={inputCronemberg.showPhonePopover}
@@ -666,7 +667,7 @@ const SignUpTab = () => {
                 right: 8,
               }}>
               <Popover
-                verticalOffset={-32}
+                /* verticalOffset={-32} */
                 mode={PopoverMode.RN_MODAL}
                 placement={PopoverPlacement.LEFT}
                 isVisible={inputCronemberg.showPasswordPopover}
@@ -747,7 +748,7 @@ const SignUpTab = () => {
                 right: 8,
               }}>
               <Popover
-                verticalOffset={-32}
+                /* verticalOffset={-32} */
                 mode={PopoverMode.RN_MODAL}
                 placement={PopoverPlacement.LEFT}
                 isVisible={inputCronemberg.consfirmShowPasswordPopover}

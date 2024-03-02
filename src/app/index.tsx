@@ -10,7 +10,7 @@ import { Image } from 'expo-image';
 import { useKeepAwake } from 'expo-keep-awake';
 // import { Accuracy, getCurrentPositionAsync } from 'expo-location';
 import * as NavigationBar from 'expo-navigation-bar';
-import { Link } from 'expo-router';
+import { Link, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   StatusBar,
@@ -57,6 +57,7 @@ export default function Home() {
   useKeepAwake();
   console.log('Map re-rendered');
   const colorScheme = useColorScheme();
+  const router = useRouter()
 
   if (Platform.OS === "android") {
     // NavigationBar.setBackgroundColorAsync(Colors[colorScheme ?? 'light'].background);
@@ -230,32 +231,21 @@ export default function Home() {
                     {user?.username ?? 'Not signed'}
                   </Text>
 
-                  <Link
-                    href={{ pathname: 'sign' }}
-                    style={{
-                      marginTop: 15,
-                      gap: 8,
-                      flexDirection: 'row',
-                      width: 120,
-                      height: 34,
-                      paddingHorizontal: 12,
-                      paddingVertical: 4,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      borderRadius: 12,
-                      // backgroundColor: Colors[colorScheme ?? 'light'].secondary,
+                  <ScaleBtn onPress={() => {
+                    router.push("sign")
+                  }}>
+                    <View
+                      style={{
+                        marginVertical: 18,
+                        padding: 12,
+                        borderRadius: 12,
+                        backgroundColor: Colors[colorScheme ?? 'light'].secondary,
+                      }}>
+                      <Text>{!isSignedIn ? "Sign In" : user?.phone}</Text>
+                    </View>
+                  </ScaleBtn>
 
-                      borderColor: Colors[colorScheme ?? 'light'].text_dark,
-                      borderWidth: 2,
-                      borderStyle: 'dotted',
-                    }}>
-                    {!isSignedIn ? "Sign In" : user?.phone}
-                    <MaterialIcons
-                      color={Colors[colorScheme ?? 'light'].text_light}
-                      name="arrow-forward-ios"
-                      size={16}
-                    />
-                  </Link>
+
                 </View>
               </View>
               <View
@@ -450,24 +440,21 @@ export default function Home() {
                   gap: 20,
                   marginBottom: 10,
                 }}>
-                <ScaleBtn
-                  style={{
-                    flex: 1,
-                  }}>
+                <ScaleBtn style={{
+                  flex: 1
+                }}>
                   <ColorInstagram />
                 </ScaleBtn>
 
-                <ScaleBtn
-                  style={{
-                    flex: 1,
-                  }}>
+                <ScaleBtn style={{
+                  flex: 1
+                }}>
                   <ColorFacebook />
                 </ScaleBtn>
 
-                <ScaleBtn
-                  style={{
-                    flex: 1,
-                  }}>
+                <ScaleBtn style={{
+                  flex: 1
+                }}>
                   <ColorTwitter />
                 </ScaleBtn>
 

@@ -5,7 +5,7 @@ type PressBtnProps = {
   onPress?: () => void;
   callback?: () => void;
   disabled?: boolean;
-  style: StyleProp<ViewStyle>;
+  style?: StyleProp<ViewStyle>;
   children: React.ReactNode;
 };
 
