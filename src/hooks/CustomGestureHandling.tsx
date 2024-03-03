@@ -10,7 +10,7 @@ import {
 } from '@gorhom/bottom-sheet';
 import { getCurrentPositionAsync, Accuracy } from 'expo-location';
 import React, { Ref, useCallback, useEffect, useMemo, useRef } from 'react';
-import { View, Text, useColorScheme, Keyboard, Platform } from 'react-native';
+import { View, Text, useColorScheme, Keyboard, Platform, useWindowDimensions } from 'react-native';
 import { LatLng } from 'react-native-maps';
 import { Extrapolate, interpolate, useAnimatedStyle } from 'react-native-reanimated';
 
@@ -41,7 +41,10 @@ export const BottomSheetContent = ({
 }) => {
   const colorScheme = useColorScheme();
 
-  const placesInputViewRef = useRef<GooglePlacesAutocompleteRef>(null);
+  const { width } = useWindowDimensions();
+
+  const originInputViewRef = useRef<GooglePlacesAutocompleteRef>(null);
+  const destinationInputViewRef = useRef<GooglePlacesAutocompleteRef>(null);
 
   const { animatedIndex, animateToPosition } = useBottomSheetInternal();
 
@@ -56,28 +59,30 @@ export const BottomSheetContent = ({
   }));
   const startBtnStyle = useMemo(() => [startBtnContainerStyle], [startBtnContainerStyle]);
 
-  useEffect(() => {
+  /* useEffect(() => {
     // only needed for Android because
     // keyboardBehavior="extend" is not working properly
     // on Android, it leaves a gap between the keyboard and the bottom sheet
     // when the keyboard is visible
-    /* const showSubscription = Keyboard.addListener('keyboardDidShow', () => {
-      if (Platform.OS === 'android') {
-        console.log('keyboardDidShow-BS-to-1');
-        bottomSheetModalRef.current?.snapToIndex(1);
-      }
-    }); */
+
+    // const showSubscription = Keyboard.addListener('keyboardDidShow', () => {
+    //   if (Platform.OS === 'android') {
+    //     console.log('keyboardDidShow-BS-to-1');
+    //     bottomSheetModalRef.current?.snapToIndex(1);
+    //   }
+    // });
+
     const hideSubscription = Keyboard.addListener('keyboardDidHide', () => {
       if (Platform.OS === 'android') {
-        placesInputViewRef.current?.clear();
-        placesInputViewRef.current?.blur();
+        originInputViewRef.current?.clear();
+        originInputViewRef.current?.blur();
       }
     });
     return () => {
       // showSubscription.remove();
       hideSubscription.remove();
     };
-  }, []);
+  }, []); */
 
   const renderBottomSheetItem = useCallback(
     ({ item }: { item: { userId: string } }) => (
@@ -143,229 +148,275 @@ export const BottomSheetContent = ({
         // borderWidth: 2,
         // borderStyle: 'dotted',
       }}>
-      <GooglePlacesAutocomplete
-        ref={placesInputViewRef}
-        renderLeftButton={() => (
-          <ScaleBtn
-            style={{
-              width: 36,
-              height: '100%',
-              justifyContent: 'center',
-              alignItems: 'flex-end',
-              borderTopLeftRadius: 10,
-              borderBottomLeftRadius: 10,
-              backgroundColor: Colors[colorScheme ?? 'light'].background_light1,
-            }}
-            onPress={() => { }}>
-            <MaterialCommunityIcons
-              name="magnify"
-              size={28}
-              color={Colors[colorScheme ?? 'light'].text_light}
-            />
-          </ScaleBtn>
-        )}
-        renderRightButton={() => (
-          <ScaleBtn
-            style={{
-              width: 52,
-              height: '100%',
-              borderRadius: 12,
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}
-            onPress={() => { }}>
-            <MaterialIcons name="supervised-user-circle" size={42} color="#C7C7CB" />
-          </ScaleBtn>
-        )}
-        /* renderRow={(data) => (
-          <RippleBtn
-            style={{
-              height: 42,
-              width: '100%',
-              // borderRadius: 12,
+      <Text style={{
+        fontWeight: "700",
+        fontSize: 20,
+      }}>A donde quieres ir?</Text>
 
-              borderColor: 'black',
-              borderWidth: 2,
-              borderStyle: 'dotted',
-            }}
-            onTap={() => {}}>
-            <BottomSheetView
-              style={{
-                height: '100%',
-                width: '100%',
-                flexDirection: 'row',
-                flexWrap: 'wrap',
-                alignItems: 'center',
-                alignContent: 'center',
-                gap: 18,
-                paddingHorizontal: 12,
-              }}>
-              <MaterialIcons name="supervised-user-circle" size={42} color="#0C79FE" />
-              <BottomSheetView style={{}}>
-                <Text>{data.reference}</Text>
-                <Text>{data.description} A 5.2km de distancia.</Text>
-              </BottomSheetView>
-            </BottomSheetView>
-          </RippleBtn>
-        )} */
-        /* renderHeaderComponent={() => (
-          <Text
-            style={{
-              fontWeight: '500',
-              fontSize: 18,
+      <View style={{
+        position: "relative",
+        zIndex: 1000,
+        width: '100%',
+        height: 50,
+        marginTop: 20,
+        paddingHorizontal: 0,
+
+        alignItems: 'center',
+        flexDirection: 'row',
+      }}>
+        <MaterialCommunityIcons name="map-marker-account" size={32} color="#000" />
+        <GooglePlacesAutocomplete
+          ref={originInputViewRef}
+          predefinedPlaces={userMarkers.map((marker) => ({
+            description: marker.name,
+            geometry: {
+              location: {
+                lat: marker.coords.latitude,
+                lng: marker.coords.longitude,
+              },
+            },
+          }))}
+          placeholder="Lugar de Origen"
+          textInputProps={{
+            placeholderTextColor: colorScheme === 'light' ? '#6C6C6C' : 'black',
+            onFocus: () => {
+
+            }
+          }}
+          enablePoweredByContainer={false}
+          onPress={(data, details) => {
+            const tokio = async (_data: GooglePlaceData, details: GooglePlaceDetail | null) => {
+              if (!details) {
+                return;
+              }
+              const position = await getCurrentPositionAsync({
+                accuracy: Accuracy.Highest,
+              });
+              try {
+                const resp = await fetch(
+                  `http://192.168.133.191:4200/route?from=${position.coords.latitude},${position.coords.longitude}&to=${details.geometry.location.lat},${details.geometry.location.lng}`
+                );
+                const respJson = await resp.json();
+                const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map(
+                  (point) => ({ latitude: point[0]!, longitude: point[1]! })
+                );
+                setActiveRoute({
+                  coords: decodedCoords,
+                });
+                console.log(JSON.stringify(decodedCoords, null, 2));
+              } catch (error) {
+                if (error instanceof Error) {
+                  console.error(error.message);
+                }
+              }
+            };
+            tokio(data, details);
+          }}
+          debounce={400}
+          styles={{
+            container: {
+              position: 'relative',
+              zIndex: 1000,
+              overflow: 'visible',
+            },
+            textInputContainer: {
+              position: 'relative',
+              zIndex: 1000,
+              overflow: 'hidden',
+              marginLeft: 12,
+              height: 46,
+              borderRadius: 10,
+              width: (width * 0.9) - 48,
+            },
+            textInput: {
+              position: 'relative',
+              zIndex: 1000,
+
+              height: '100%',
+              fontWeight: '400',
+              borderRadius: 10,
+              fontSize: 16,
               textAlignVertical: 'center',
               color: colorScheme === 'light' ? '#6C6C6C' : 'black',
-            }}>
-            Siri Suggestions
-          </Text>
-        )} */
-        predefinedPlaces={userMarkers.map((marker) => ({
-          description: marker.name,
-          geometry: {
-            location: {
-              lat: marker.coords.latitude,
-              lng: marker.coords.longitude,
+              backgroundColor: Colors[colorScheme ?? 'light'].background_light1,
+
+              borderTopRightRadius: 10,
+              borderBottomRightRadius: 10,
             },
-          },
-        }))}
-        placeholder="Buscar Lugar"
-        textInputProps={{
-          placeholderTextColor: colorScheme === 'light' ? '#6C6C6C' : 'black',
-        }}
-        enablePoweredByContainer={false}
-        onPress={(data, details) => {
-          const tokio = async (_data: GooglePlaceData, details: GooglePlaceDetail | null) => {
-            if (!details) {
-              return;
-            }
-            const position = await getCurrentPositionAsync({
-              accuracy: Accuracy.Highest,
-            });
-            try {
-              const resp = await fetch(
-                `http://192.168.133.191:4200/route?from=${position.coords.latitude},${position.coords.longitude}&to=${details.geometry.location.lat},${details.geometry.location.lng}`
-              );
-              const respJson = await resp.json();
-              const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map(
-                (point) => ({ latitude: point[0]!, longitude: point[1]! })
-              );
-              setActiveRoute({
-                coords: decodedCoords,
-              });
-              console.log(JSON.stringify(decodedCoords, null, 2));
-            } catch (error) {
-              if (error instanceof Error) {
-                console.error(error.message);
-              }
-            }
-          };
-          tokio(data, details);
-        }}
-        debounce={400}
-        styles={{
-          textInputContainer: {
-            // position: 'relative',
-            // overflow: 'hidden',
-            height: 42,
-            borderRadius: 10,
-          },
-          textInput: {
-            height: '100%',
-            fontWeight: '400',
-            borderRadius: 0,
-            fontSize: 18,
-            textAlignVertical: 'center',
-            color: colorScheme === 'light' ? '#6C6C6C' : 'black',
-            backgroundColor: Colors[colorScheme ?? 'light'].background_light1,
-          },
-          container: {
-            position: 'relative',
-            // borderRadius: 10,
-            // paddingTop: 2,
-            // height: 400,
-            overflow: 'visible',
-
-            // borderColor: 'green',
-            // borderWidth: 2,
-            // borderStyle: 'dotted',
-          },
-          listView: {
-            position: 'absolute',
-            backgroundColor: 'white',
-            borderRadius: 5,
-            flex: 1,
-            elevation: 3,
-            zIndex: 10,
-            marginTop: 12,
-
-            // borderColor: 'black',
-            // borderWidth: 2,
-            // borderStyle: 'dotted',
-          },
-          /* row: {
-            height: 30,
-            backgroundColor: 'transparent',
-          }, */
-        }}
-        fetchDetails
-        query={{
-          key: 'AIzaSyAtcwUbA0jjJ6ARXl5_FqIqYcGbTI_XZEE',
-          language: 'es',
-          components: 'country:cu',
-          location: '23.11848,-82.38052',
-          radius: 100,
-        }}
-      // nearbyPlacesAPI='GooglePlacesSearch'
-      // currentLocation
-      // currentLocationLabel="My Location"
-      />
-      {/* <BottomSheetView
-        style={
-          {
-            // borderColor: 'brown',
-            // borderStyle: 'dotted',
-            // borderWidth: 1,
-          }
-        }>
-        <Text
-          style={{
-            fontWeight: '500',
-            fontSize: 18,
-            textAlignVertical: 'center',
-            color: colorScheme === 'light' ? '#6C6C6C' : 'black',
-          }}>
-          Siri Suggestions
-        </Text>
-        <RippleBtn
-          style={{
-            height: 60,
-            width: '100%',
-            borderRadius: 12,
-
-            // borderColor: 'black',
-            // borderWidth: 2,
-            // borderStyle: 'dotted',
+            listView: {
+              position: 'absolute',
+              zIndex: 1000,
+              backgroundColor: 'white',
+              borderRadius: 5,
+              flex: 1,
+              elevation: 3,
+              marginTop: 12,
+            },
           }}
-          onTap={() => {}}>
-          <BottomSheetView
-            style={{
+          fetchDetails
+          query={{
+            key: 'AIzaSyAtcwUbA0jjJ6ARXl5_FqIqYcGbTI_XZEE',
+            language: 'es',
+            components: 'country:cu',
+            location: '23.11848,-82.38052',
+            radius: 100,
+          }}
+        />
+
+      </View>
+
+      <View style={{
+        position: "relative",
+        zIndex: -1,
+        width: '100%',
+        height: 50,
+        marginTop: 10,
+        paddingHorizontal: 0,
+
+        alignItems: 'center',
+        flexDirection: 'row',
+      }}>
+        <MaterialCommunityIcons name="map-marker-radius" size={32} color="#000" />
+        <GooglePlacesAutocomplete
+          ref={destinationInputViewRef}
+          predefinedPlaces={userMarkers.map((marker) => ({
+            description: marker.name,
+            geometry: {
+              location: {
+                lat: marker.coords.latitude,
+                lng: marker.coords.longitude,
+              },
+            },
+          }))}
+          placeholder="Lugar Destino"
+          textInputProps={{
+            placeholderTextColor: colorScheme === 'light' ? '#6C6C6C' : 'black',
+            onFocus: () => {
+
+            },
+
+          }}
+          enablePoweredByContainer={false}
+          onPress={(data, details) => {
+            const tokio = async (_data: GooglePlaceData, details: GooglePlaceDetail | null) => {
+              if (!details) {
+                return;
+              }
+              const position = await getCurrentPositionAsync({
+                accuracy: Accuracy.Highest,
+              });
+              try {
+                const resp = await fetch(
+                  `http://192.168.133.191:4200/route?from=${position.coords.latitude},${position.coords.longitude}&to=${details.geometry.location.lat},${details.geometry.location.lng}`
+                );
+                const respJson = await resp.json();
+                const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map(
+                  (point) => ({ latitude: point[0]!, longitude: point[1]! })
+                );
+                setActiveRoute({
+                  coords: decodedCoords,
+                });
+                console.log(JSON.stringify(decodedCoords, null, 2));
+              } catch (error) {
+                if (error instanceof Error) {
+                  console.error(error.message);
+                }
+              }
+            };
+            tokio(data, details);
+          }}
+          debounce={400}
+          styles={{
+            container: {
+              position: 'relative',
+              zIndex: -1,
+              overflow: 'visible',
+            },
+            textInputContainer: {
+              position: 'relative',
+              zIndex: -1,
+              overflow: 'hidden',
+              marginLeft: 12,
+              height: 46,
+              borderRadius: 10,
+              width: (width * 0.9) - 48,
+            },
+            textInput: {
+              position: "relative",
+              zIndex: -1,
+
               height: '100%',
-              width: '100%',
-              flexDirection: 'row',
-              flexWrap: 'wrap',
-              alignItems: 'center',
-              alignContent: 'center',
-              gap: 18,
-              paddingHorizontal: 12,
-            }}>
-            <MaterialIcons name="supervised-user-circle" size={42} color="#0C79FE" />
-            <BottomSheetView style={{}}>
-              <Text>Parked Car</Text>
-              <Text>A 5.2km de distancia.</Text>
-            </BottomSheetView>
-          </BottomSheetView>
-        </RippleBtn>
-      </BottomSheetView> */}
+              fontWeight: '400',
+              borderRadius: 10,
+              fontSize: 16,
+              textAlignVertical: 'center',
+              color: colorScheme === 'light' ? '#6C6C6C' : 'black',
+              backgroundColor: Colors[colorScheme ?? 'light'].background_light1,
+
+              borderTopRightRadius: 10,
+              borderBottomRightRadius: 10,
+            },
+            listView: {
+              position: 'absolute',
+              zIndex: -1,
+              backgroundColor: 'white',
+              borderRadius: 5,
+              flex: 1,
+              elevation: 3,
+              marginTop: 12,
+            },
+          }}
+          fetchDetails
+          query={{
+            key: 'AIzaSyAtcwUbA0jjJ6ARXl5_FqIqYcGbTI_XZEE',
+            language: 'es',
+            components: 'country:cu',
+            location: '23.11848,-82.38052',
+            radius: 100,
+          }}
+        />
+
+      </View>
+
+      <View style={{
+        marginTop: 28,
+        gap: 18
+      }}>
+
+        <View style={{
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 18
+        }}>
+          <MaterialCommunityIcons name="bookmark-outline" size={32} color="#000" />
+          <View style={{}}>
+            <Text style={{
+              fontSize: 18,
+              fontWeight: "600"
+            }}>Casa</Text>
+            <Text style={{
+            }}>Pedro P / Clavel y Mariano No.561</Text>
+          </View>
+        </View>
+
+        <View style={{
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 18
+        }}>
+          <MaterialCommunityIcons name="bookmark-outline" size={32} color="#000" />
+          <View style={{}}>
+            <Text style={{
+              fontSize: 18,
+              fontWeight: "600"
+            }}>Trabajo</Text>
+            <Text style={{
+            }}>8 / 11 y 13 No.256 apto 10</Text>
+          </View>
+        </View>
+
+      </View>
+
     </BottomSheetView>
   );
 };

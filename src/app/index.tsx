@@ -51,7 +51,7 @@ import {
 import { getData } from '~/lib/storage';
 import { polylineDecode } from '~/utils/directions';
 
-const SNAP_POINTS = ['15%', '50%', '75%'];
+const SNAP_POINTS = [220, '50%', '95%'];
 
 export default function Home() {
   useKeepAwake();
@@ -504,6 +504,24 @@ export default function Home() {
             <UserMarker title="User Marker" description="User Marker Description" userId="123" />
           </MapView>
 
+          <ScaleBtn style={{
+            position: "absolute",
+            top: 56,
+            left: 28,
+          }} onPress={() => { setDrawerOpen(true) }}>
+            <View style={{
+              backgroundColor: Colors[colorScheme ?? 'light'].background_light,
+              padding: 3,
+              borderRadius: 12,
+              borderStyle: "solid",
+              borderWidth: 1,
+              borderColor: Colors[colorScheme ?? 'light'].border,
+            }} >
+
+              <MaterialIcons name="menu" size={36} color="#000" />
+            </View>
+          </ScaleBtn>
+
           <BottomSheetModal
             // stackBehavior="push"
             ref={bottomSheetModalRef}
@@ -511,7 +529,7 @@ export default function Home() {
             keyboardBehavior="extend"
             keyboardBlurBehavior="restore"
             handleComponent={renderCustomHandle}
-            index={0}
+            index={sheetCurrentSnap}
             onChange={(e) => {
               console.log('BottomSheetModal-onChange', e);
               setSheetCurrentSnap(e);
@@ -572,6 +590,6 @@ export default function Home() {
           />
         </BottomSheetModalProvider>
       </Drawer>
-    </GestureHandlerRootView>
+    </GestureHandlerRootView >
   );
 }

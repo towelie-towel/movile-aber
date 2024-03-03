@@ -51,10 +51,11 @@ const defaultStyles = {
     flex: 1,
     marginBottom: 5,
   },
-  listView: {},
+  listView: {
+  },
   row: {
     backgroundColor: '#FFFFFF',
-    padding: 13,
+    padding: 12,
     minHeight: 44,
     flexDirection: 'row',
   },
@@ -277,12 +278,12 @@ export const GooglePlacesAutocomplete = forwardRef((props, ref) => {
       request.open(
         'GET',
         `${url}/place/details/json?` +
-          Qs.stringify({
-            key: props.query.key,
-            placeid: rowData.place_id,
-            language: props.query.language,
-            ...props.GooglePlacesDetailsQuery,
-          })
+        Qs.stringify({
+          key: props.query.key,
+          placeid: rowData.place_id,
+          language: props.query.language,
+          ...props.GooglePlacesDetailsQuery,
+        })
       );
 
       request.withCredentials = requestShouldUseWithCredentials();
@@ -471,9 +472,9 @@ export const GooglePlacesAutocomplete = forwardRef((props, ref) => {
             const results =
               props.nearbyPlacesAPI === 'GoogleReverseGeocoding'
                 ? _filterResultsByTypes(
-                    responseJSON.predictions,
-                    props.filterReverseGeocodingByTypes
-                  )
+                  responseJSON.predictions,
+                  props.filterReverseGeocodingByTypes
+                )
                 : responseJSON.predictions;
 
             _results = results;
@@ -499,9 +500,9 @@ export const GooglePlacesAutocomplete = forwardRef((props, ref) => {
       request.open(
         'GET',
         `${url}/place/autocomplete/json?input=` +
-          encodeURIComponent(text) +
-          '&' +
-          Qs.stringify(props.query)
+        encodeURIComponent(text) +
+        '&' +
+        Qs.stringify(props.query)
       );
 
       request.withCredentials = requestShouldUseWithCredentials();
@@ -733,7 +734,7 @@ export const GooglePlacesAutocomplete = forwardRef((props, ref) => {
         <View
           style={[
             props.suppressDefaultStyles ? {} : defaultStyles.textInputContainer,
-            props.styles.textInputContainer,
+            props.styles.textInputContainer
           ]}>
           {_renderLeftButton()}
           <TextInputComp
@@ -747,47 +748,23 @@ export const GooglePlacesAutocomplete = forwardRef((props, ref) => {
             onFocus={
               onFocus
                 ? (e) => {
-                    _onFocus();
-                    onFocus(e);
-                  }
+                  _onFocus();
+                  onFocus(e);
+                }
                 : _onFocus
             }
             onBlur={
               onBlur
                 ? (e) => {
-                    _onBlur(e);
-                    onBlur(e);
-                  }
+                  _onBlur(e);
+                  onBlur(e);
+                }
                 : _onBlur
             }
             clearButtonMode={clearButtonMode || 'while-editing'}
             onChangeText={_handleChangeText}
             {...userProps}
           />
-          <RippleCenter
-            onTap={() => {
-              inputRef.current.clear();
-              // inputRef.current.blur();
-            }}
-            radius={18}
-            style={{
-              backgroundColor: props.styles.textInput?.backgroundColor ?? '#C7C7CB',
-              height: 42,
-              width: 38,
-              justifyContent: 'center',
-              alignItems: 'center',
-              borderRadius: 0,
-              borderTopRightRadius: 10,
-              borderBottomRightRadius: 10,
-            }}>
-            <MaterialIcons
-              name="close"
-              size={18}
-              // color={props?.textInputProps?.placeholderTextColor ?? '#6C6C6C'}
-              color={'black'}
-              style={{}}
-            />
-          </RippleCenter>
           {_renderRightButton()}
         </View>
       )}
@@ -872,9 +849,9 @@ GooglePlacesAutocomplete.defaultProps = {
   minLength: 0,
   nearbyPlacesAPI: 'GooglePlacesSearch',
   numberOfLines: 1,
-  onFail: () => {},
-  onNotFound: () => {},
-  onPress: () => {},
+  onFail: () => { },
+  onNotFound: () => { },
+  onPress: () => { },
   onTimeout: () => console.warn('google places autocomplete: request timeout'),
   placeholder: '',
   predefinedPlaces: [],
