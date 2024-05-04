@@ -1,26 +1,16 @@
-import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import {
-  useBottomSheetInternal,
-  BottomSheetFlatList,
   BottomSheetView,
-  BottomSheetTextInput,
-  TouchableOpacity,
-  BottomSheetScrollView,
-  ANIMATION_SOURCE,
 } from '@gorhom/bottom-sheet';
 import { getCurrentPositionAsync, Accuracy } from 'expo-location';
-import React, { Ref, useCallback, useEffect, useMemo, useRef } from 'react';
-import { View, Text, useColorScheme, Keyboard, Platform, useWindowDimensions } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, useColorScheme, useWindowDimensions } from 'react-native';
 import { LatLng } from 'react-native-maps';
-import { Extrapolate, interpolate, useAnimatedStyle } from 'react-native-reanimated';
+import * as ExpoLocation from 'expo-location';
 
 import { UserMarkerIconType } from '~/components/AddUserMarker';
-import RippleBtn from '~/components/RippleBtn';
-import { ScaleBtn } from '~/components/ScaleBtn';
 import Colors from '~/constants/Colors';
-// import { ScrollView } from 'react-native-gesture-handler';
 
-import { MarkerCloudSVG } from '~/constants/Icons';
 import {
   GooglePlacesAutocomplete,
   GooglePlaceData,
@@ -31,7 +21,6 @@ import { polylineDecode } from '~/utils/directions';
 // import RippleCenter from '~/components/RippleCenterBtn';
 
 export const BottomSheetContent = ({
-  activeRoute,
   userMarkers,
   setActiveRoute,
 }: {
@@ -41,100 +30,24 @@ export const BottomSheetContent = ({
 }) => {
   const colorScheme = useColorScheme();
 
-  const { width } = useWindowDimensions();
-
   const originInputViewRef = useRef<GooglePlacesAutocompleteRef>(null);
   const destinationInputViewRef = useRef<GooglePlacesAutocompleteRef>(null);
 
-  const { animatedIndex, animateToPosition } = useBottomSheetInternal();
+  useEffect(() => {
+    (async () => {
+      const posSubscrition = await ExpoLocation.getCurrentPositionAsync(
+        {
+          accuracy: ExpoLocation.Accuracy.Highest,
+        }
+      );
+      const resp = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${posSubscrition.coords.latitude},${posSubscrition.coords.longitude}&key=AIzaSyAtcwUbA0jjJ6ARXl5_FqIqYcGbTI_XZEE`)
+      const respJson = await resp.json();
+      originInputViewRef.current?.setAddressText(respJson.results[0].formatted_address)
+      console.log(respJson.results[0].formatted_address)
+    })()
+  }, [])
 
-  const listContentContainerStyle = useAnimatedStyle(() => ({
-    // [-1, 1, 2] this first array defines the [-1, disapearPoint, aperPoint]
-    opacity: interpolate(animatedIndex.value, [-1, 0, 1], [0, -1, 1], Extrapolate.CLAMP),
-  }));
-  const listContentStyle = useMemo(() => [listContentContainerStyle], [listContentContainerStyle]);
-
-  const startBtnContainerStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(animatedIndex.value, [-1, 0, 1], [1, 1, -1], Extrapolate.CLAMP),
-  }));
-  const startBtnStyle = useMemo(() => [startBtnContainerStyle], [startBtnContainerStyle]);
-
-  /* useEffect(() => {
-    // only needed for Android because
-    // keyboardBehavior="extend" is not working properly
-    // on Android, it leaves a gap between the keyboard and the bottom sheet
-    // when the keyboard is visible
-
-    // const showSubscription = Keyboard.addListener('keyboardDidShow', () => {
-    //   if (Platform.OS === 'android') {
-    //     console.log('keyboardDidShow-BS-to-1');
-    //     bottomSheetModalRef.current?.snapToIndex(1);
-    //   }
-    // });
-
-    const hideSubscription = Keyboard.addListener('keyboardDidHide', () => {
-      if (Platform.OS === 'android') {
-        originInputViewRef.current?.clear();
-        originInputViewRef.current?.blur();
-      }
-    });
-    return () => {
-      // showSubscription.remove();
-      hideSubscription.remove();
-    };
-  }, []); */
-
-  const renderBottomSheetItem = useCallback(
-    ({ item }: { item: { userId: string } }) => (
-      <View
-        key={item.userId}
-        style={{
-          padding: 6,
-          margin: 6,
-          backgroundColor: '#eee',
-        }}>
-        <Text>{item.userId}</Text>
-      </View>
-    ),
-    []
-  );
-
-  const renderMarkerBtnItems = useCallback(
-    ({ item }: { item: UserMarkerIconType }) => (
-      <View
-        key={item.id}
-        style={{
-          padding: 6,
-          margin: 6,
-          backgroundColor: Colors[colorScheme ?? 'light'].btn_light_bg,
-          width: 60,
-          height: 60,
-          marginLeft: 12,
-          justifyContent: 'center',
-          alignItems: 'center',
-
-          borderRadius: 100,
-
-          // borderColor: Colors[colorScheme ?? 'light'].primary,
-          // borderWidth: 2,
-          // borderStyle: 'dotted',
-        }}>
-        <TouchableOpacity
-          onPress={() => {
-            console.log('aaa');
-          }}
-          style={{}}>
-          <MaterialCommunityIcons
-            // @ts-ignore
-            name={item.icon.name}
-            size={35}
-            color="black"
-          />
-        </TouchableOpacity>
-      </View>
-    ),
-    []
-  );
+  const { width } = useWindowDimensions();
 
   return (
     <BottomSheetView
@@ -237,7 +150,7 @@ export const BottomSheetContent = ({
               borderRadius: 10,
               fontSize: 16,
               textAlignVertical: 'center',
-              color: colorScheme === 'light' ? '#6C6C6C' : 'black',
+              color: Colors[colorScheme ?? 'light'].text_dark,
               backgroundColor: Colors[colorScheme ?? 'light'].background_light1,
 
               borderTopRightRadius: 10,
@@ -267,7 +180,7 @@ export const BottomSheetContent = ({
 
       <View style={{
         position: "relative",
-        zIndex: -1,
+        zIndex: 999,
         width: '100%',
         height: 50,
         marginTop: 10,
@@ -329,12 +242,12 @@ export const BottomSheetContent = ({
           styles={{
             container: {
               position: 'relative',
-              zIndex: -1,
+              zIndex: 999,
               overflow: 'visible',
             },
             textInputContainer: {
               position: 'relative',
-              zIndex: -1,
+              zIndex: 999,
               overflow: 'hidden',
               marginLeft: 12,
               height: 46,
@@ -342,15 +255,15 @@ export const BottomSheetContent = ({
               width: (width * 0.9) - 48,
             },
             textInput: {
-              position: "relative",
-              zIndex: -1,
+              position: 'relative',
+              zIndex: 999,
 
               height: '100%',
               fontWeight: '400',
               borderRadius: 10,
               fontSize: 16,
               textAlignVertical: 'center',
-              color: colorScheme === 'light' ? '#6C6C6C' : 'black',
+              color: Colors[colorScheme ?? 'light'].text_dark,
               backgroundColor: Colors[colorScheme ?? 'light'].background_light1,
 
               borderTopRightRadius: 10,
@@ -358,7 +271,7 @@ export const BottomSheetContent = ({
             },
             listView: {
               position: 'absolute',
-              zIndex: -1,
+              zIndex: 999,
               backgroundColor: 'white',
               borderRadius: 5,
               flex: 1,
@@ -380,7 +293,9 @@ export const BottomSheetContent = ({
 
       <View style={{
         marginTop: 28,
-        gap: 18
+        gap: 18,
+        position: 'relative',
+        zIndex: 1,
       }}>
 
         <View style={{

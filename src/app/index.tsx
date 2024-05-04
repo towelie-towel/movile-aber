@@ -529,7 +529,7 @@ export default function Home() {
             keyboardBehavior="extend"
             keyboardBlurBehavior="restore"
             handleComponent={renderCustomHandle}
-            index={sheetCurrentSnap}
+            index={1}
             onChange={(e) => {
               console.log('BottomSheetModal-onChange', e);
               setSheetCurrentSnap(e);
