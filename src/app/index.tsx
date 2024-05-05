@@ -120,6 +120,10 @@ export default function Home() {
     []
   );
 
+  const piningLocation = useCallback(() => {
+    setSheetCurrentSnap(1);
+  }, [])
+
   return (
     <GestureHandlerRootView
       onLayout={() => {

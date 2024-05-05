@@ -45,7 +45,7 @@ export const BottomSheetContent = ({ userMarkers, setActiveRoute }: BottomSheetC
     <BottomSheetView className='flex-1 bg-[#F8F8F8] dark:bg-[#222222]'>
       <View className='w-[90%] h-full self-center pt-2.5'>
 
-        <View className='h-10 flex-row justify-between items-center'>
+        <View className='h-10 flex-row justify-between items-center mx-1.5'>
           <Text className='font-bold text-xl'>A donde quieres ir?</Text>
 
           {viewPinOnMap && <ScaleBtn>
@@ -160,7 +160,6 @@ export const BottomSheetContent = ({ userMarkers, setActiveRoute }: BottomSheetC
               radius: 100,
             }}
           />
-
         </View>
 
         <View className='relative z-[999] w-full h-12 px-0 mt-5 items-center flex-row'>
@@ -267,49 +266,20 @@ export const BottomSheetContent = ({ userMarkers, setActiveRoute }: BottomSheetC
               radius: 100,
             }}
           />
-
         </View>
 
-        <View style={{
-          marginTop: 28,
-          gap: 18,
-          position: 'relative',
-          zIndex: 1,
-        }}>
-
-          <View style={{
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 18
-          }}>
-            <MaterialCommunityIcons name="bookmark-outline" size={32} color="#000" />
-            <View style={{}}>
-              <Text style={{
-                fontSize: 18,
-                fontWeight: "600"
-              }}>Casa</Text>
-              <Text style={{
-              }}>Pedro P / Clavel y Mariano No.561</Text>
+        <View className='mt-7 gap-5 relative z-1'>
+          {userMarkers.map((marker) => (
+            <View className='flex-row items-center gap-5'>
+              <MaterialCommunityIcons name="bookmark-outline" size={32} color="#000" />
+              <View>
+                <Text className='font-lg font-medium'>{marker.name}</Text>
+                <Text>{marker.description}</Text>
+              </View>
             </View>
-          </View>
-
-          <View style={{
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 18
-          }}>
-            <MaterialCommunityIcons name="bookmark-outline" size={32} color="#000" />
-            <View style={{}}>
-              <Text style={{
-                fontSize: 18,
-                fontWeight: "600"
-              }}>Trabajo</Text>
-              <Text style={{
-              }}>8 / 11 y 13 No.256 apto 10</Text>
-            </View>
-          </View>
-
+          ))}
         </View>
+
       </View>
     </BottomSheetView>
   );
