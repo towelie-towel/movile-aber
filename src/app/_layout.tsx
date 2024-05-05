@@ -1,11 +1,11 @@
 import 'react-native-gesture-handler';
+import '~/styles/global.css';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import React, { useCallback, useEffect } from 'react';
-import { NativeModules, Platform, useColorScheme } from 'react-native';
-import { Colors } from 'react-native/Libraries/NewAppScreen';
+import { NativeModules, Platform } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { UserProvider } from '~/context/UserContext';

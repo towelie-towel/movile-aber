@@ -1,26 +1,27 @@
 import React, { useRef } from 'react';
-import { Animated, Pressable, StyleProp, ViewStyle } from 'react-native';
+import { Animated, Pressable, PressableProps } from 'react-native';
 
 type PressBtnProps = {
+  scaleReduction?: number;
   onPress?: () => void;
   callback?: () => void;
   disabled?: boolean;
-  style?: StyleProp<ViewStyle>;
   children: React.ReactNode;
-};
+} & PressableProps;
 
 export const ScaleBtn: React.FC<PressBtnProps> = ({
+  scaleReduction = 0.95,
   onPress,
-  style,
   children,
   callback,
   disabled = false,
+  ...props
 }) => {
   const animatedValue = useRef(new Animated.Value(1)).current;
 
   const handlePressIn = () => {
     Animated.timing(animatedValue, {
-      toValue: 0.9,
+      toValue: scaleReduction,
       duration: 75,
       useNativeDriver: true,
     }).start();
@@ -30,8 +31,9 @@ export const ScaleBtn: React.FC<PressBtnProps> = ({
       toValue: 1,
       duration: 50,
       useNativeDriver: true,
-    }).start();
-    onPress && onPress();
+    }).start(() => {
+      onPress && onPress();
+    });
   };
 
   return (
@@ -40,12 +42,14 @@ export const ScaleBtn: React.FC<PressBtnProps> = ({
       onPress={callback}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
-      style={style}>
+      {...props}
+    >
       <Animated.View
         style={{
           transform: [{ scale: animatedValue }],
           opacity: disabled ? 0.6 : 1,
-        }}>
+        }}
+      >
         {children}
       </Animated.View>
     </Pressable>

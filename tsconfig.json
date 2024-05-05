@@ -31,7 +31,7 @@
     "skipDefaultLibCheck": true,
     "lib": ["ESNext", "DOM", "DOM.Iterable", "ScriptHost"]
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "nativewind-env.d.ts"],
   "exclude": [
     "node_modules",
     "babel.config.js",

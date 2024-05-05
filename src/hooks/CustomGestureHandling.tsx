@@ -1,24 +1,15 @@
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import {
-  BottomSheetView,
-} from '@gorhom/bottom-sheet';
-import { getCurrentPositionAsync, Accuracy } from 'expo-location';
 import React, { useEffect, useRef } from 'react';
 import { View, Text, useColorScheme, useWindowDimensions } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { BottomSheetView } from '@gorhom/bottom-sheet';
+import { getCurrentPositionAsync, Accuracy } from 'expo-location';
 import { LatLng } from 'react-native-maps';
 import * as ExpoLocation from 'expo-location';
 
 import { UserMarkerIconType } from '~/components/AddUserMarker';
 import Colors from '~/constants/Colors';
-
-import {
-  GooglePlacesAutocomplete,
-  GooglePlaceData,
-  GooglePlaceDetail,
-  GooglePlacesAutocompleteRef,
-} from '~/lib/google-places-autocomplete/GooglePlacesAutocomplete';
+import { GooglePlacesAutocomplete, GooglePlaceData, GooglePlaceDetail, GooglePlacesAutocompleteRef } from '~/lib/google-places-autocomplete/GooglePlacesAutocomplete';
 import { polylineDecode } from '~/utils/directions';
-// import RippleCenter from '~/components/RippleCenterBtn';
 
 export const BottomSheetContent = ({
   userMarkers,
@@ -29,6 +20,7 @@ export const BottomSheetContent = ({
   setActiveRoute: React.Dispatch<{ coords: LatLng[] } | null>;
 }) => {
   const colorScheme = useColorScheme();
+  const { width } = useWindowDimensions();
 
   const originInputViewRef = useRef<GooglePlacesAutocompleteRef>(null);
   const destinationInputViewRef = useRef<GooglePlacesAutocompleteRef>(null);
@@ -47,8 +39,6 @@ export const BottomSheetContent = ({
     })()
   }, [])
 
-  const { width } = useWindowDimensions();
-
   return (
     <BottomSheetView
       style={{
@@ -56,10 +46,6 @@ export const BottomSheetContent = ({
         alignSelf: 'center',
         height: '100%',
         paddingTop: 10,
-
-        // borderColor: 'orange',
-        // borderWidth: 2,
-        // borderStyle: 'dotted',
       }}>
       <Text style={{
         fontWeight: "700",

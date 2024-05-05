@@ -1,32 +1,15 @@
-import { MaterialIcons } from '@expo/vector-icons';
-import {
-  BottomSheetBackdrop,
-  BottomSheetBackdropProps,
-  BottomSheetModal,
-  BottomSheetModalProvider,
-  BottomSheetHandleProps,
-} from '@gorhom/bottom-sheet';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { StatusBar, useColorScheme, Text, View, Platform, Keyboard } from 'react-native';
 import { Image } from 'expo-image';
 import { useKeepAwake } from 'expo-keep-awake';
-// import { Accuracy, getCurrentPositionAsync } from 'expo-location';
 import * as NavigationBar from 'expo-navigation-bar';
-import { Link, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {
-  StatusBar,
-  LayoutAnimation,
-  useColorScheme,
-  Text,
-  View,
-  Platform,
-  Keyboard,
-} from 'react-native';
+import { useRouter } from 'expo-router';
+import { MaterialIcons } from '@expo/vector-icons';
+import { BottomSheetBackdrop, BottomSheetBackdropProps, BottomSheetModal, BottomSheetModalProvider, BottomSheetHandleProps } from '@gorhom/bottom-sheet';
 import { Drawer } from 'react-native-drawer-layout';
-import { TouchableOpacity, GestureHandlerRootView } from 'react-native-gesture-handler';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MapView, { type LatLng, PROVIDER_GOOGLE, Polyline } from 'react-native-maps';
-// import NetInfo from '@react-native-community/netinfo';
-
-import Svg, { Circle, Defs, G, Path, RadialGradient, Stop } from 'react-native-svg';
 
 import { UserMarkerIconType } from '~/components/AddUserMarker';
 import AnimatedRouteMarker from '~/components/AnimatedRouteMarker';
@@ -34,46 +17,58 @@ import Ripple from '~/components/RippleBtn';
 import { ScaleBtn } from '~/components/ScaleBtn';
 import TaxisMarkers from '~/components/TaxiMarkers';
 import UserMarker from '~/components/UserMarker';
-import { ColorInstagram, ColorFacebook, ColorTwitter } from '~/components/svgs';
+// import { ColorInstagram, ColorFacebook, ColorTwitter } from '~/components/svgs';
 import Colors from '~/constants/Colors';
-import { MarkerCloudSVG } from '~/constants/Icons';
 import { NightMap } from '~/constants/NightMap';
 import { useUser } from '~/context/UserContext';
-// import { useWSConnection } from '~/context/WSContext';
 import { BottomSheetContent } from '~/hooks/CustomGestureHandling';
 import { CustomHandle } from '~/hooks/CustomHandle';
-import {
-  GooglePlaceData,
-  GooglePlaceDetail,
-  GooglePlacesAutocomplete,
-  GooglePlacesAutocompleteRef,
-} from '~/lib/google-places-autocomplete/GooglePlacesAutocomplete';
+import { GooglePlacesAutocompleteRef } from '~/lib/google-places-autocomplete/GooglePlacesAutocomplete';
 import { getData } from '~/lib/storage';
-import { polylineDecode } from '~/utils/directions';
 
-const SNAP_POINTS = [220, '50%', '95%'];
+const drawerItems: {
+  icon: string;
+  label: string;
+}[] = [
+    {
+      icon: 'map',
+      label: 'Home',
+    },
+    {
+      icon: 'wallet-giftcard',
+      label: 'Créditos',
+    },
+    {
+      icon: 'history',
+      label: 'Historia',
+    },
+    {
+      icon: 'notifications',
+      label: 'Notificaciones',
+    },
+    {
+      icon: 'settings',
+      label: 'Opciones',
+    },
+    {
+      icon: 'logout',
+      label: 'Salir',
+    },
+  ]
 
 export default function Home() {
   useKeepAwake();
-  console.log('Map re-rendered');
+
+  const [userMarkers, setUserMarkers] = useState<UserMarkerIconType[]>([]);
   const colorScheme = useColorScheme();
+  const insets = useSafeAreaInsets()
   const router = useRouter()
+  const { user, isSignedIn } = useUser();
 
   if (Platform.OS === "android") {
-    // NavigationBar.setBackgroundColorAsync(Colors[colorScheme ?? 'light'].background);
     NavigationBar.setBackgroundColorAsync('transparent');
     NavigationBar.setButtonStyleAsync('dark');
   }
-
-  // const { width, height } = Dimensions.get('window');
-  // const { isConnected, isInternetReachable } = NetInfo.useNetInfo();
-
-  const { session, user, isSignedIn, isLoading, signOut } = useUser();
-  // const { wsTaxis } = useWSConnection();
-
-  const [userMarkers, setUserMarkers] = useState<UserMarkerIconType[]>([]);
-
-  // const [isAddingMarker, setIsAddingMarker] = useState(false);
 
   // map & markers
   const mapViewRef = useRef<MapView>(null);
@@ -86,32 +81,17 @@ export default function Home() {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   // bottom sheet
-  const [sheetCurrentSnap, setSheetCurrentSnap] = useState(1);
+  const [_sheetCurrentSnap, setSheetCurrentSnap] = useState(1);
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
-  // const snapPoints = useMemo(() => [120, '75%', '90%'], []);
-
-  // const [selectedTaxiId, _setSelectedTaxiId] = useState<string | null>(null);
-  // const [isModalVisible, setIsModalVisible] = useState(false);
+  const snapPoints = useMemo(() => [220, '50%', '95%'], []);
 
   useEffect(() => {
-    // only needed for Android because
-    // keyboardBehavior="extend" is not working properly
-    // on Android, it leaves a gap between the keyboard and the bottom sheet
-    // when the keyboard is visible
-    /* const showSubscription = Keyboard.addListener('keyboardDidShow', () => {
-      if (Platform.OS === 'android') {
-        console.log('keyboardDidShow-BS-to-1');
-        bottomSheetModalRef.current?.snapToIndex(1);
-      }
-    }); */
     const hideSubscription = Keyboard.addListener('keyboardDidHide', () => {
       if (Platform.OS === 'android') {
-        console.log('keyboardDidHide-BS-to-0');
         bottomSheetModalRef.current?.snapToIndex(0);
       }
     });
     return () => {
-      // showSubscription.remove();
       hideSubscription.remove();
     };
   }, []);
@@ -142,326 +122,91 @@ export default function Home() {
 
   return (
     <GestureHandlerRootView
-      onLayout={(e) => {
-        console.log(e.nativeEvent.layout);
+      onLayout={() => {
         getData('user_markers').then((data) => {
           setUserMarkers(data ?? []);
         });
       }}
-      style={{ flex: 1 }}>
+      className='flex-1'
+    >
       <Drawer
         open={drawerOpen}
         onOpen={() => setDrawerOpen(true)}
         onClose={() => setDrawerOpen(false)}
         renderDrawerContent={() => {
           return (
-            <View
-              style={{
-                backgroundColor: Colors[colorScheme ?? 'light'].secondary,
-                height: '100%',
-                width: '100%',
-              }}>
-              <View
-                style={{
-                  height: 300,
-                  width: '100%',
-                  backgroundColor: Colors[colorScheme ?? 'light'].primary,
-                }}>
-                <View
-                  style={{
-                    position: 'absolute',
-                    top: -170,
-                    left: -40,
-                    width: 300,
-                    height: 300,
-                    borderRadius: 1000,
-                    opacity: 0.05,
-                    backgroundColor: '#000000',
-                  }}
-                />
-                <View
-                  style={{
-                    position: 'absolute',
-                    left: -175,
-                    top: -50,
-                    width: 350,
-                    height: 350,
-                    borderRadius: 1000,
-                    opacity: 0.05,
-                    backgroundColor: '#000000',
-                  }}
-                />
-                <View
-                  style={{
-                    position: 'absolute',
-                    width: 80,
-                    height: 80,
-                    left: 30,
-                    top: 90,
-                  }}>
-                  {!isSignedIn ? (
-                    <MaterialIcons
-                      color={Colors[colorScheme ?? 'light'].text_light}
-                      name="account-circle"
-                      size={80}
-                    />
-                  ) : (
-                    <Image
-                      source={{
-                        uri: 'https://lh3.googleusercontent.com/a/AAcHTtfPgVic8qF8hDw_WPE80JpGOkKASohxkUA8y272Ow=s1000-c',
-                      }}
-                      alt="Profile Image"
-                      style={{
-                        borderRadius: 1000,
-                        width: 80,
-                        height: 80,
-                        borderColor: Colors[colorScheme ?? 'light'].secondary,
-                        borderWidth: 2,
-                      }}
-                    />
-                  )}
-                  <Text
-                    style={{
-                      color: Colors[colorScheme ?? 'light'].text_light2,
-                      fontSize: 18,
-                      fontWeight: '400',
-                      marginTop: 10,
-                      textAlignVertical: 'center',
-                    }}>
+            <View className='w-full h-full bg-[#F8F8F8] dark:bg-[#222222]'>
+
+              <View className='h-[300px] w-full justify-center items-center bg-[#FCCB6F]'>
+                <View className='absolute top-[-170px] left-[-40px] w-[300px] h-[300px] rounded-full opacity-5 bg-black' />
+                <View className='absolute w-[350px] h-[350px] top-[-50px] left-[-175px] rounded-full opacity-5 bg-black' />
+
+                <View className='w-4/5' style={{ marginTop: insets.top }}>
+                  <Image
+                    style={{ borderRadius: 1000, width: 80, height: 80 }}
+                    source={{
+                      uri: isSignedIn ? 'https://lh3.googleusercontent.com/a/AAcHTtfPgVic8qF8hDw_WPE80JpGOkKASohxkUA8y272Ow=s1000-c' : 'https://avatars.githubusercontent.com/u/100803609?v=4',
+                    }}
+                    alt="Profile Image"
+                  />
+                  <Text className='text-[#FFFFFF] text-xl font-semibold mt-2.5'>
                     {user?.username ?? 'Not signed'}
                   </Text>
-
-                  <ScaleBtn onPress={() => {
-                    router.push("sign")
-                  }}>
-                    <View
-                      style={{
-                        marginVertical: 18,
-                        padding: 12,
-                        borderRadius: 12,
-                        backgroundColor: Colors[colorScheme ?? 'light'].secondary,
-                      }}>
-                      <Text>{!isSignedIn ? "Sign In" : user?.phone}</Text>
+                  <ScaleBtn
+                    className='mt-4'
+                    onPress={() => router.push("sign")}
+                  >
+                    <View className='bg-[#F8F8F8] dark:bg-[#222222] rounded-lg p-3'>
+                      <Text className='text-center font-semibold w-auto dark:text-[#fff]'>{!isSignedIn ? "Sign In" : user?.phone}</Text>
                     </View>
                   </ScaleBtn>
-
-
                 </View>
               </View>
-              <View
-                style={{
-                  flex: 1,
-                  backgroundColor: Colors[colorScheme ?? 'light'].secondary,
-                  paddingTop: 20,
-                }}>
-                <Ripple>
-                  <View
-                    style={{
-                      width: '100%',
-                      height: 60,
-                      backgroundColor: 'transparent',
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      justifyContent: 'flex-start',
-                      paddingHorizontal: 35,
-                      paddingVertical: 10,
-                      gap: 20,
-                    }}>
-                    <MaterialIcons
-                      name="map"
-                      size={30}
-                      color={Colors[colorScheme ?? 'light'].text_dark}
-                    />
-                    <Text
-                      style={{
-                        color: Colors[colorScheme ?? 'light'].text_dark,
-                        fontSize: 18,
-                        fontWeight: '600',
-                      }}>
-                      Home
-                    </Text>
-                  </View>
-                </Ripple>
-                <Ripple>
-                  <View
-                    style={{
-                      width: '100%',
-                      height: 60,
-                      backgroundColor: 'transparent',
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      justifyContent: 'flex-start',
-                      paddingHorizontal: 35,
-                      paddingVertical: 10,
-                      gap: 20,
-                    }}>
-                    <MaterialIcons
-                      name="wallet-giftcard"
-                      size={30}
-                      color={Colors[colorScheme ?? 'light'].text_dark}
-                    />
-                    <Text
-                      style={{
-                        color: Colors[colorScheme ?? 'light'].text_dark,
-                        fontSize: 18,
-                        fontWeight: '600',
-                      }}>
-                      Créditos
-                    </Text>
-                  </View>
-                </Ripple>
-                <Ripple>
-                  <View
-                    style={{
-                      width: '100%',
-                      height: 60,
-                      backgroundColor: 'transparent',
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      justifyContent: 'flex-start',
-                      paddingHorizontal: 35,
-                      paddingVertical: 10,
-                      gap: 20,
-                    }}>
-                    <MaterialIcons
-                      name="history"
-                      size={30}
-                      color={Colors[colorScheme ?? 'light'].text_dark}
-                    />
-                    <Text
-                      style={{
-                        color: Colors[colorScheme ?? 'light'].text_dark,
-                        fontSize: 18,
-                        fontWeight: '600',
-                      }}>
-                      Historia
-                    </Text>
-                  </View>
-                </Ripple>
-                <Ripple>
-                  <View
-                    style={{
-                      width: '100%',
-                      height: 60,
-                      backgroundColor: 'transparent',
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      justifyContent: 'flex-start',
-                      paddingHorizontal: 35,
-                      paddingVertical: 10,
-                      gap: 20,
-                    }}>
-                    <MaterialIcons
-                      name="notifications"
-                      size={30}
-                      color={Colors[colorScheme ?? 'light'].text_dark}
-                    />
-                    <Text
-                      style={{
-                        color: Colors[colorScheme ?? 'light'].text_dark,
-                        fontSize: 18,
-                        fontWeight: '600',
-                      }}>
-                      Notificaciones
-                    </Text>
-                  </View>
-                </Ripple>
-                <Ripple>
-                  <View
-                    style={{
-                      width: '100%',
-                      height: 60,
-                      backgroundColor: 'transparent',
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      justifyContent: 'flex-start',
-                      paddingHorizontal: 35,
-                      paddingVertical: 10,
-                      gap: 20,
-                    }}>
-                    <MaterialIcons
-                      name="settings"
-                      size={30}
-                      color={Colors[colorScheme ?? 'light'].text_dark}
-                    />
-                    <Text
-                      style={{
-                        color: Colors[colorScheme ?? 'light'].text_dark,
-                        fontSize: 18,
-                        fontWeight: '600',
-                      }}>
-                      Opciones
-                    </Text>
-                  </View>
-                </Ripple>
-                <Ripple
-                  onTap={() => {
-                    signOut();
-                  }}>
-                  <View
-                    style={{
-                      width: '100%',
-                      height: 60,
-                      backgroundColor: 'transparent',
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      justifyContent: 'flex-start',
-                      paddingHorizontal: 35,
-                      paddingVertical: 10,
-                      gap: 20,
-                    }}>
-                    <MaterialIcons
-                      name="logout"
-                      size={30}
-                      color={Colors[colorScheme ?? 'light'].text_dark}
-                    />
-                    <Text
-                      style={{
-                        color: Colors[colorScheme ?? 'light'].text_dark,
-                        fontSize: 18,
-                        fontWeight: '600',
-                      }}>
-                      Salir
-                    </Text>
-                  </View>
-                </Ripple>
+
+              <View className='ml-[-4px] flex-1 bg-[#F8F8F8] dark:bg-[#222222]'>
+                {
+                  drawerItems.map((item, index) => {
+                    return (
+                      <Ripple key={index}>
+                        <View className='w-full h-16 flex-row items-center justify-start px-[10%] gap-4'>
+                          <MaterialIcons
+                            // @ts-ignore
+                            name={item.icon}
+                            size={30}
+                            color={Colors[colorScheme ?? 'light'].text_dark}
+                          />
+                          <Text
+                            style={{
+                              color: Colors[colorScheme ?? 'light'].text_dark,
+                              fontSize: 18,
+                              fontWeight: '600',
+                            }}>
+                            {item.label}
+                          </Text>
+                        </View>
+                      </Ripple>
+                    );
+                  })
+                }
               </View>
 
-              <View
-                style={{
-                  backgroundColor: 'transparent',
-                  width: '100%',
-                  height: 60,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'flex-start',
-                  paddingHorizontal: 35,
-                  paddingVertical: 10,
-                  gap: 20,
-                  marginBottom: 10,
-                }}>
-                <ScaleBtn style={{
-                  flex: 1
-                }}>
+              {/* Social Links  */}
+              {/* <View className='w-full h-20 flex-row items-center justify-around' style={{ marginBottom: insets.bottom }}>
+                <ScaleBtn className='items-center'>
                   <ColorInstagram />
                 </ScaleBtn>
-
-                <ScaleBtn style={{
-                  flex: 1
-                }}>
+                <ScaleBtn className='items-center'>
                   <ColorFacebook />
                 </ScaleBtn>
-
-                <ScaleBtn style={{
-                  flex: 1
-                }}>
+                <ScaleBtn className='items-center'>
                   <ColorTwitter />
                 </ScaleBtn>
+              </View> */}
 
-              </View>
             </View>
           );
         }}>
+
         <BottomSheetModalProvider>
           <MapView
             style={{
@@ -504,20 +249,8 @@ export default function Home() {
             <UserMarker title="User Marker" description="User Marker Description" userId="123" />
           </MapView>
 
-          <ScaleBtn style={{
-            position: "absolute",
-            top: 56,
-            left: 28,
-          }} onPress={() => { setDrawerOpen(true) }}>
-            <View style={{
-              backgroundColor: Colors[colorScheme ?? 'light'].background_light,
-              padding: 3,
-              borderRadius: 12,
-              borderStyle: "solid",
-              borderWidth: 1,
-              borderColor: Colors[colorScheme ?? 'light'].border,
-            }} >
-
+          <ScaleBtn className='absolute left-7' style={{ top: insets.top + 12 }} onPress={() => setDrawerOpen(true)}>
+            <View className='bg-[#f8f8f8] dark:bg-[#000] p-1 rounded-xl border border-[#d8d8d8] dark:[#a3a3a3]' >
               <MaterialIcons name="menu" size={36} color="#000" />
             </View>
           </ScaleBtn>
@@ -537,11 +270,11 @@ export default function Home() {
             }}
             // enableDynamicSizing
             android_keyboardInputMode="adjustResize"
-            enableContentPanningGesture={false}
+            // enableContentPanningGesture={false}
             enableDismissOnClose={false}
             // enableHandlePanningGesture={false}
             enablePanDownToClose={false}
-            snapPoints={SNAP_POINTS}
+            snapPoints={snapPoints}
             backgroundStyle={{
               borderRadius: 15,
               // backgroundColor: Colors[colorScheme ?? 'light'].background,
