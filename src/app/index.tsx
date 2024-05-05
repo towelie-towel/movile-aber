@@ -144,18 +144,13 @@ export default function Home() {
                 <View className='w-4/5' style={{ marginTop: insets.top }}>
                   <Image
                     style={{ borderRadius: 1000, width: 80, height: 80 }}
-                    source={{
-                      uri: isSignedIn ? 'https://lh3.googleusercontent.com/a/AAcHTtfPgVic8qF8hDw_WPE80JpGOkKASohxkUA8y272Ow=s1000-c' : 'https://avatars.githubusercontent.com/u/100803609?v=4',
-                    }}
+                    source={{ uri: isSignedIn ? 'https://lh3.googleusercontent.com/a/AAcHTtfPgVic8qF8hDw_WPE80JpGOkKASohxkUA8y272Ow=s1000-c' : 'https://avatars.githubusercontent.com/u/100803609?v=4' }}
                     alt="Profile Image"
                   />
                   <Text className='text-[#FFFFFF] text-xl font-semibold mt-2.5'>
                     {user?.username ?? 'Not signed'}
                   </Text>
-                  <ScaleBtn
-                    className='mt-4'
-                    onPress={() => router.push("sign")}
-                  >
+                  <ScaleBtn className='mt-4' onPress={() => router.push("sign")}>
                     <View className='bg-[#F8F8F8] dark:bg-[#222222] rounded-lg p-3'>
                       <Text className='text-center font-semibold w-auto dark:text-[#fff]'>{!isSignedIn ? "Sign In" : user?.phone}</Text>
                     </View>
@@ -164,30 +159,28 @@ export default function Home() {
               </View>
 
               <View className='ml-[-4px] flex-1 bg-[#F8F8F8] dark:bg-[#222222]'>
-                {
-                  drawerItems.map((item, index) => {
-                    return (
-                      <Ripple key={index}>
-                        <View className='w-full h-16 flex-row items-center justify-start px-[10%] gap-4'>
-                          <MaterialIcons
-                            // @ts-ignore
-                            name={item.icon}
-                            size={30}
-                            color={Colors[colorScheme ?? 'light'].text_dark}
-                          />
-                          <Text
-                            style={{
-                              color: Colors[colorScheme ?? 'light'].text_dark,
-                              fontSize: 18,
-                              fontWeight: '600',
-                            }}>
-                            {item.label}
-                          </Text>
-                        </View>
-                      </Ripple>
-                    );
-                  })
-                }
+                {drawerItems.map((item, index) => {
+                  return (
+                    <Ripple key={index} onTap={() => { console.log(item) }}>
+                      <View className='w-full h-16 flex-row items-center justify-start px-[10%] gap-4'>
+                        <MaterialIcons
+                          // @ts-ignore
+                          name={item.icon}
+                          size={30}
+                          color={Colors[colorScheme ?? 'light'].text_dark}
+                        />
+                        <Text
+                          style={{
+                            color: Colors[colorScheme ?? 'light'].text_dark,
+                            fontSize: 18,
+                            fontWeight: '600',
+                          }}>
+                          {item.label}
+                        </Text>
+                      </View>
+                    </Ripple>
+                  );
+                })}
               </View>
 
               {/* Social Links  */}
@@ -209,10 +202,7 @@ export default function Home() {
 
         <BottomSheetModalProvider>
           <MapView
-            style={{
-              width: '100%',
-              height: '100%',
-            }}
+            style={{ width: '100%', height: '100%' }}
             onTouchMove={() => { }}
             onTouchStart={() => {
               placesInputViewRef.current?.blur();
@@ -220,12 +210,7 @@ export default function Home() {
             }}
             onTouchEnd={() => { }}
             onPress={() => { }}
-            initialRegion={{
-              latitude: 23.118644,
-              longitude: -82.3806211,
-              latitudeDelta: 0.0322,
-              longitudeDelta: 0.0221,
-            }}
+            initialRegion={{ latitude: 23.118644, longitude: -82.3806211, latitudeDelta: 0.0322, longitudeDelta: 0.0221 }}
             ref={mapViewRef}
             provider={PROVIDER_GOOGLE}
             customMapStyle={colorScheme === 'dark' ? NightMap : undefined}>
@@ -309,7 +294,8 @@ export default function Home() {
               shadowRadius: 4,
               elevation: 2,
             }}
-            backdropComponent={renderBackdrop}>
+            backdropComponent={renderBackdrop}
+          >
             <BottomSheetContent
               userMarkers={userMarkers}
               activeRoute={activeRoute}

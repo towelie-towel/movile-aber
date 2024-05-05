@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, useColorScheme, ViewProps } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { measure, useAnimatedRef, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, { measure, runOnJS, useAnimatedRef, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 type RippleProps = {
   onTap?: () => void;
@@ -38,7 +38,7 @@ const Ripple: React.FC<RippleProps> = ({ onTap, children, ...restProps }) => {
         if (scale.value !== 0) {
           scale.value = 0;
         }
-        onTap && onTap();
+        onTap && runOnJS(onTap)()
       });
     })
     .onTouchesCancelled(() => {
