@@ -23,7 +23,7 @@ export default {
     text_dark: '#fff',
     background: '#000',
     background_light: '#000',
-    background_light1: '#E9E9E9',
+    background_light1: '#333333',
     background_dark: '#000',
     primary: '#FCCB6F',
     secondary: '#222222',

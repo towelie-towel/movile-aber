@@ -8,8 +8,8 @@ import {
   useColorScheme,
 } from 'react-native';
 
-import { ScaleBtn } from '~/components/ScaleBtn';
-import { View, Text } from '~/components/Themed';
+import { ScaleBtn } from '~/components/common/ScaleBtn';
+import { View, Text } from '~/components/common/Themed';
 import Colors from '~/constants/Colors';
 import { IMarker } from '~/constants/Markers';
 import { getData } from '~/lib/storage';

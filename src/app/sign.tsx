@@ -22,7 +22,7 @@ import { Bar } from 'react-native-progress';
 import { Path, Svg } from 'react-native-svg';
 import { SceneMap, TabBar, TabView } from 'react-native-tab-view';
 
-import { View } from '~/components/Themed';
+import { View } from '~/components/common/Themed';
 import Colors from '~/constants/Colors';
 import useKeyboard from '~/hooks/useKeyboard';
 import { supabase } from '~/lib/supabase';

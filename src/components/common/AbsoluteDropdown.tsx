@@ -3,7 +3,7 @@ import { BlurView } from 'expo-blur';
 import { useState } from 'react';
 import { LayoutAnimation, Pressable, View, useColorScheme } from 'react-native';
 
-import { Text } from '~/components/Themed';
+import { Text } from '~/components/common/Themed';
 import Colors from '~/constants/Colors';
 
 interface Action {

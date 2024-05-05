@@ -11,18 +11,18 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MapView, { type LatLng, PROVIDER_GOOGLE, Polyline } from 'react-native-maps';
 
-import { UserMarkerIconType } from '~/components/AddUserMarker';
-import AnimatedRouteMarker from '~/components/AnimatedRouteMarker';
-import Ripple from '~/components/RippleBtn';
-import { ScaleBtn } from '~/components/ScaleBtn';
-import TaxisMarkers from '~/components/TaxiMarkers';
-import UserMarker from '~/components/UserMarker';
+import { UserMarkerIconType } from '~/components/markers/AddUserMarker';
+import AnimatedRouteMarker from '~/components/markers/AnimatedRouteMarker';
+import Ripple from '~/components/common/RippleBtn';
+import { ScaleBtn } from '~/components/common/ScaleBtn';
+import TaxisMarkers from '~/components/markers/TaxiMarkers';
+import UserMarker from '~/components/markers/UserMarker';
 // import { ColorInstagram, ColorFacebook, ColorTwitter } from '~/components/svgs';
 import Colors from '~/constants/Colors';
 import { NightMap } from '~/constants/NightMap';
 import { useUser } from '~/context/UserContext';
-import { BottomSheetContent } from '~/hooks/CustomGestureHandling';
-import { CustomHandle } from '~/hooks/CustomHandle';
+import { BottomSheetContent } from '~/components/bottomsheet/BottomSheetContent';
+import { CustomHandle } from '~/components/bottomsheet/CustomHandle';
 import { GooglePlacesAutocompleteRef } from '~/lib/google-places-autocomplete/GooglePlacesAutocomplete';
 import { getData } from '~/lib/storage';
 
@@ -137,7 +137,7 @@ export default function Home() {
           return (
             <View className='w-full h-full bg-[#F8F8F8] dark:bg-[#222222]'>
 
-              <View className='h-[300px] w-full justify-center items-center bg-[#FCCB6F]'>
+              <View className='h-[300px] w-full justify-center items-center bg-[#FCCB6F] dark:bg-[#947233]'>
                 <View className='absolute top-[-170px] left-[-40px] w-[300px] h-[300px] rounded-full opacity-5 bg-black' />
                 <View className='absolute w-[350px] h-[350px] top-[-50px] left-[-175px] rounded-full opacity-5 bg-black' />
 
@@ -236,7 +236,7 @@ export default function Home() {
 
           <ScaleBtn className='absolute left-7' style={{ top: insets.top + 12 }} onPress={() => setDrawerOpen(true)}>
             <View className='bg-[#f8f8f8] dark:bg-[#000] p-1 rounded-xl border border-[#d8d8d8] dark:[#a3a3a3]' >
-              <MaterialIcons name="menu" size={36} color="#000" />
+              <MaterialIcons name="menu" size={36} color={Colors[colorScheme ?? 'light'].text_dark} />
             </View>
           </ScaleBtn>
 

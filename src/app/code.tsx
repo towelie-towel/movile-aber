@@ -18,9 +18,9 @@ import OTPTextInput from 'react-native-otp-textinput';
 import Popover, { PopoverMode, PopoverPlacement } from 'react-native-popover-view';
 import Svg, { Path } from 'react-native-svg';
 
-import AbsoluteLoading from '~/components/AbsoluteLoading';
-import { ScaleBtn } from '~/components/ScaleBtn';
-import { View } from '~/components/Themed';
+import AbsoluteLoading from '~/components/common/AbsoluteLoading';
+import { ScaleBtn } from '~/components/common/ScaleBtn';
+import { View } from '~/components/common/Themed';
 import Colors from '~/constants/Colors';
 import { useUser } from '~/context/UserContext';
 import useKeyboard from '~/hooks/useKeyboard';

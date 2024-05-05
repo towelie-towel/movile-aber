@@ -2,7 +2,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React, { memo } from 'react';
 import { Marker } from 'react-native-maps';
 
-import { type UserMarkerIconType } from '~/components/AddUserMarker';
+import { type UserMarkerIconType } from '~/components/markers/AddUserMarker';
 import Colors from '~/constants/Colors';
 
 const UserMarkerIcon: React.FC<UserMarkerIconType & { colorScheme: 'light' | 'dark' }> = ({

@@ -11,8 +11,8 @@ import {
 } from 'react-native';
 import Popover, { PopoverMode, PopoverPlacement } from 'react-native-popover-view';
 
-import { ScaleBtn } from '~/components/ScaleBtn';
-import { View, Text } from '~/components/Themed';
+import { ScaleBtn } from '~/components/common/ScaleBtn';
+import { View, Text } from '~/components/common/Themed';
 import Colors from '~/constants/Colors';
 import type { SignInConfig } from '~/constants/Configs';
 import { supabase } from '~/lib/supabase';

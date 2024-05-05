@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useRef } from 'react';
+import { memo, useEffect, useRef } from 'react';
 import { Animated, Dimensions, Easing, Platform } from 'react-native';
 import { AnimatedRegion, MapMarker, Marker } from 'react-native-maps';
 
@@ -104,7 +104,7 @@ function TaxiMarker({
       onPress={onPress}
       anchor={{ x: 0.5, y: 0.5 }}
       rotation={headingAnimated ? animatedHeading : undefined}
-      icon={require('../../assets/images/Car_Black.png')}
+      icon={require('../../../assets/images/Car_Black.png')}
     />
   );
 }
