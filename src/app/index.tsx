@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { StatusBar, useColorScheme, Text, View, Platform, Keyboard } from 'react-native';
+import { StatusBar, useColorScheme, Text, View, Platform, Keyboard, useWindowDimensions } from 'react-native';
 import { Image } from 'expo-image';
 import { useKeepAwake } from 'expo-keep-awake';
 import * as NavigationBar from 'expo-navigation-bar';
@@ -9,7 +9,7 @@ import { BottomSheetBackdrop, BottomSheetBackdropProps, BottomSheetModal, Bottom
 import { Drawer } from 'react-native-drawer-layout';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import MapView, { type LatLng, PROVIDER_GOOGLE, Polyline } from 'react-native-maps';
+import MapView, { type LatLng, PROVIDER_GOOGLE, Polyline, Marker } from 'react-native-maps';
 
 import { UserMarkerIconType } from '~/components/markers/AddUserMarker';
 import AnimatedRouteMarker from '~/components/markers/AnimatedRouteMarker';
@@ -60,6 +60,7 @@ export default function Home() {
   useKeepAwake();
 
   const [userMarkers, setUserMarkers] = useState<UserMarkerIconType[]>([]);
+  const { width, height } = useWindowDimensions()
   const colorScheme = useColorScheme();
   const insets = useSafeAreaInsets()
   const router = useRouter()
@@ -81,9 +82,10 @@ export default function Home() {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   // bottom sheet
-  const [_sheetCurrentSnap, setSheetCurrentSnap] = useState(1);
+  const [sheetCurrentSnap, setSheetCurrentSnap] = useState(1);
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
-  const snapPoints = useMemo(() => [220, '50%', '95%'], []);
+  const snapPoints = useMemo(() => [195, '50%', '95%'], []);
+  const [piningLocation, setPiningLocation] = useState(false);
 
   useEffect(() => {
     const hideSubscription = Keyboard.addListener('keyboardDidHide', () => {
@@ -120,8 +122,42 @@ export default function Home() {
     []
   );
 
-  const piningLocation = useCallback(() => {
-    setSheetCurrentSnap(1);
+  const startPiningLocation = useCallback(() => {
+    setPiningLocation(true);
+  }, [])
+  const cancelPiningLocation = useCallback(() => {
+    setPiningLocation(false);
+  }, [])
+  const confirmPiningLocation = useCallback(async () => {
+    setPiningLocation(false);
+
+    const coords = await getMiddlePoint();
+
+    setUserMarkers([...userMarkers, {
+      id: Date.now().toString(),
+      name: "Best Place",
+      description: "This is the best place in Portland",
+      icon: {
+        type: 'MCI',
+        name: 'map-marker',
+      },
+      coords,
+    }])
+
+    return coords;
+  }, [])
+
+  const getMiddlePoint = useCallback(async () => {
+    const pointCoords = await mapViewRef.current?.coordinateForPoint({
+      x: (width / 2),
+      y: (height / 2),
+    })
+
+    if (!pointCoords) {
+      throw new Error('Trouble colecting the coordinates')
+    }
+
+    return { latitude: pointCoords.latitude, longitude: pointCoords.longitude }
   }, [])
 
   return (
@@ -207,13 +243,21 @@ export default function Home() {
         <BottomSheetModalProvider>
           <MapView
             style={{ width: '100%', height: '100%' }}
-            onTouchMove={() => { }}
+            onTouchMove={async (e) => {
+              // mapViewRef.current?.addressForCoordinate()
+              /* const resp = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${""},${""}&key=AIzaSyAtcwUbA0jjJ6ARXl5_FqIqYcGbTI_XZEE`)
+              const respJson = await resp.json();
+              respJson.results[0].formatted_address; */
+            }}
             onTouchStart={() => {
               placesInputViewRef.current?.blur();
               bottomSheetModalRef.current?.present();
             }}
             onTouchEnd={() => { }}
             onPress={() => { }}
+            onLongPress={(e) => {
+              console.log(JSON.stringify(e.nativeEvent, null, 2))
+            }}
             initialRegion={{ latitude: 23.118644, longitude: -82.3806211, latitudeDelta: 0.0322, longitudeDelta: 0.0221 }}
             ref={mapViewRef}
             provider={PROVIDER_GOOGLE}
@@ -236,6 +280,12 @@ export default function Home() {
             <TaxisMarkers onPressTaxi={() => { }} />
             <AnimatedRouteMarker key={2} />
             <UserMarker title="User Marker" description="User Marker Description" userId="123" />
+
+            {userMarkers.map((marker) => (
+              <Marker key={marker.id} coordinate={{ ...marker.coords }}>
+                <MaterialIcons name="location-on" size={24} color={Colors[colorScheme ?? 'light'].text} />
+              </Marker>
+            ))}
           </MapView>
 
           <ScaleBtn className='absolute left-7' style={{ top: insets.top + 12 }} onPress={() => setDrawerOpen(true)}>
@@ -244,12 +294,21 @@ export default function Home() {
             </View>
           </ScaleBtn>
 
+          {piningLocation && <View
+            style={{
+              position: 'absolute',
+              right: width / 2 - 24,
+              top: height / 2 - 48,
+            }}>
+            <MaterialIcons name="location-pin" size={48} color={Colors[colorScheme ?? 'light'].text} />
+          </View>}
+
           <BottomSheetModal
             // stackBehavior="push"
             ref={bottomSheetModalRef}
             // overDragResistanceFactor={6}
             keyboardBehavior="extend"
-            keyboardBlurBehavior="restore"
+            // keyboardBlurBehavior="restore"
             handleComponent={renderCustomHandle}
             index={1}
             onChange={(e) => {
@@ -301,6 +360,11 @@ export default function Home() {
             backdropComponent={renderBackdrop}
           >
             <BottomSheetContent
+              placesInputViewRef={placesInputViewRef}
+              startPiningLocation={startPiningLocation}
+              cancelPiningLocation={cancelPiningLocation}
+              confirmPiningLocation={confirmPiningLocation}
+              piningLocation={piningLocation}
               userMarkers={userMarkers}
               activeRoute={activeRoute}
               setActiveRoute={setActiveRoute}

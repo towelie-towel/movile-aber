@@ -1,3 +1,13 @@
+export const getAddress = async (latitude: number, longitude: number) => {
+  const resp = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=AIzaSyAtcwUbA0jjJ6ARXl5_FqIqYcGbTI_XZEE`)
+  const respJson = await resp.json();
+
+  const streetAddresses = respJson.results.filter((result: any) => result.types.includes('street_address') || result.types.includes('route'))
+  const streets = streetAddresses.map((address: any) => address.address_components.find((component: any) => component.types.includes('route'))?.long_name)
+  console.log(JSON.stringify(respJson.results, null, 2))
+  return streets
+}
+
 export const getDirections = async (startLoc: string, destinationLoc: string) => {
   try {
     const resp = await fetch(
