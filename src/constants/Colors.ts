@@ -14,6 +14,7 @@ export default {
     border: '#D8D8D8',
     shadow: '#000',
     btn_light_bg: '#eee',
+    icons: '#8d8a9e',
   },
   dark: {
     text: '#fff',
@@ -30,5 +31,6 @@ export default {
     border: '#A3A3A3',
     shadow: '#000',
     btn_light_bg: '#eee',
+    icons: '#C1C0C9',
   },
 };

@@ -7,6 +7,7 @@ import { StatusBar } from 'expo-status-bar';
 import React, { useCallback, useEffect } from 'react';
 import { NativeModules, Platform } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { ToastProvider } from 'react-native-toast-notifications'
 
 import { UserProvider } from '~/context/UserContext';
 import { WSProvider } from '~/context/WSContext';
@@ -40,16 +41,18 @@ const RootLayout = () => {
   return (
     <WSProvider>
       <UserProvider>
-        <SafeAreaProvider onLayout={onLayoutRootView}>
-          <StatusBar />
-          <Stack
-            screenOptions={{
-              headerShown: false,
-            }}>
-            <Stack.Screen name="code" />
-            <Stack.Screen name="sign" />
-          </Stack>
-        </SafeAreaProvider>
+        <ToastProvider>
+          <SafeAreaProvider onLayout={onLayoutRootView}>
+            <StatusBar />
+            <Stack
+              screenOptions={{
+                headerShown: false,
+              }}>
+              <Stack.Screen name="code" />
+              <Stack.Screen name="sign" />
+            </Stack>
+          </SafeAreaProvider>
+        </ToastProvider>
       </UserProvider>
     </WSProvider>
   );

@@ -17,13 +17,12 @@ import Ripple from '~/components/common/RippleBtn';
 import { ScaleBtn } from '~/components/common/ScaleBtn';
 import TaxisMarkers from '~/components/markers/TaxiMarkers';
 import UserMarker from '~/components/markers/UserMarker';
-// import { ColorInstagram, ColorFacebook, ColorTwitter } from '~/components/svgs';
+import { ColorInstagram, ColorFacebook, ColorTwitter } from '~/components/svgs';
 import Colors from '~/constants/Colors';
 import { NightMap } from '~/constants/NightMap';
 import { useUser } from '~/context/UserContext';
 import { BottomSheetContent } from '~/components/bottomsheet/BottomSheetContent';
 import { CustomHandle } from '~/components/bottomsheet/CustomHandle';
-import { GooglePlacesAutocompleteRef } from '~/lib/google-places-autocomplete/GooglePlacesAutocomplete';
 import { getData } from '~/lib/storage';
 
 const drawerItems: {
@@ -50,10 +49,6 @@ const drawerItems: {
       icon: 'settings',
       label: 'Opciones',
     },
-    {
-      icon: 'logout',
-      label: 'Salir',
-    },
   ]
 
 export default function Home() {
@@ -64,7 +59,7 @@ export default function Home() {
   const colorScheme = useColorScheme();
   const insets = useSafeAreaInsets()
   const router = useRouter()
-  const { user, isSignedIn } = useUser();
+  const { user, isSignedIn, getSession, signOut } = useUser();
 
   if (Platform.OS === "android") {
     NavigationBar.setBackgroundColorAsync('transparent');
@@ -75,14 +70,12 @@ export default function Home() {
   const mapViewRef = useRef<MapView>(null);
 
   // search bar
-  const placesInputViewRef = useRef<GooglePlacesAutocompleteRef | null>(null);
   const [activeRoute, setActiveRoute] = useState<{ coords: LatLng[] } | null | undefined>(null);
 
   // drawer
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   // bottom sheet
-  const [sheetCurrentSnap, setSheetCurrentSnap] = useState(1);
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const snapPoints = useMemo(() => [195, '50%', '95%'], []);
   const [piningLocation, setPiningLocation] = useState(false);
@@ -93,10 +86,17 @@ export default function Home() {
         bottomSheetModalRef.current?.snapToIndex(0);
       }
     });
+    if (user) {
+      bottomSheetModalRef.current?.present();
+    }
     return () => {
       hideSubscription.remove();
     };
   }, []);
+
+  useEffect(() => {
+    getSession()
+  }, [isSignedIn])
 
   // renders
   const renderCustomHandle = useCallback(
@@ -181,12 +181,14 @@ export default function Home() {
                 <View className='absolute top-[-170px] left-[-40px] w-[300px] h-[300px] rounded-full opacity-5 bg-black' />
                 <View className='absolute w-[350px] h-[350px] top-[-50px] left-[-175px] rounded-full opacity-5 bg-black' />
 
-                <View className='w-4/5' style={{ marginTop: insets.top }}>
-                  <Image
-                    style={{ borderRadius: 1000, width: 80, height: 80 }}
-                    source={{ uri: isSignedIn ? 'https://lh3.googleusercontent.com/a/AAcHTtfPgVic8qF8hDw_WPE80JpGOkKASohxkUA8y272Ow=s1000-c' : 'https://avatars.githubusercontent.com/u/100803609?v=4' }}
-                    alt="Profile Image"
-                  />
+                <View className='w-4/5 shadow' style={{ marginTop: insets.top }}>
+                  <View className='' style={{ borderRadius: 1000, overflow: "hidden", width: 80, height: 80, borderWidth: 1, borderColor: "white" }}>
+                    <Image
+                      style={{ flex: 1 }}
+                      source={{ uri: isSignedIn ? 'https://lh3.googleusercontent.com/a/AAcHTtfPgVic8qF8hDw_WPE80JpGOkKASohxkUA8y272Ow=s1000-c' : 'https://avatars.githubusercontent.com/u/100803609?v=4' }}
+                      alt="Profile Image"
+                    />
+                  </View>
                   <Text className='text-[#FFFFFF] text-xl font-semibold mt-2.5'>
                     {user?.username ?? 'Not signed'}
                   </Text>
@@ -198,7 +200,7 @@ export default function Home() {
                 </View>
               </View>
 
-              <View className='ml-[-4px] flex-1 bg-[#F8F8F8] dark:bg-[#222222]'>
+              {user ? <View className='ml-[-4px] flex-1 bg-[#F8F8F8] dark:bg-[#222222]'>
                 {drawerItems.map((item, index) => {
                   return (
                     <Ripple key={index} onTap={() => { console.log(item) }}>
@@ -207,7 +209,7 @@ export default function Home() {
                           // @ts-ignore
                           name={item.icon}
                           size={30}
-                          color={Colors[colorScheme ?? 'light'].text_dark}
+                          color={Colors[colorScheme ?? 'light'].icons}
                         />
                         <Text
                           style={{
@@ -221,10 +223,29 @@ export default function Home() {
                     </Ripple>
                   );
                 })}
-              </View>
+                <Ripple onTap={() => { signOut() }}>
+                  <View className='w-full h-16 flex-row items-center justify-start px-[10%] gap-4'>
+                    <MaterialIcons
+                      name={"logout"}
+                      size={30}
+                      color={Colors[colorScheme ?? 'light'].icons}
+                    />
+                    <Text
+                      style={{
+                        color: Colors[colorScheme ?? 'light'].text_dark,
+                        fontSize: 18,
+                        fontWeight: '600',
+                      }}>
+                      Sign Out
+                    </Text>
+                  </View>
+                </Ripple>
+              </View> : <View className='flex-1 bg-[#F8F8F8] dark:bg-[#222222] justify-center items-center'>
+                <Text className='text-[#000] dark:text-[#fff] text-xl font-semibold'>Please Sign In</Text>
+              </View>}
 
               {/* Social Links  */}
-              {/* <View className='w-full h-20 flex-row items-center justify-around' style={{ marginBottom: insets.bottom }}>
+              <View className='w-4/5 self-center flex-row justify-between mt-auto' style={{ marginBottom: insets.bottom }}>
                 <ScaleBtn className='items-center'>
                   <ColorInstagram />
                 </ScaleBtn>
@@ -234,7 +255,7 @@ export default function Home() {
                 <ScaleBtn className='items-center'>
                   <ColorTwitter />
                 </ScaleBtn>
-              </View> */}
+              </View>
 
             </View>
           );
@@ -242,44 +263,25 @@ export default function Home() {
 
         <BottomSheetModalProvider>
           <MapView
+            showsUserLocation
             style={{ width: '100%', height: '100%' }}
-            onTouchMove={async (e) => {
-              // mapViewRef.current?.addressForCoordinate()
-              /* const resp = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${""},${""}&key=AIzaSyAtcwUbA0jjJ6ARXl5_FqIqYcGbTI_XZEE`)
-              const respJson = await resp.json();
-              respJson.results[0].formatted_address; */
-            }}
-            onTouchStart={() => {
-              placesInputViewRef.current?.blur();
-              bottomSheetModalRef.current?.present();
-            }}
+            onTouchMove={() => { }}
+            onTouchStart={() => { }}
             onTouchEnd={() => { }}
             onPress={() => { }}
-            onLongPress={(e) => {
-              console.log(JSON.stringify(e.nativeEvent, null, 2))
-            }}
+            onLongPress={() => { }}
             initialRegion={{ latitude: 23.118644, longitude: -82.3806211, latitudeDelta: 0.0322, longitudeDelta: 0.0221 }}
             ref={mapViewRef}
             provider={PROVIDER_GOOGLE}
             customMapStyle={colorScheme === 'dark' ? NightMap : undefined}>
             <Polyline
               coordinates={activeRoute?.coords ?? []}
-              // strokeColor={Colors[colorScheme ?? 'light'].text_dark}
               strokeWidth={5}
-              strokeColor="#000" // fallback for when `strokeColors` is not supported by the map-provider
-            /* strokeColors={[
-              '#7F0000',
-              '#00000000', // no color, creates a "long" gradient between the previous and next coordinate
-              '#B24112',
-              '#E5845C',
-              '#238C23',
-              '#7F0000',
-            ]} */
-            // strokeWidth={6}
+              strokeColor="#000"
             />
             <TaxisMarkers onPressTaxi={() => { }} />
             <AnimatedRouteMarker key={2} />
-            <UserMarker title="User Marker" description="User Marker Description" userId="123" />
+            {/* <UserMarker title="User Marker" description="User Marker Description" userId="123" /> */}
 
             {userMarkers.map((marker) => (
               <Marker key={marker.id} coordinate={{ ...marker.coords }}>
@@ -310,11 +312,9 @@ export default function Home() {
             keyboardBehavior="extend"
             // keyboardBlurBehavior="restore"
             handleComponent={renderCustomHandle}
-            index={1}
+            index={0}
             onChange={(e) => {
               console.log('BottomSheetModal-onChange', e);
-              setSheetCurrentSnap(e);
-              // if (sheetCurrentSnap === 2) placesInputViewRef.current?.blur();
             }}
             // enableDynamicSizing
             android_keyboardInputMode="adjustResize"
@@ -360,7 +360,6 @@ export default function Home() {
             backdropComponent={renderBackdrop}
           >
             <BottomSheetContent
-              placesInputViewRef={placesInputViewRef}
               startPiningLocation={startPiningLocation}
               cancelPiningLocation={cancelPiningLocation}
               confirmPiningLocation={confirmPiningLocation}

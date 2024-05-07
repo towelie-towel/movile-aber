@@ -10,7 +10,6 @@ const useKeyboard = () => {
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', (e) => {
       setKeyboard({
-        ...keyboard,
         keyboardHeight: e.endCoordinates.height,
         keyboardVisible: true,
       });
@@ -18,7 +17,6 @@ const useKeyboard = () => {
 
     const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
       setKeyboard({
-        ...keyboard,
         keyboardHeight: 0,
         keyboardVisible: false,
       });

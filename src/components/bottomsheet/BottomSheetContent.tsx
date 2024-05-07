@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, useColorScheme, useWindowDimensions, LayoutAnimation, Keyboard } from 'react-native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { View, Text, useColorScheme, useWindowDimensions, LayoutAnimation, Keyboard, StyleSheet, StyleProp, ViewStyle } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { BottomSheetView, useBottomSheet } from '@gorhom/bottom-sheet';
 import { getCurrentPositionAsync, Accuracy } from 'expo-location';
@@ -9,41 +9,53 @@ import * as ExpoLocation from 'expo-location';
 import { UserMarkerIconType } from '~/components/markers/AddUserMarker';
 import Colors from '~/constants/Colors';
 import { GooglePlacesAutocomplete, GooglePlaceData, GooglePlaceDetail, GooglePlacesAutocompleteRef } from '~/lib/google-places-autocomplete/GooglePlacesAutocomplete';
-import { getAddress, polylineDecode } from '~/utils/directions';
+import { polylineDecode } from '~/utils/directions';
 import { ScaleBtn } from '~/components/common/ScaleBtn';
 
 interface BottomSheetContentProps {
   activeRoute: { coords: LatLng[] } | null | undefined;
   userMarkers: UserMarkerIconType[];
   setActiveRoute: React.Dispatch<{ coords: LatLng[] } | null>;
-  placesInputViewRef: React.RefObject<GooglePlacesAutocompleteRef>;
   startPiningLocation: () => void;
   cancelPiningLocation: () => void;
   confirmPiningLocation: () => Promise<{ latitude: number; longitude: number; address?: Address }>;
   piningLocation: boolean;
 }
 
-export const BottomSheetContent = ({ userMarkers, setActiveRoute, placesInputViewRef, startPiningLocation, cancelPiningLocation, confirmPiningLocation, piningLocation }: BottomSheetContentProps) => {
+export const BottomSheetContent = ({ userMarkers, setActiveRoute, startPiningLocation, cancelPiningLocation, confirmPiningLocation, piningLocation }: BottomSheetContentProps) => {
   const colorScheme = useColorScheme();
   const { width } = useWindowDimensions();
   const { collapse } = useBottomSheet();
-  const [viewPinOnMap, setViewPinOnMap] = useState<"none" | "origin" | "destination">("none");
+  const [viewPinOnMap, setViewPinOnMap] = useState(false);
+  const [piningInput, setPiningInput] = useState<"origin" | "destination">("destination");
+  const [piningInfo, setPiningInfo] = useState({
+    origin: { latitude: 0, longitude: 0, address: "" },
+    destination: { latitude: 0, longitude: 0, address: "" },
+  });
 
   const originInputViewRef = useRef<GooglePlacesAutocompleteRef>(null);
   const destinationInputViewRef = useRef<GooglePlacesAutocompleteRef>(null);
 
   useEffect(() => {
-    // fetchOrigin()
+    fetchOrigin()
   }, [])
 
   const fetchOrigin = async () => {
-    const posSubscrition = await ExpoLocation.getCurrentPositionAsync({
+    const currentPosition = await ExpoLocation.getCurrentPositionAsync({
       accuracy: ExpoLocation.Accuracy.Highest,
     });
-
-    const resp = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${posSubscrition.coords.latitude},${posSubscrition.coords.longitude}&key=AIzaSyAtcwUbA0jjJ6ARXl5_FqIqYcGbTI_XZEE`)
+    const resp = await fetch(
+      `https://revgeocode.search.hereapi.com/v1/revgeocode?at=${currentPosition.coords.latitude},${currentPosition.coords.longitude}&types=street&limit=5&apiKey=mRASkFtnRqYimoHBzud5-kSsj0y_FvqR-1jwJHrfUvQ&showMapReferences=pointAddress&show=streetInfo`
+    );
     const respJson = await resp.json();
-    originInputViewRef.current?.setAddressText(respJson.results[0].formatted_address)
+
+    if (respJson.items.length > 0) {
+      const streetInfo = `${respJson.items[0].address.street.replace("Calle ", "")} e/ ${respJson.items[1].address.street.replace("Calle ", "")} y ${respJson.items[2].address.street.replace("Calle ", "")}, ${respJson.items[2].address.district}, ${respJson.items[2].address.district}, Habana, Cuba`;
+      originInputViewRef.current?.setAddressText(streetInfo);
+    } else {
+      console.log('No street address found in the response.');
+    }
+
   }
 
   const startPiningLocationHandler = () => {
@@ -60,49 +72,25 @@ export const BottomSheetContent = ({ userMarkers, setActiveRoute, placesInputVie
     cancelPiningLocation()
   }
 
-  /* const confirmPiningLocationHandler = async () => {
-    const location = await confirmPiningLocation()
-    console.log(await getAddress(location.latitude, location.longitude))
-    const resp = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${location.latitude},${location.longitude}&key=AIzaSyAtcwUbA0jjJ6ARXl5_FqIqYcGbTI_XZEE`)
-    const respJson = await resp.json();
-    const result = respJson.results.find((result: any) => result.types.includes('street_address'))
-    originInputViewRef.current?.setAddressText(result.formatted_address)
-  } */
-
   const confirmPiningLocationHandler = async () => {
     const location = await confirmPiningLocation();
-    console.log(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${location.latitude},${location.longitude}&region=cu&language=es-419&result_type=street_address|route|intersection&key=AIzaSyAtcwUbA0jjJ6ARXl5_FqIqYcGbTI_XZEE`)
     const resp = await fetch(
-      `https://maps.googleapis.com/maps/api/geocode/json?latlng=${location.latitude},${location.longitude}&region=cu&language=es-419&result_type=street_address|route|intersection&key=AIzaSyAtcwUbA0jjJ6ARXl5_FqIqYcGbTI_XZEE`
+      `https://revgeocode.search.hereapi.com/v1/revgeocode?at=${location.latitude},${location.longitude}&types=street&limit=5&apiKey=mRASkFtnRqYimoHBzud5-kSsj0y_FvqR-1jwJHrfUvQ&showMapReferences=pointAddress&show=streetInfo`
     );
     const respJson = await resp.json();
-    console.log(JSON.stringify(respJson, null, 2))
 
-    // Find the result that contains the street address
-    const streetAddressResult = respJson.results.find((result: any) =>
-      result.types.includes('street_address')
-    );
+    if (respJson.items.length > 0) {
+      const streetInfo = `${respJson.items[0].address.street.replace("Calle ", "")} e/ ${respJson.items[1].address.street.replace("Calle ", "")} y ${respJson.items[2].address.street.replace("Calle ", "")}, ${respJson.items[2].address.district}, ${respJson.items[2].address.district}, Habana, Cuba`;
 
-    if (streetAddressResult) {
-      const { formatted_address, address_components } = streetAddressResult;
-
-      // Extract the street information
-      const streetNumber = address_components.find((component: any) =>
-        component.types.includes('street_number')
-      )?.long_name;
-      const streetName = address_components.find((component: any) =>
-        component.types.includes('route')
-      )?.long_name;
-      const crossStreets = address_components
-        .filter((component: any) => component.types.includes('intersection'))
-        .map((component: any) => component.long_name)
-        .join(' and ');
-
-      // Format the street information
-      const streetInfo = `${streetNumber} ${streetName} between ${crossStreets}`;
-
-      originInputViewRef.current?.setAddressText(formatted_address);
-      console.log(streetInfo);
+      if (piningInput === "origin") {
+        originInputViewRef.current?.setAddressText(streetInfo);
+      } else if (piningInput === "destination") {
+        destinationInputViewRef.current?.setAddressText(streetInfo);
+      }
+      setPiningInfo({
+        ...piningInfo,
+        [piningInput]: { ...location, address: streetInfo },
+      })
     } else {
       console.log('No street address found in the response.');
     }
@@ -115,7 +103,7 @@ export const BottomSheetContent = ({ userMarkers, setActiveRoute, placesInputVie
         <View className='h-10 flex-row justify-between items-center mx-1.5'>
           <Text className='font-bold text-xl'>A donde quieres ir?</Text>
 
-          {viewPinOnMap !== "none" && <ScaleBtn onPress={startPiningLocationHandler}>
+          {viewPinOnMap && <ScaleBtn onPress={startPiningLocationHandler}>
             <View className='flex-row items-center gap-2 p-1 px-2 border rounded-lg'>
               <Text className='h-full text-lg font-medium text-center'>Fijar en el Mapa</Text>
               <MaterialCommunityIcons name="map-search-outline" size={22} color="#000" />
@@ -155,11 +143,12 @@ export const BottomSheetContent = ({ userMarkers, setActiveRoute, placesInputVie
               onFocus: () => {
                 LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
                 if (piningLocation) cancelPiningLocationHandler()
-                setViewPinOnMap("origin")
+                setViewPinOnMap(true)
+                setPiningInput("origin")
               },
               onBlur: () => {
                 LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-                setViewPinOnMap("none")
+                setViewPinOnMap(false)
               }
             }}
             enablePoweredByContainer={false}
@@ -244,6 +233,11 @@ export const BottomSheetContent = ({ userMarkers, setActiveRoute, placesInputVie
         </View>
 
         <View className='relative z-[999] w-full h-12 px-0 mt-5 items-center flex-row'>
+          <DashedLine axis='vertical' style={{
+            height: 30,
+            left: 15,
+            top: -29
+          }} />
           <MaterialCommunityIcons name="map-marker-radius" size={32} color="#000" />
           <GooglePlacesAutocomplete
             ref={destinationInputViewRef}
@@ -262,11 +256,12 @@ export const BottomSheetContent = ({ userMarkers, setActiveRoute, placesInputVie
               onFocus: () => {
                 LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
                 if (piningLocation) cancelPiningLocationHandler()
-                setViewPinOnMap("destination")
+                setViewPinOnMap(true)
+                setPiningInput("destination")
               },
               onBlur: () => {
                 LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-                setViewPinOnMap("none")
+                setViewPinOnMap(false)
               }
             }}
             enablePoweredByContainer={false}
@@ -350,7 +345,12 @@ export const BottomSheetContent = ({ userMarkers, setActiveRoute, placesInputVie
           />
         </View>
 
-        <View className='mt-7 gap-5 relative z-1'>
+
+        <View className='h-10 flex-row justify-between items-center mx-1.5 mt-7'>
+          <Text className='font-bold text-xl'>Favoritos</Text>
+        </View>
+
+        <View className='mt-2 gap-5 relative z-1'>
           {userMarkers.map((marker) => (
             <View key={marker.id} className='flex-row items-center gap-5'>
               <MaterialCommunityIcons name="bookmark-outline" size={32} color="#000" />
@@ -362,7 +362,65 @@ export const BottomSheetContent = ({ userMarkers, setActiveRoute, placesInputVie
           ))}
         </View>
 
+
       </View>
     </BottomSheetView>
   );
 };
+
+const DashedLine = ({
+  axis = 'horizontal',
+  dashGap = 2,
+  dashLength = 4,
+  dashThickness = 2,
+  dashColor = '#000',
+  dashStyle,
+  style,
+}: {
+  axis?: 'horizontal' | 'vertical';
+  dashGap?: number;
+  dashLength?: number;
+  dashThickness?: number;
+  dashColor?: string;
+  dashStyle?: StyleProp<ViewStyle>;
+  style?: StyleProp<ViewStyle>;
+}) => {
+  const [lineLength, setLineLength] = useState(0);
+  const isRow = axis === 'horizontal';
+  const numOfDashes = Math.ceil(lineLength / (dashGap + dashLength));
+
+  const dashStyles = useMemo(
+    () => ({
+      width: isRow ? dashLength : dashThickness,
+      height: isRow ? dashThickness : dashLength,
+      marginRight: isRow ? dashGap : 0,
+      marginBottom: isRow ? 0 : dashGap,
+      backgroundColor: dashColor,
+    }),
+    [dashColor, dashGap, dashLength, dashThickness, isRow],
+  );
+
+  return (
+    <View
+      onLayout={event => {
+        const { width, height } = event.nativeEvent.layout;
+        setLineLength(isRow ? width : height);
+      }}
+      style={[style, isRow ? styles.row : styles.column]}
+    >
+      {[...Array(numOfDashes)].map((_, i) => {
+        // eslint-disable-next-line react/no-array-index-key
+        return <View key={i} style={[dashStyles, dashStyle]} />;
+      })}
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  row: {
+    flexDirection: 'row',
+  },
+  column: {
+    flexDirection: 'column',
+  },
+});
