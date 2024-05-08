@@ -134,9 +134,12 @@ export default function Home() {
     })
   }, [])
 
-  const animateToActiveRoute = useCallback(async () => {
-    activeRoute && animateToRegion(calculateMiddlePointAndDelta({ latitude: activeRoute.coords[0].latitude, longitude: activeRoute.coords[0].longitude }, { latitude: activeRoute.coords[activeRoute.coords.length - 1].latitude, longitude: activeRoute.coords[activeRoute.coords.length - 1].longitude }))
-  }, [activeRoute])
+  const animateToActiveRoute = useCallback(() => {
+    activeRoute && animateToRegion(calculateMiddlePointAndDelta({ latitude: activeRoute.coords[0].latitude, longitude: activeRoute.coords[0].longitude }, { latitude: activeRoute.coords[activeRoute.coords.length - 1].latitude, longitude: activeRoute.coords[activeRoute.coords.length - 1].longitude }, 0.01, sheetCurrentSnap * 0.4))
+  }, [activeRoute, sheetCurrentSnap])
+  const animateToRoute = useCallback((origin: { latitude: number; longitude: number }, destination: { latitude: number; longitude: number }) => {
+    animateToRegion(calculateMiddlePointAndDelta(origin, destination, 0.01, sheetCurrentSnap * 0.4))
+  }, [sheetCurrentSnap])
 
   // renders
   const renderCustomHandle = useCallback(
@@ -464,7 +467,7 @@ export default function Home() {
               userMarkers={userMarkers}
               activeRoute={activeRoute}
               setActiveRoute={setActiveRoute}
-              animateToRegion={animateToRegion}
+              animateToRoute={animateToRoute}
             />
           </BottomSheetModal>
 

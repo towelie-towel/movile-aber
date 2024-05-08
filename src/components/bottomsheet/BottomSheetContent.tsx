@@ -2,14 +2,13 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, useColorScheme, useWindowDimensions, LayoutAnimation, Keyboard, StyleSheet, StyleProp, ViewStyle, ScrollView } from 'react-native';
 import { MaterialCommunityIcons, FontAwesome6 } from '@expo/vector-icons';
 import { BottomSheetView, useBottomSheet } from '@gorhom/bottom-sheet';
-import { getCurrentPositionAsync, Accuracy } from 'expo-location';
 import type { Address, LatLng } from 'react-native-maps';
 import * as ExpoLocation from 'expo-location';
 
 import { UserMarkerIconType } from '~/components/markers/AddUserMarker';
 import Colors from '~/constants/Colors';
 import { GooglePlacesAutocomplete, GooglePlaceData, GooglePlaceDetail, GooglePlacesAutocompleteRef } from '~/lib/google-places-autocomplete/GooglePlacesAutocomplete';
-import { calculateMiddlePointAndDelta, polylineDecode } from '~/utils/directions';
+import { polylineDecode } from '~/utils/directions';
 import { ScaleBtn } from '~/components/common/ScaleBtn';
 
 interface BottomSheetContentProps {
@@ -20,18 +19,13 @@ interface BottomSheetContentProps {
   cancelPiningLocation: () => void;
   confirmPiningLocation: () => Promise<{ latitude: number; longitude: number; address?: Address }>;
   piningLocation: boolean;
-  animateToRegion: (region: {
-    latitudeDelta: number;
-    longitudeDelta: number;
-    latitude: number;
-    longitude: number;
-  }) => void;
+  animateToRoute: (origin: { latitude: number; longitude: number }, destination: { latitude: number; longitude: number }) => void;
 }
 
-export const BottomSheetContent = ({ userMarkers, setActiveRoute, startPiningLocation, cancelPiningLocation, confirmPiningLocation, piningLocation, animateToRegion }: BottomSheetContentProps) => {
+export const BottomSheetContent = ({ userMarkers, setActiveRoute, startPiningLocation, cancelPiningLocation, confirmPiningLocation, piningLocation, animateToRoute }: BottomSheetContentProps) => {
   const colorScheme = useColorScheme();
   const { width } = useWindowDimensions();
-  const { collapse, snapToIndex, expand } = useBottomSheet();
+  const { collapse, snapToIndex } = useBottomSheet();
   const [viewPinOnMap, setViewPinOnMap] = useState(false);
   const [piningInput, setPiningInput] = useState<"origin" | "destination">("destination");
   const [piningInfo, setPiningInfo] = useState({
@@ -84,42 +78,54 @@ export const BottomSheetContent = ({ userMarkers, setActiveRoute, startPiningLoc
   }
 
   const confirmPiningLocationHandler = async () => {
-    const location = await confirmPiningLocation();
-    const resp = await fetch(
-      `https://revgeocode.search.hereapi.com/v1/revgeocode?at=${location.latitude},${location.longitude}&types=street&limit=5&apiKey=mRASkFtnRqYimoHBzud5-kSsj0y_FvqR-1jwJHrfUvQ&showMapReferences=pointAddress&show=streetInfo`
-    );
-    const respJson = await resp.json();
 
-    if (respJson.items.length > 0) {
-      const streetInfo = `${respJson.items[0].address.street.replace("Calle ", "")} e/ ${respJson.items[1].address.street.replace("Calle ", "")} y ${respJson.items[2].address.street.replace("Calle ", "")}, ${respJson.items[2].address.district}, ${respJson.items[2].address.district}, Habana, Cuba`;
 
-      if (piningInput === "origin") {
-        originInputViewRef.current?.setAddressText(streetInfo);
-      } else if (piningInput === "destination") {
-        destinationInputViewRef.current?.setAddressText(streetInfo);
-        if (piningInfo.origin.address === "") fetchOrigin()
-        else if (piningInfo.origin.latitude && piningInfo.origin.longitude) {
-          const resp = await fetch(
-            `http://172.20.10.12:4200/route?from=${piningInfo.origin.latitude},${piningInfo.origin.longitude}&to=${location.latitude},${location.longitude}`
-          );
-          const respJson = await resp.json();
-          const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map(
-            (point) => ({ latitude: point[0]!, longitude: point[1]! })
-          );
-          setActiveRoute({
-            coords: decodedCoords,
-          });
-          console.log(JSON.stringify(respJson, null, 2))
-          animateToRegion(calculateMiddlePointAndDelta({ latitude: piningInfo.origin.latitude, longitude: piningInfo.origin.longitude }, { latitude: location.latitude, longitude: location.longitude }))
+    try {
+      const location = await confirmPiningLocation();
+      const resp = await fetch(
+        `https://revgeocode.search.hereapi.com/v1/revgeocode?at=${location.latitude},${location.longitude}&types=street&limit=5&apiKey=mRASkFtnRqYimoHBzud5-kSsj0y_FvqR-1jwJHrfUvQ&showMapReferences=pointAddress&show=streetInfo`
+      );
+      const respJson = await resp.json();
+
+      if (respJson.items.length > 0) {
+        const streetInfo = `${respJson.items[0].address.street.replace("Calle ", "")} e/ ${respJson.items[1].address.street.replace("Calle ", "")} y ${respJson.items[2].address.street.replace("Calle ", "")}, ${respJson.items[2].address.district}, ${respJson.items[2].address.district}, Habana, Cuba`;
+
+        if (piningInput === "origin") {
+          originInputViewRef.current?.setAddressText(streetInfo);
+        } else if (piningInput === "destination") {
+          destinationInputViewRef.current?.setAddressText(streetInfo);
+          if (piningInfo.origin.address === "") fetchOrigin()
+          else if (piningInfo.origin.latitude && piningInfo.origin.longitude) {
+            const resp = await fetch(
+              `http://172.20.10.12:4200/route?from=${piningInfo.origin.latitude},${piningInfo.origin.longitude}&to=${location.latitude},${location.longitude}`
+            );
+            const respJson = await resp.json();
+            const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map(
+              (point) => ({ latitude: point[0]!, longitude: point[1]! })
+            );
+
+            LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+            snapToIndex(1)
+            setActiveRoute({
+              coords: decodedCoords,
+            });
+            setRouteInfo({ distance: respJson[0].legs[0].distance.text, duration: respJson[0].legs[0].duration.text })
+            animateToRoute({ latitude: piningInfo.origin.latitude, longitude: piningInfo.origin.longitude }, { latitude: location.latitude, longitude: location.longitude })
+            console.log(JSON.stringify(respJson, null, 2))
+          }
+
         }
-
+        setPiningInfo({
+          ...piningInfo,
+          [piningInput]: { ...location, address: streetInfo },
+        })
+      } else {
+        console.log('No street address found in the response.');
       }
-      setPiningInfo({
-        ...piningInfo,
-        [piningInput]: { ...location, address: streetInfo },
-      })
-    } else {
-      console.log('No street address found in the response.');
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error(error.message);
+      }
     }
   };
 
@@ -188,30 +194,7 @@ export const BottomSheetContent = ({ userMarkers, setActiveRoute, startPiningLoc
             }}
             enablePoweredByContainer={false}
             onPress={(data, details) => {
-              const tokio = async (_data: GooglePlaceData, details: GooglePlaceDetail | null) => {
-                if (!details) {
-                  return;
-                }
-                const position = await getCurrentPositionAsync({
-                  accuracy: Accuracy.Highest,
-                });
-                try {
-                  const resp = await fetch(
-                    `http://172.20.10.12:4200/route?from=${position.coords.latitude},${position.coords.longitude}&to=${details.geometry.location.lat},${details.geometry.location.lng}`
-                  );
-                  const respJson = await resp.json();
-                  const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map(
-                    (point) => ({ latitude: point[0]!, longitude: point[1]! })
-                  );
-                  setActiveRoute({
-                    coords: decodedCoords,
-                  });
-                  console.log(JSON.stringify(decodedCoords, null, 2));
-                } catch (error) {
-                  if (error instanceof Error) {
-                    console.error(error.message);
-                  }
-                }
+              const tokio = async (_data: GooglePlaceData, _details: GooglePlaceDetail | null) => {
               };
               tokio(data, details);
             }}
@@ -301,33 +284,7 @@ export const BottomSheetContent = ({ userMarkers, setActiveRoute, startPiningLoc
             }}
             enablePoweredByContainer={false}
             onPress={(data, details) => {
-              const tokio = async (_data: GooglePlaceData, details: GooglePlaceDetail | null) => {
-                if (!details) {
-                  return;
-                }
-                const position = await getCurrentPositionAsync({
-                  accuracy: Accuracy.Highest,
-                });
-                try {
-                  LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-                  const resp = await fetch(
-                    `http://172.20.10.12:4200/route?from=${position.coords.latitude},${position.coords.longitude}&to=${details.geometry.location.lat},${details.geometry.location.lng}`
-                  );
-                  const respJson = await resp.json();
-                  const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map(
-                    (point) => ({ latitude: point[0]!, longitude: point[1]! })
-                  );
-                  expand()
-                  setActiveRoute({
-                    coords: decodedCoords,
-                  });
-                  console.log(JSON.stringify(decodedCoords, null, 2));
-                  setRouteInfo({ distance: respJson[0].legs[0].distance.text, duration: respJson[0].legs[0].duration.text })
-                } catch (error) {
-                  if (error instanceof Error) {
-                    console.error(error.message);
-                  }
-                }
+              const tokio = async (_data: GooglePlaceData, _details: GooglePlaceDetail | null) => {
               };
               tokio(data, details);
             }}
@@ -384,7 +341,7 @@ export const BottomSheetContent = ({ userMarkers, setActiveRoute, startPiningLoc
         </View>
 
 
-        {routeInfo && <>
+        {!routeInfo && <>
 
           <View className='mx-1.5 mt-7 overflow-visible'>
             <Text className='font-bold text-xl'>Favoritos</Text>
