@@ -98,17 +98,23 @@ export function polylineDecode(str: string, precision?: number) {
   return coordinates;
 }
 
-export function calculateMiddlePointAndDelta(coord1: { latitude: number, longitude: number }, coord2: { latitude: number, longitude: number }, buffer = 0.01) {
+export function calculateMiddlePointAndDelta(coord1: { latitude: number, longitude: number }, coord2: { latitude: number, longitude: number }, buffer = 0.01, bottomSheetHeightPercentage = 0.3) {
+  // Calculate middle point
   const middlePoint = {
     latitude: (coord1.latitude + coord2.latitude) / 2,
     longitude: (coord1.longitude + coord2.longitude) / 2,
   };
 
+  // Calculate deltas with buffer
   const latitudeDelta = Math.abs(coord1.latitude - coord2.latitude) + buffer;
   const longitudeDelta = Math.abs(coord1.longitude - coord2.longitude) + buffer;
 
+  // Adjust latitude for bottom sheet
+  const adjustedLatitude = middlePoint.latitude - (latitudeDelta * bottomSheetHeightPercentage / 2);
+
   return {
-    ...middlePoint,
+    latitude: adjustedLatitude,
+    longitude: middlePoint.longitude,
     latitudeDelta,
     longitudeDelta,
   };

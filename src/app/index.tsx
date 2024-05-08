@@ -27,7 +27,7 @@ import { useUser } from '~/context/UserContext';
 import { BottomSheetContent } from '~/components/bottomsheet/BottomSheetContent';
 import { CustomHandle } from '~/components/bottomsheet/CustomHandle';
 import { getData } from '~/lib/storage';
-import { useWSConnection } from '~/context/WSContext';
+import { calculateMiddlePointAndDelta } from '~/utils/directions';
 
 const drawerItems: {
   icon: string;
@@ -133,6 +133,10 @@ export default function Home() {
       longitudeDelta: 0.0221,
     })
   }, [])
+
+  const animateToActiveRoute = useCallback(async () => {
+    activeRoute && animateToRegion(calculateMiddlePointAndDelta({ latitude: activeRoute.coords[0].latitude, longitude: activeRoute.coords[0].longitude }, { latitude: activeRoute.coords[activeRoute.coords.length - 1].latitude, longitude: activeRoute.coords[activeRoute.coords.length - 1].longitude }))
+  }, [activeRoute])
 
   // renders
   const renderCustomHandle = useCallback(
@@ -384,6 +388,14 @@ export default function Home() {
               </View>
             </ScaleBtn>
           </Animated.View>
+
+          {activeRoute && activeRoute.coords.length > 0 && <Animated.View style={topSheetBtnsAnimStyle} className='self-start justify-center items-center absolute bottom-60'>
+            <ScaleBtn className='mt-4' onPress={() => { animateToActiveRoute() }}>
+              <View className='bg-[#fff] rounded-lg p-3 shadow ml-5'>
+                <FontAwesome6 name="route" size={24} color="black" />
+              </View>
+            </ScaleBtn>
+          </Animated.View>}
 
           <BottomSheetModal
             animatedPosition={animatedPosition}

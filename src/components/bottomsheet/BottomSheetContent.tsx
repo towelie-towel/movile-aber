@@ -31,7 +31,7 @@ interface BottomSheetContentProps {
 export const BottomSheetContent = ({ userMarkers, setActiveRoute, startPiningLocation, cancelPiningLocation, confirmPiningLocation, piningLocation, animateToRegion }: BottomSheetContentProps) => {
   const colorScheme = useColorScheme();
   const { width } = useWindowDimensions();
-  const { collapse, snapToIndex } = useBottomSheet();
+  const { collapse, snapToIndex, expand } = useBottomSheet();
   const [viewPinOnMap, setViewPinOnMap] = useState(false);
   const [piningInput, setPiningInput] = useState<"origin" | "destination">("destination");
   const [piningInfo, setPiningInfo] = useState({
@@ -136,6 +136,14 @@ export const BottomSheetContent = ({ userMarkers, setActiveRoute, startPiningLoc
               <MaterialCommunityIcons name="map-search-outline" size={22} color="#000" />
             </View>
           </ScaleBtn>}
+
+          {/* <View className='flex-row gap-4'>
+            <ScaleBtn onPress={() => { snapToIndex(1) }}>
+              <View className='flex-row items-center gap-2 p-1 border rounded-lg'>
+                <MaterialCommunityIcons name="check" size={28} color="#000" />
+              </View>
+            </ScaleBtn>
+          </View> */}
 
           {piningLocation && <View className='flex-row gap-4'>
             <ScaleBtn onPress={confirmPiningLocationHandler}>
@@ -309,12 +317,12 @@ export const BottomSheetContent = ({ userMarkers, setActiveRoute, startPiningLoc
                   const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map(
                     (point) => ({ latitude: point[0]!, longitude: point[1]! })
                   );
+                  expand()
                   setActiveRoute({
                     coords: decodedCoords,
                   });
                   console.log(JSON.stringify(decodedCoords, null, 2));
                   setRouteInfo({ distance: respJson[0].legs[0].distance.text, duration: respJson[0].legs[0].duration.text })
-                  snapToIndex(1)
                 } catch (error) {
                   if (error instanceof Error) {
                     console.error(error.message);
