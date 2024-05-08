@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, useColorScheme, useWindowDimensions, LayoutAnimation, Keyboard, StyleSheet, StyleProp, ViewStyle } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { View, Text, useColorScheme, useWindowDimensions, LayoutAnimation, Keyboard, StyleSheet, StyleProp, ViewStyle, ScrollView } from 'react-native';
+import { MaterialCommunityIcons, FontAwesome6 } from '@expo/vector-icons';
 import { BottomSheetView, useBottomSheet } from '@gorhom/bottom-sheet';
 import { getCurrentPositionAsync, Accuracy } from 'expo-location';
 import type { Address, LatLng } from 'react-native-maps';
@@ -32,6 +32,7 @@ export const BottomSheetContent = ({ userMarkers, setActiveRoute, startPiningLoc
     origin: { latitude: 0, longitude: 0, address: "" },
     destination: { latitude: 0, longitude: 0, address: "" },
   });
+  const [routeInfo, setRouteInfo] = useState<{ distance: number; duration: number } | null>(null);
 
   const originInputViewRef = useRef<GooglePlacesAutocompleteRef>(null);
   const destinationInputViewRef = useRef<GooglePlacesAutocompleteRef>(null);
@@ -52,6 +53,10 @@ export const BottomSheetContent = ({ userMarkers, setActiveRoute, startPiningLoc
     if (respJson.items.length > 0) {
       const streetInfo = `${respJson.items[0].address.street.replace("Calle ", "")} e/ ${respJson.items[1].address.street.replace("Calle ", "")} y ${respJson.items[2].address.street.replace("Calle ", "")}, ${respJson.items[2].address.district}, ${respJson.items[2].address.district}, Habana, Cuba`;
       originInputViewRef.current?.setAddressText(streetInfo);
+      setPiningInfo({
+        ...piningInfo,
+        origin: { address: streetInfo, ...currentPosition.coords },
+      })
     } else {
       console.log('No street address found in the response.');
     }
@@ -86,6 +91,20 @@ export const BottomSheetContent = ({ userMarkers, setActiveRoute, startPiningLoc
         originInputViewRef.current?.setAddressText(streetInfo);
       } else if (piningInput === "destination") {
         destinationInputViewRef.current?.setAddressText(streetInfo);
+        if (piningInfo.origin.address === "") fetchOrigin()
+        else if (piningInfo.origin.latitude && piningInfo.origin.longitude) {
+          const resp = await fetch(
+            `http://172.20.10.12:4200/route?from=${piningInfo.origin.latitude},${piningInfo.origin.longitude}&to=${location.latitude},${location.longitude}`
+          );
+          const respJson = await resp.json();
+          const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map(
+            (point) => ({ latitude: point[0]!, longitude: point[1]! })
+          );
+          setActiveRoute({
+            coords: decodedCoords,
+          });
+        }
+
       }
       setPiningInfo({
         ...piningInfo,
@@ -98,8 +117,8 @@ export const BottomSheetContent = ({ userMarkers, setActiveRoute, startPiningLoc
 
   return (
     <BottomSheetView className='flex-1 bg-[#F8F8F8] dark:bg-[#222222]'>
-      <View className='w-[90%] h-full self-center'>
 
+      <View className='w-[90%] h-full self-center overflow-visible'>
         <View className='h-10 flex-row justify-between items-center mx-1.5'>
           <Text className='font-bold text-xl'>A donde quieres ir?</Text>
 
@@ -162,7 +181,7 @@ export const BottomSheetContent = ({ userMarkers, setActiveRoute, startPiningLoc
                 });
                 try {
                   const resp = await fetch(
-                    `http://192.168.133.191:4200/route?from=${position.coords.latitude},${position.coords.longitude}&to=${details.geometry.location.lat},${details.geometry.location.lng}`
+                    `http://172.20.10.12:4200/route?from=${position.coords.latitude},${position.coords.longitude}&to=${details.geometry.location.lat},${details.geometry.location.lng}`
                   );
                   const respJson = await resp.json();
                   const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map(
@@ -238,7 +257,7 @@ export const BottomSheetContent = ({ userMarkers, setActiveRoute, startPiningLoc
             left: 15,
             top: -29
           }} />
-          <MaterialCommunityIcons name="map-marker-radius" size={32} color="#000" />
+          <MaterialCommunityIcons className='ml-[-1.5px]' name="map-marker-radius" size={32} color="#000" />
           <GooglePlacesAutocomplete
             ref={destinationInputViewRef}
             predefinedPlaces={userMarkers.map((marker) => ({
@@ -275,7 +294,7 @@ export const BottomSheetContent = ({ userMarkers, setActiveRoute, startPiningLoc
                 });
                 try {
                   const resp = await fetch(
-                    `http://192.168.133.191:4200/route?from=${position.coords.latitude},${position.coords.longitude}&to=${details.geometry.location.lat},${details.geometry.location.lng}`
+                    `http://172.20.10.12:4200/route?from=${position.coords.latitude},${position.coords.longitude}&to=${details.geometry.location.lat},${details.geometry.location.lng}`
                   );
                   const respJson = await resp.json();
                   const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map(
@@ -346,11 +365,60 @@ export const BottomSheetContent = ({ userMarkers, setActiveRoute, startPiningLoc
         </View>
 
 
-        <View className='h-10 flex-row justify-between items-center mx-1.5 mt-7'>
+        <View className='mx-1.5 mt-7 overflow-visible'>
           <Text className='font-bold text-xl'>Favoritos</Text>
+
+          <ScrollView horizontal className='w-100 overflow-visible'>
+            <View>
+              <ScaleBtn className='mt-3 w-20 h-20 rounded-full border-2 border-[#C1C0C9] items-center justify-center' onPress={() => { }}>
+                <FontAwesome6 name="suitcase" size={32} color={Colors[colorScheme ?? 'light'].icons} />
+              </ ScaleBtn>
+              <Text className='text-lg font-semibold text-center text-[#333]'>Trabajo</Text>
+              <Text className='text-sm text-center text-[#555]'>Add</Text>
+            </View>
+
+            <View className='ml-5'>
+              <ScaleBtn className='mt-3 w-20 h-20 rounded-full border-2 border-[#C1C0C9] items-center justify-center' onPress={() => { }}>
+                <FontAwesome6 name="house" size={32} color={Colors[colorScheme ?? 'light'].icons} />
+              </ ScaleBtn>
+              <Text className='text-lg font-semibold text-center text-[#333]'>Casa</Text>
+              <Text className='text-sm text-center text-[#555]'>Add</Text>
+            </View>
+
+            <View className='ml-5'>
+              <ScaleBtn className='mt-3 w-20 h-20 rounded-full border-2 border-[#C1C0C9] items-center justify-center' onPress={() => { }}>
+                <FontAwesome6 name="plus" size={32} color={Colors[colorScheme ?? 'light'].icons} />
+              </ ScaleBtn>
+              <Text className='text-lg font-semibold text-center text-[#333]'>Add</Text>
+            </View>
+          </ScrollView>
+
         </View>
 
-        <View className='mt-2 gap-5 relative z-1'>
+        <View className='mx-1.5 mt-5 overflow-visible'>
+          <Text className='font-bold text-xl'>Recent</Text>
+
+          <View className='flex-row items-center gap-2 mt-3'>
+            <View className='bg-[#C1C0C9] rounded-full items-center justify-center p-1 text-center'>
+              <MaterialCommunityIcons name="history" size={32} color="white" />
+            </View>
+            <View>
+              <Text numberOfLines={1} className='font-lg font-medium'>23 y 12, Plaza de la Revolucion, La Habana</Text>
+            </View>
+          </View>
+
+          <View className='flex-row items-center gap-2 mt-3'>
+            <View className='bg-[#C1C0C9] rounded-full items-center justify-center p-1 text-center'>
+              <MaterialCommunityIcons name="history" size={32} color="white" />
+            </View>
+            <View>
+              <Text numberOfLines={1} className='font-lg font-medium'>Pedro Perez e/ Clavel y Mariano, Cerro, La...</Text>
+            </View>
+          </View>
+
+        </View>
+
+        {/* <View className='mt-2 gap-5 relative z-1'>
           {userMarkers.map((marker) => (
             <View key={marker.id} className='flex-row items-center gap-5'>
               <MaterialCommunityIcons name="bookmark-outline" size={32} color="#000" />
@@ -360,11 +428,11 @@ export const BottomSheetContent = ({ userMarkers, setActiveRoute, startPiningLoc
               </View>
             </View>
           ))}
-        </View>
+        </View> */}
 
 
       </View>
-    </BottomSheetView>
+    </BottomSheetView >
   );
 };
 

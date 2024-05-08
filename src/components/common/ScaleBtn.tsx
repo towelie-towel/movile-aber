@@ -1,7 +1,8 @@
 import React, { useRef } from 'react';
-import { Animated, Pressable, PressableProps } from 'react-native';
+import { Animated, Pressable, PressableProps, ViewStyle } from 'react-native';
 
 type PressBtnProps = {
+  containerStyle?: ViewStyle;
   scaleReduction?: number;
   onPress?: () => void;
   callback?: () => void;
@@ -10,6 +11,7 @@ type PressBtnProps = {
 } & PressableProps;
 
 export const ScaleBtn: React.FC<PressBtnProps> = ({
+  containerStyle,
   scaleReduction = 0.95,
   onPress,
   children,
@@ -37,21 +39,21 @@ export const ScaleBtn: React.FC<PressBtnProps> = ({
   };
 
   return (
-    <Pressable
-      disabled={disabled}
-      onPress={callback}
-      onPressIn={handlePressIn}
-      onPressOut={handlePressOut}
-      {...props}
+    <Animated.View
+      style={[{
+        transform: [{ scale: animatedValue }],
+        opacity: disabled ? 0.6 : 1,
+      }, containerStyle]}
     >
-      <Animated.View
-        style={{
-          transform: [{ scale: animatedValue }],
-          opacity: disabled ? 0.6 : 1,
-        }}
+      <Pressable
+        disabled={disabled}
+        onPress={callback}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        {...props}
       >
         {children}
-      </Animated.View>
-    </Pressable>
+      </Pressable>
+    </Animated.View>
   );
 };

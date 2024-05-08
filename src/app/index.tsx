@@ -1,22 +1,24 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { StatusBar, useColorScheme, Text, View, Platform, Keyboard, useWindowDimensions } from 'react-native';
+import { StatusBar, useColorScheme, Text, View, Platform, Keyboard, useWindowDimensions, LayoutAnimation } from 'react-native';
 import { Image } from 'expo-image';
 import { useKeepAwake } from 'expo-keep-awake';
 import * as NavigationBar from 'expo-navigation-bar';
 import { useRouter } from 'expo-router';
-import { MaterialIcons } from '@expo/vector-icons';
+import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { BottomSheetBackdrop, BottomSheetBackdropProps, BottomSheetModal, BottomSheetModalProvider, BottomSheetHandleProps } from '@gorhom/bottom-sheet';
 import { Drawer } from 'react-native-drawer-layout';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MapView, { type LatLng, PROVIDER_GOOGLE, Polyline, Marker } from 'react-native-maps';
+import { MotiView } from 'moti';
+import Animated, { Easing, Extrapolation, interpolate, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 
 import { UserMarkerIconType } from '~/components/markers/AddUserMarker';
 import AnimatedRouteMarker from '~/components/markers/AnimatedRouteMarker';
 import Ripple from '~/components/common/RippleBtn';
 import { ScaleBtn } from '~/components/common/ScaleBtn';
 import TaxisMarkers from '~/components/markers/TaxiMarkers';
-import UserMarker from '~/components/markers/UserMarker';
+// import UserMarker from '~/components/markers/UserMarker';
 import { ColorInstagram, ColorFacebook, ColorTwitter } from '~/components/svgs';
 import Colors from '~/constants/Colors';
 import { NightMap } from '~/constants/NightMap';
@@ -24,6 +26,7 @@ import { useUser } from '~/context/UserContext';
 import { BottomSheetContent } from '~/components/bottomsheet/BottomSheetContent';
 import { CustomHandle } from '~/components/bottomsheet/CustomHandle';
 import { getData } from '~/lib/storage';
+import { useWSConnection } from '~/context/WSContext';
 
 const drawerItems: {
   icon: string;
@@ -35,19 +38,19 @@ const drawerItems: {
     },
     {
       icon: 'wallet-giftcard',
-      label: 'Créditos',
+      label: 'Wallet',
     },
     {
       icon: 'history',
-      label: 'Historia',
+      label: 'History',
     },
     {
       icon: 'notifications',
-      label: 'Notificaciones',
+      label: 'Notifications',
     },
     {
       icon: 'settings',
-      label: 'Opciones',
+      label: 'Settings',
     },
   ]
 
@@ -60,6 +63,7 @@ export default function Home() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
   const { user, isSignedIn, getSession, signOut } = useUser();
+  const { position } = useWSConnection();
 
   if (Platform.OS === "android") {
     NavigationBar.setBackgroundColorAsync('transparent');
@@ -76,26 +80,49 @@ export default function Home() {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   // bottom sheet
+  const animatedPosition = useSharedValue(0);
+  const animatedIndex = useSharedValue(0);
+  const [sheetCurrentSnap, setSheetCurrentSnap] = useState(1);
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
-  const snapPoints = useMemo(() => [195, '50%', '95%'], []);
+  const snapPoints = useMemo(() => [195, 360, 550], []);
   const [piningLocation, setPiningLocation] = useState(false);
 
+  const requestRideAnimatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        {
+          translateY: interpolate(animatedIndex.value, [0, 1, 2], [0, -165, -355], Extrapolation.CLAMP),
+        },
+      ],
+    };
+  });
+
   useEffect(() => {
-    const hideSubscription = Keyboard.addListener('keyboardDidHide', () => {
-      if (Platform.OS === 'android') {
-        bottomSheetModalRef.current?.snapToIndex(0);
-      }
+    // const hideSubscription = Keyboard.addListener('keyboardDidHide', () => {
+    //   bottomSheetModalRef.current?.snapToIndex(0);
+    // });
+    const showSubscription = Keyboard.addListener('keyboardDidShow', () => {
+      bottomSheetModalRef.current?.snapToPosition(700)
     });
-    if (user) {
-      bottomSheetModalRef.current?.present();
-    }
+    getSession()
     return () => {
-      hideSubscription.remove();
+      // hideSubscription.remove();
+      showSubscription.remove();
     };
   }, []);
 
   useEffect(() => {
-    getSession()
+    if (isSignedIn) {
+      bottomSheetModalRef.current?.present();
+      mapViewRef.current?.animateToRegion({
+        latitude: position?.coords.latitude ?? 23.118644,
+        longitude: position?.coords.longitude ?? -82.3806211,
+        latitudeDelta: 0.0322,
+        longitudeDelta: 0.0221,
+      })
+    } else {
+      bottomSheetModalRef.current?.dismiss();
+    }
   }, [isSignedIn])
 
   // renders
@@ -130,20 +157,7 @@ export default function Home() {
   }, [])
   const confirmPiningLocation = useCallback(async () => {
     setPiningLocation(false);
-
     const coords = await getMiddlePoint();
-
-    setUserMarkers([...userMarkers, {
-      id: Date.now().toString(),
-      name: "Best Place",
-      description: "This is the best place in Portland",
-      icon: {
-        type: 'MCI',
-        name: 'map-marker',
-      },
-      coords,
-    }])
-
     return coords;
   }, [])
 
@@ -192,11 +206,17 @@ export default function Home() {
                   <Text className='text-[#FFFFFF] text-xl font-semibold mt-2.5'>
                     {user?.username ?? 'Not signed'}
                   </Text>
-                  <ScaleBtn className='mt-4' onPress={() => router.push("sign")}>
-                    <View className='bg-[#F8F8F8] dark:bg-[#222222] rounded-lg p-3'>
-                      <Text className='text-center font-semibold w-auto dark:text-[#fff]'>{!isSignedIn ? "Sign In" : user?.phone}</Text>
+                  {!isSignedIn ? <ScaleBtn className='mt-4' onPress={() => router.push("sign")}>
+                    <View className='bg-[#F8F8F8] dark:bg-[#222222] rounded-lg p-3 chevron-right'>
+                      <Text className='text-center font-semibold w-auto dark:text-[#fff]'>{"Sign In"}</Text>
                     </View>
-                  </ScaleBtn>
+                  </ScaleBtn> : <ScaleBtn className='mt-4 w-40 gap-3' onPress={() => router.push("profile")}>
+                    <View className='flex-row items-center justify-center bg-[#F8F8F8] dark:bg-[#222222] rounded-lg p-3'>
+                      <Text className='text-center font-semibold w-auto dark:text-[#fff]'>{"User Profile"}</Text>
+                      <MaterialCommunityIcons name="chevron-right" size={24} color="black" />
+                    </View>
+                  </ScaleBtn>}
+
                 </View>
               </View>
 
@@ -268,7 +288,7 @@ export default function Home() {
             onTouchMove={() => { }}
             onTouchStart={() => { }}
             onTouchEnd={() => { }}
-            onPress={() => { }}
+            onPress={() => { Keyboard.dismiss() }}
             onLongPress={() => { }}
             initialRegion={{ latitude: 23.118644, longitude: -82.3806211, latitudeDelta: 0.0322, longitudeDelta: 0.0221 }}
             ref={mapViewRef}
@@ -288,9 +308,18 @@ export default function Home() {
                 <MaterialIcons name="location-on" size={24} color={Colors[colorScheme ?? 'light'].text} />
               </Marker>
             ))}
+
+            {activeRoute && activeRoute.coords.length > 0 && <>
+              <Marker coordinate={activeRoute.coords[0]}>
+                <MaterialCommunityIcons name="map-marker-account" size={24} color={Colors[colorScheme ?? 'light'].text} />
+              </Marker>
+              <Marker coordinate={activeRoute.coords[activeRoute.coords.length - 1]}>
+                <MaterialCommunityIcons name="map-marker-radius" size={24} color={Colors[colorScheme ?? 'light'].text} />
+              </Marker>
+            </>}
           </MapView>
 
-          <ScaleBtn className='absolute left-7' style={{ top: insets.top + 12 }} onPress={() => setDrawerOpen(true)}>
+          <ScaleBtn containerStyle={{ position: "absolute", left: 28, top: insets.top + 12 }} onPress={() => setDrawerOpen(true)}>
             <View className='bg-[#f8f8f8] dark:bg-[#000] p-1 rounded-xl border border-[#d8d8d8] dark:[#a3a3a3]' >
               <MaterialIcons name="menu" size={36} color={Colors[colorScheme ?? 'light'].text_dark} />
             </View>
@@ -305,8 +334,35 @@ export default function Home() {
             <MaterialIcons name="location-pin" size={48} color={Colors[colorScheme ?? 'light'].text} />
           </View>}
 
+          {activeRoute && activeRoute.coords.length > 0 && <Animated.View style={requestRideAnimatedStyle} className='self-center justify-center items-center absolute bottom-60'>
+            <ScaleBtn className='mt-4' onPress={() => router.push("sign")}>
+              <View className='bg-[#FCCB6F] w-40 h-14 rounded-lg p-3 chevron-right'>
+                {[...Array(3).keys()].map((index) => {
+                  return (
+                    <MotiView
+                      from={{ opacity: 0.7, scale: 0.2, borderRadius: 8 }}
+                      animate={{ opacity: 0, scale: 2, borderRadius: 1000 }}
+                      transition={{
+                        type: 'timing',
+                        duration: 2000,
+                        easing: Easing.out(Easing.ease),
+                        delay: index * 400,
+                        repeatReverse: false,
+                        loop: true,
+                      }}
+                      key={index}
+                      style={[{ backgroundColor: '#FCCB6F', borderRadius: 100, width: 160, height: 56, position: 'absolute', left: -10, top: -2 }]}
+                    />
+                  );
+                })}
+                <Text className='text-center text-lg font-bold w-auto text-[#fff]'>{"Request Ride"}</Text>
+              </View>
+            </ScaleBtn>
+          </Animated.View>}
+
           <BottomSheetModal
-            // stackBehavior="push"
+            animatedPosition={animatedPosition}
+            animatedIndex={animatedIndex}
             ref={bottomSheetModalRef}
             // overDragResistanceFactor={6}
             keyboardBehavior="extend"
@@ -314,7 +370,11 @@ export default function Home() {
             handleComponent={renderCustomHandle}
             index={0}
             onChange={(e) => {
-              console.log('BottomSheetModal-onChange', e);
+              if (e < sheetCurrentSnap) {
+                Keyboard.dismiss();
+              }
+              LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+              setSheetCurrentSnap(e);
             }}
             // enableDynamicSizing
             android_keyboardInputMode="adjustResize"

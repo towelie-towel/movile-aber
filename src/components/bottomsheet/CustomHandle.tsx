@@ -2,7 +2,7 @@ import { BottomSheetHandleProps } from '@gorhom/bottom-sheet';
 import React, { memo, useMemo } from 'react';
 import { StyleProp, StyleSheet, ViewStyle } from 'react-native';
 import Animated, {
-  Extrapolate,
+  Extrapolation,
   interpolate,
   useAnimatedStyle,
   useDerivedValue,
@@ -32,12 +32,12 @@ interface CustomHandleProps extends BottomSheetHandleProps {
 
 const CustomHandleComponent: React.FC<CustomHandleProps> = ({ style, animatedIndex }) => {
   const indicatorTransformOriginY = useDerivedValue(() =>
-    interpolate(animatedIndex.value, [0, 1, 2], [-1, 0, 1], Extrapolate.CLAMP)
+    interpolate(animatedIndex.value, [0, 1, 2], [-1, 0, 1], Extrapolation.CLAMP)
   );
 
   const containerStyle = useMemo(() => [styles.container, style], [style]);
   const containerAnimatedStyle = useAnimatedStyle(() => {
-    const borderTopRadius = interpolate(animatedIndex.value, [1, 2], [20, 0], Extrapolate.CLAMP);
+    const borderTopRadius = interpolate(animatedIndex.value, [1, 2], [20, 0], Extrapolation.CLAMP);
     return {
       borderTopLeftRadius: borderTopRadius,
       borderTopRightRadius: borderTopRadius,
@@ -55,7 +55,7 @@ const CustomHandleComponent: React.FC<CustomHandleProps> = ({ style, animatedInd
       animatedIndex.value,
       [0, 1, 2],
       [toRad(-30), 0, toRad(30)],
-      Extrapolate.CLAMP
+      Extrapolation.CLAMP
     );
     return {
       transform: transformOrigin(
@@ -81,7 +81,7 @@ const CustomHandleComponent: React.FC<CustomHandleProps> = ({ style, animatedInd
       animatedIndex.value,
       [0, 1, 2],
       [toRad(30), 0, toRad(-30)],
-      Extrapolate.CLAMP
+      Extrapolation.CLAMP
     );
     return {
       transform: transformOrigin(
