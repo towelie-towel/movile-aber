@@ -4,7 +4,8 @@ import { Image } from 'expo-image';
 import { useKeepAwake } from 'expo-keep-awake';
 import * as NavigationBar from 'expo-navigation-bar';
 import { useRouter } from 'expo-router';
-import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
+import * as ExpoLocation from 'expo-location';
+import { MaterialIcons, MaterialCommunityIcons, FontAwesome6 } from '@expo/vector-icons';
 import { BottomSheetBackdrop, BottomSheetBackdropProps, BottomSheetModal, BottomSheetModalProvider, BottomSheetHandleProps } from '@gorhom/bottom-sheet';
 import { Drawer } from 'react-native-drawer-layout';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -63,7 +64,7 @@ export default function Home() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
   const { user, isSignedIn, getSession, signOut } = useUser();
-  const { position } = useWSConnection();
+  // const { position } = useWSConnection();
 
   if (Platform.OS === "android") {
     NavigationBar.setBackgroundColorAsync('transparent');
@@ -75,6 +76,8 @@ export default function Home() {
 
   // search bar
   const [activeRoute, setActiveRoute] = useState<{ coords: LatLng[] } | null | undefined>(null);
+  const [piningLocation, setPiningLocation] = useState(false);
+  const [findingRide, setFindingRide] = useState(false);
 
   // drawer
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -85,9 +88,8 @@ export default function Home() {
   const [sheetCurrentSnap, setSheetCurrentSnap] = useState(1);
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const snapPoints = useMemo(() => [195, 360, 550], []);
-  const [piningLocation, setPiningLocation] = useState(false);
 
-  const requestRideAnimatedStyle = useAnimatedStyle(() => {
+  const topSheetBtnsAnimStyle = useAnimatedStyle(() => {
     return {
       transform: [
         {
@@ -114,16 +116,23 @@ export default function Home() {
   useEffect(() => {
     if (isSignedIn) {
       bottomSheetModalRef.current?.present();
-      mapViewRef.current?.animateToRegion({
-        latitude: position?.coords.latitude ?? 23.118644,
-        longitude: position?.coords.longitude ?? -82.3806211,
-        latitudeDelta: 0.0322,
-        longitudeDelta: 0.0221,
-      })
+      animateToUserLocation()
     } else {
       bottomSheetModalRef.current?.dismiss();
     }
   }, [isSignedIn])
+
+  const animateToUserLocation = useCallback(async () => {
+    const position = await ExpoLocation.getCurrentPositionAsync({
+      accuracy: ExpoLocation.Accuracy.Highest,
+    })
+    mapViewRef.current?.animateToRegion({
+      latitude: position?.coords.latitude,
+      longitude: position?.coords.longitude,
+      latitudeDelta: 0.0322,
+      longitudeDelta: 0.0221,
+    })
+  }, [])
 
   // renders
   const renderCustomHandle = useCallback(
@@ -159,6 +168,14 @@ export default function Home() {
     setPiningLocation(false);
     const coords = await getMiddlePoint();
     return coords;
+  }, [])
+  const animateToRegion = useCallback((region: {
+    latitudeDelta: number;
+    longitudeDelta: number;
+    latitude: number;
+    longitude: number;
+  }) => {
+    mapViewRef.current?.animateToRegion(region);
   }, [])
 
   const getMiddlePoint = useCallback(async () => {
@@ -334,10 +351,10 @@ export default function Home() {
             <MaterialIcons name="location-pin" size={48} color={Colors[colorScheme ?? 'light'].text} />
           </View>}
 
-          {activeRoute && activeRoute.coords.length > 0 && <Animated.View style={requestRideAnimatedStyle} className='self-center justify-center items-center absolute bottom-60'>
-            <ScaleBtn className='mt-4' onPress={() => router.push("sign")}>
-              <View className='bg-[#FCCB6F] w-40 h-14 rounded-lg p-3 chevron-right'>
-                {[...Array(3).keys()].map((index) => {
+          {activeRoute && activeRoute.coords.length > 0 && <Animated.View style={topSheetBtnsAnimStyle} className='self-center justify-center items-center absolute bottom-60'>
+            <ScaleBtn disabled={findingRide} className='' onPress={() => { setFindingRide(true) }}>
+              <View className='bg-[#FCCB6F] w-40 h-14 rounded-lg p-3'>
+                {findingRide && [...Array(3).keys()].map((index) => {
                   return (
                     <MotiView
                       from={{ opacity: 0.7, scale: 0.2, borderRadius: 8 }}
@@ -348,17 +365,25 @@ export default function Home() {
                         easing: Easing.out(Easing.ease),
                         delay: index * 400,
                         repeatReverse: false,
-                        loop: true,
+                        repeat: Infinity,
                       }}
                       key={index}
                       style={[{ backgroundColor: '#FCCB6F', borderRadius: 100, width: 160, height: 56, position: 'absolute', left: -10, top: -2 }]}
                     />
                   );
                 })}
-                <Text className='text-center text-lg font-bold w-auto text-[#fff]'>{"Request Ride"}</Text>
+                <Text className='text-center text-lg font-bold w-auto text-[#fff]'>{findingRide ? "Finding Ride" : "Request Ride"}</Text>
               </View>
             </ScaleBtn>
           </Animated.View>}
+
+          <Animated.View style={topSheetBtnsAnimStyle} className='self-end justify-center items-center absolute bottom-60'>
+            <ScaleBtn className='mt-4' onPress={() => { animateToUserLocation() }}>
+              <View className='bg-[#fff] rounded-lg p-3 shadow mr-5'>
+                <FontAwesome6 name="location-arrow" size={24} color="black" />
+              </View>
+            </ScaleBtn>
+          </Animated.View>
 
           <BottomSheetModal
             animatedPosition={animatedPosition}
@@ -427,6 +452,7 @@ export default function Home() {
               userMarkers={userMarkers}
               activeRoute={activeRoute}
               setActiveRoute={setActiveRoute}
+              animateToRegion={animateToRegion}
             />
           </BottomSheetModal>
 

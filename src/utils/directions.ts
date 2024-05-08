@@ -97,3 +97,19 @@ export function polylineDecode(str: string, precision?: number) {
 
   return coordinates;
 }
+
+export function calculateMiddlePointAndDelta(coord1: { latitude: number, longitude: number }, coord2: { latitude: number, longitude: number }, buffer = 0.01) {
+  const middlePoint = {
+    latitude: (coord1.latitude + coord2.latitude) / 2,
+    longitude: (coord1.longitude + coord2.longitude) / 2,
+  };
+
+  const latitudeDelta = Math.abs(coord1.latitude - coord2.latitude) + buffer;
+  const longitudeDelta = Math.abs(coord1.longitude - coord2.longitude) + buffer;
+
+  return {
+    ...middlePoint,
+    latitudeDelta,
+    longitudeDelta,
+  };
+}

@@ -9,7 +9,7 @@ import * as ExpoLocation from 'expo-location';
 import { UserMarkerIconType } from '~/components/markers/AddUserMarker';
 import Colors from '~/constants/Colors';
 import { GooglePlacesAutocomplete, GooglePlaceData, GooglePlaceDetail, GooglePlacesAutocompleteRef } from '~/lib/google-places-autocomplete/GooglePlacesAutocomplete';
-import { polylineDecode } from '~/utils/directions';
+import { calculateMiddlePointAndDelta, polylineDecode } from '~/utils/directions';
 import { ScaleBtn } from '~/components/common/ScaleBtn';
 
 interface BottomSheetContentProps {
@@ -20,19 +20,25 @@ interface BottomSheetContentProps {
   cancelPiningLocation: () => void;
   confirmPiningLocation: () => Promise<{ latitude: number; longitude: number; address?: Address }>;
   piningLocation: boolean;
+  animateToRegion: (region: {
+    latitudeDelta: number;
+    longitudeDelta: number;
+    latitude: number;
+    longitude: number;
+  }) => void;
 }
 
-export const BottomSheetContent = ({ userMarkers, setActiveRoute, startPiningLocation, cancelPiningLocation, confirmPiningLocation, piningLocation }: BottomSheetContentProps) => {
+export const BottomSheetContent = ({ userMarkers, setActiveRoute, startPiningLocation, cancelPiningLocation, confirmPiningLocation, piningLocation, animateToRegion }: BottomSheetContentProps) => {
   const colorScheme = useColorScheme();
   const { width } = useWindowDimensions();
-  const { collapse } = useBottomSheet();
+  const { collapse, snapToIndex } = useBottomSheet();
   const [viewPinOnMap, setViewPinOnMap] = useState(false);
   const [piningInput, setPiningInput] = useState<"origin" | "destination">("destination");
   const [piningInfo, setPiningInfo] = useState({
     origin: { latitude: 0, longitude: 0, address: "" },
     destination: { latitude: 0, longitude: 0, address: "" },
   });
-  const [routeInfo, setRouteInfo] = useState<{ distance: number; duration: number } | null>(null);
+  const [routeInfo, setRouteInfo] = useState<{ distance: string; duration: string } | null>(null);
 
   const originInputViewRef = useRef<GooglePlacesAutocompleteRef>(null);
   const destinationInputViewRef = useRef<GooglePlacesAutocompleteRef>(null);
@@ -103,6 +109,8 @@ export const BottomSheetContent = ({ userMarkers, setActiveRoute, startPiningLoc
           setActiveRoute({
             coords: decodedCoords,
           });
+          console.log(JSON.stringify(respJson, null, 2))
+          animateToRegion(calculateMiddlePointAndDelta({ latitude: piningInfo.origin.latitude, longitude: piningInfo.origin.longitude }, { latitude: location.latitude, longitude: location.longitude }))
         }
 
       }
@@ -293,6 +301,7 @@ export const BottomSheetContent = ({ userMarkers, setActiveRoute, startPiningLoc
                   accuracy: Accuracy.Highest,
                 });
                 try {
+                  LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
                   const resp = await fetch(
                     `http://172.20.10.12:4200/route?from=${position.coords.latitude},${position.coords.longitude}&to=${details.geometry.location.lat},${details.geometry.location.lng}`
                   );
@@ -304,6 +313,8 @@ export const BottomSheetContent = ({ userMarkers, setActiveRoute, startPiningLoc
                     coords: decodedCoords,
                   });
                   console.log(JSON.stringify(decodedCoords, null, 2));
+                  setRouteInfo({ distance: respJson[0].legs[0].distance.text, duration: respJson[0].legs[0].duration.text })
+                  snapToIndex(1)
                 } catch (error) {
                   if (error instanceof Error) {
                     console.error(error.message);
@@ -365,58 +376,60 @@ export const BottomSheetContent = ({ userMarkers, setActiveRoute, startPiningLoc
         </View>
 
 
-        <View className='mx-1.5 mt-7 overflow-visible'>
-          <Text className='font-bold text-xl'>Favoritos</Text>
+        {routeInfo && <>
 
-          <ScrollView horizontal className='w-100 overflow-visible'>
-            <View>
-              <ScaleBtn className='mt-3 w-20 h-20 rounded-full border-2 border-[#C1C0C9] items-center justify-center' onPress={() => { }}>
-                <FontAwesome6 name="suitcase" size={32} color={Colors[colorScheme ?? 'light'].icons} />
-              </ ScaleBtn>
-              <Text className='text-lg font-semibold text-center text-[#333]'>Trabajo</Text>
-              <Text className='text-sm text-center text-[#555]'>Add</Text>
-            </View>
+          <View className='mx-1.5 mt-7 overflow-visible'>
+            <Text className='font-bold text-xl'>Favoritos</Text>
 
-            <View className='ml-5'>
-              <ScaleBtn className='mt-3 w-20 h-20 rounded-full border-2 border-[#C1C0C9] items-center justify-center' onPress={() => { }}>
-                <FontAwesome6 name="house" size={32} color={Colors[colorScheme ?? 'light'].icons} />
-              </ ScaleBtn>
-              <Text className='text-lg font-semibold text-center text-[#333]'>Casa</Text>
-              <Text className='text-sm text-center text-[#555]'>Add</Text>
-            </View>
+            <ScrollView horizontal className='w-100 overflow-visible'>
+              <View>
+                <ScaleBtn className='mt-3 w-20 h-20 rounded-full border-2 border-[#C1C0C9] items-center justify-center' onPress={() => { }}>
+                  <FontAwesome6 name="suitcase" size={32} color={Colors[colorScheme ?? 'light'].icons} />
+                </ ScaleBtn>
+                <Text className='text-lg font-semibold text-center text-[#333]'>Trabajo</Text>
+                <Text className='text-sm text-center text-[#555]'>Add</Text>
+              </View>
 
-            <View className='ml-5'>
-              <ScaleBtn className='mt-3 w-20 h-20 rounded-full border-2 border-[#C1C0C9] items-center justify-center' onPress={() => { }}>
-                <FontAwesome6 name="plus" size={32} color={Colors[colorScheme ?? 'light'].icons} />
-              </ ScaleBtn>
-              <Text className='text-lg font-semibold text-center text-[#333]'>Add</Text>
-            </View>
-          </ScrollView>
+              <View className='ml-5'>
+                <ScaleBtn className='mt-3 w-20 h-20 rounded-full border-2 border-[#C1C0C9] items-center justify-center' onPress={() => { }}>
+                  <FontAwesome6 name="house" size={32} color={Colors[colorScheme ?? 'light'].icons} />
+                </ ScaleBtn>
+                <Text className='text-lg font-semibold text-center text-[#333]'>Casa</Text>
+                <Text className='text-sm text-center text-[#555]'>Add</Text>
+              </View>
 
-        </View>
+              <View className='ml-5'>
+                <ScaleBtn className='mt-3 w-20 h-20 rounded-full border-2 border-[#C1C0C9] items-center justify-center' onPress={() => { }}>
+                  <FontAwesome6 name="plus" size={32} color={Colors[colorScheme ?? 'light'].icons} />
+                </ ScaleBtn>
+                <Text className='text-lg font-semibold text-center text-[#333]'>Add</Text>
+              </View>
+            </ScrollView>
 
-        <View className='mx-1.5 mt-5 overflow-visible'>
-          <Text className='font-bold text-xl'>Recent</Text>
-
-          <View className='flex-row items-center gap-2 mt-3'>
-            <View className='bg-[#C1C0C9] rounded-full items-center justify-center p-1 text-center'>
-              <MaterialCommunityIcons name="history" size={32} color="white" />
-            </View>
-            <View>
-              <Text numberOfLines={1} className='font-lg font-medium'>23 y 12, Plaza de la Revolucion, La Habana</Text>
-            </View>
           </View>
 
-          <View className='flex-row items-center gap-2 mt-3'>
-            <View className='bg-[#C1C0C9] rounded-full items-center justify-center p-1 text-center'>
-              <MaterialCommunityIcons name="history" size={32} color="white" />
-            </View>
-            <View>
-              <Text numberOfLines={1} className='font-lg font-medium'>Pedro Perez e/ Clavel y Mariano, Cerro, La...</Text>
-            </View>
-          </View>
+          <View className='mx-1.5 mt-5 overflow-visible'>
+            <Text className='font-bold text-xl'>Recent</Text>
 
-        </View>
+            <View className='flex-row items-center gap-2 mt-3'>
+              <View className='bg-[#C1C0C9] rounded-full items-center justify-center p-1 text-center'>
+                <MaterialCommunityIcons name="history" size={32} color="white" />
+              </View>
+              <View>
+                <Text numberOfLines={1} className='font-lg font-medium'>23 y 12, Plaza de la Revolucion, La Habana</Text>
+              </View>
+            </View>
+
+            <View className='flex-row items-center gap-2 mt-3'>
+              <View className='bg-[#C1C0C9] rounded-full items-center justify-center p-1 text-center'>
+                <MaterialCommunityIcons name="history" size={32} color="white" />
+              </View>
+              <View>
+                <Text numberOfLines={1} className='font-lg font-medium'>Pedro Perez e/ Clavel y Mariano, Cerro, La...</Text>
+              </View>
+            </View>
+
+          </View></>}
 
         {/* <View className='mt-2 gap-5 relative z-1'>
           {userMarkers.map((marker) => (
