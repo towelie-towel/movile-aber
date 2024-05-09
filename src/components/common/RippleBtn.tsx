@@ -1,7 +1,14 @@
 import React from 'react';
 import { View, useColorScheme, ViewProps } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { measure, runOnJS, useAnimatedRef, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, {
+  measure,
+  runOnJS,
+  useAnimatedRef,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 
 type RippleProps = {
   onTap?: () => void;
@@ -9,7 +16,7 @@ type RippleProps = {
 } & ViewProps;
 
 const Ripple: React.FC<RippleProps> = ({ onTap, children, ...restProps }) => {
-  const colorSheme = useColorScheme()
+  const colorSheme = useColorScheme();
   const centerX = useSharedValue(0);
   const centerY = useSharedValue(0);
   const scale = useSharedValue(0);
@@ -38,7 +45,7 @@ const Ripple: React.FC<RippleProps> = ({ onTap, children, ...restProps }) => {
         if (scale.value !== 0) {
           scale.value = 0;
         }
-        onTap && runOnJS(onTap)()
+        onTap && runOnJS(onTap)();
       });
     })
     .onTouchesCancelled(() => {
@@ -48,7 +55,7 @@ const Ripple: React.FC<RippleProps> = ({ onTap, children, ...restProps }) => {
     })
     .maxDuration(20000)
     .maxDistance(100000)
-    .shouldCancelWhenOutside(false)
+    .shouldCancelWhenOutside(false);
 
   const rStyle = useAnimatedStyle(() => {
     const circleRadius = Math.sqrt(width.value ** 2 + height.value ** 2);
@@ -61,7 +68,7 @@ const Ripple: React.FC<RippleProps> = ({ onTap, children, ...restProps }) => {
       height: circleRadius * 2,
       borderRadius: circleRadius,
       opacity: rippleOpacity.value,
-      backgroundColor: colorSheme === "light" ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.2)',
+      backgroundColor: colorSheme === 'light' ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.2)',
       position: 'absolute',
       top: 0,
       left: 0,
@@ -78,7 +85,7 @@ const Ripple: React.FC<RippleProps> = ({ onTap, children, ...restProps }) => {
   return (
     <View ref={aRef} collapsable={false}>
       <GestureDetector gesture={tapGesture}>
-        <Animated.View className={"overflow-hidden"}>
+        <Animated.View className="overflow-hidden">
           <View {...restProps}>{children}</View>
           <Animated.View style={rStyle} />
         </Animated.View>

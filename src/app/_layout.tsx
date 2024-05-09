@@ -7,7 +7,7 @@ import { StatusBar } from 'expo-status-bar';
 import React, { useCallback, useEffect } from 'react';
 import { NativeModules, Platform } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { ToastProvider } from 'react-native-toast-notifications'
+import { ToastProvider } from 'react-native-toast-notifications';
 
 import { UserProvider } from '~/context/UserContext';
 import { WSProvider } from '~/context/WSContext';
@@ -26,7 +26,7 @@ const RootLayout = () => {
     'Inter-Regular': require('../../assets/Inter-Regular.otf'),
   });
 
-  useEffect(() => { }, []);
+  useEffect(() => {}, []);
 
   const onLayoutRootView = useCallback(async () => {
     if (fontsLoaded) {

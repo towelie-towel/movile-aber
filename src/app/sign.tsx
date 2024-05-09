@@ -1,7 +1,18 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { TextInput, useColorScheme, Text, useWindowDimensions, KeyboardAvoidingView, Button, TouchableOpacity, Platform, Keyboard, TouchableWithoutFeedback } from 'react-native';
+import {
+  TextInput,
+  useColorScheme,
+  Text,
+  useWindowDimensions,
+  KeyboardAvoidingView,
+  Button,
+  TouchableOpacity,
+  Platform,
+  Keyboard,
+  TouchableWithoutFeedback,
+} from 'react-native';
 import Popover, { PopoverMode, PopoverPlacement } from 'react-native-popover-view';
 import { Bar } from 'react-native-progress';
 import { Path, Svg } from 'react-native-svg';
@@ -31,7 +42,7 @@ export default function Sign() {
       <View
         style={{
           flex: 1,
-          justifyContent: "center",
+          justifyContent: 'center',
           backgroundColor: Colors[colorScheme ?? 'light'].secondary,
         }}>
         <Stack.Screen
@@ -70,9 +81,7 @@ export default function Sign() {
             />
           </Svg>
         </View>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-        >
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
           <View
             style={{
               overflow: 'hidden',
@@ -110,8 +119,7 @@ export default function Sign() {
                     marginBottom: 20,
                     left: props.layout.width / 4 - 17, */
                   }}
-                  tabStyle={{
-                  }}
+                  tabStyle={{}}
                   indicatorContainerStyle={{
                     flexDirection: 'row',
                   }}
@@ -125,7 +133,7 @@ export default function Sign() {
                   }}
                   contentContainerStyle={{
                     paddingVertical: 20,
-                    justifyContent: "space-around"
+                    justifyContent: 'space-around',
                   }}
                   {...props}
                 />
@@ -170,15 +178,15 @@ const SignInTab = () => {
 
     const { error } = await supabase.auth.signInWithPassword({
       phone: '+53' + phone.trim(),
-      password: password,
+      password,
     });
     if (error) {
       console.error(JSON.stringify(error, null, 2));
       toast.show(error.message, {
-        type: "danger",
-        placement: "top",
+        type: 'danger',
+        placement: 'top',
         duration: 4000,
-        animationType: "slide-in",
+        animationType: 'slide-in',
       });
       setIsLoading(false);
       return;
@@ -376,9 +384,9 @@ const SignInTab = () => {
           )}
         </View>
 
-        <ScaleBtn className='' onPress={() => handleSignIn()}>
-          <View style={{ backgroundColor: "#FCCB6F" }} className='bg-[#FCCB6F] rounded-lg p-3'>
-            <Text className='text-center font-semibold w-auto text-[#fff]'>Sign In</Text>
+        <ScaleBtn className="" onPress={() => handleSignIn()}>
+          <View style={{ backgroundColor: '#FCCB6F' }} className="bg-[#FCCB6F] rounded-lg p-3">
+            <Text className="text-center font-semibold w-auto text-[#fff]">Sign In</Text>
           </View>
         </ScaleBtn>
       </View>

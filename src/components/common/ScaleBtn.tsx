@@ -40,18 +40,19 @@ export const ScaleBtn: React.FC<PressBtnProps> = ({
 
   return (
     <Animated.View
-      style={[{
-        transform: [{ scale: animatedValue }],
-        opacity: disabled ? 0.6 : 1,
-      }, containerStyle]}
-    >
+      style={[
+        {
+          transform: [{ scale: animatedValue }],
+          opacity: disabled ? 0.6 : 1,
+        },
+        containerStyle,
+      ]}>
       <Pressable
         disabled={disabled}
         onPress={callback}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
-        {...props}
-      >
+        {...props}>
         {children}
       </Pressable>
     </Animated.View>

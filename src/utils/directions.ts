@@ -1,17 +1,25 @@
 export const getAddress = async (latitude: number, longitude: number) => {
-  const resp = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=AIzaSyAtcwUbA0jjJ6ARXl5_FqIqYcGbTI_XZEE`)
+  const resp = await fetch(
+    `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=AIzaSyAtcwUbA0jjJ6ARXl5_FqIqYcGbTI_XZEE`
+  );
   const respJson = await resp.json();
 
-  const streetAddresses = respJson.results.filter((result: any) => result.types.includes('street_address') || result.types.includes('route'))
-  const streets = streetAddresses.map((address: any) => address.address_components.find((component: any) => component.types.includes('route'))?.long_name)
-  console.log(JSON.stringify(respJson.results, null, 2))
-  return streets
-}
+  const streetAddresses = respJson.results.filter(
+    (result: any) => result.types.includes('street_address') || result.types.includes('route')
+  );
+  const streets = streetAddresses.map(
+    (address: any) =>
+      address.address_components.find((component: any) => component.types.includes('route'))
+        ?.long_name
+  );
+  console.log(JSON.stringify(respJson.results, null, 2));
+  return streets;
+};
 
 export const getDirections = async (startLoc: string, destinationLoc: string) => {
   try {
     const resp = await fetch(
-      `http://172.20.10.12:4200/route?from=${startLoc}&to=${destinationLoc}`
+      `http://192.168.1.255:6942/route?from=${startLoc}&to=${destinationLoc}`
     );
     const respJson = await resp.json();
     const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map((point, _) => ({
@@ -98,7 +106,41 @@ export function polylineDecode(str: string, precision?: number) {
   return coordinates;
 }
 
-export function calculateMiddlePointAndDelta(coord1: { latitude: number, longitude: number }, coord2: { latitude: number, longitude: number }, buffer = 0.01, bottomSheetHeightPercentage = 0.3) {
+/* export function calculateMiddlePointAndDelta(coord1: { latitude: number, longitude: number }, coord2: { latitude: number, longitude: number }, bottomSheetHeightPercentage = 0.3, deltaIncreaseFactor = 1.2) {
+  // Calculate middle point
+  const middlePoint = {
+    latitude: (coord1.latitude + coord2.latitude) / 2,
+    longitude: (coord1.longitude + coord2.longitude) / 2,
+  };
+
+  // Calculate deltas
+  const latitudeDelta = Math.abs(coord1.latitude - coord2.latitude);
+  const longitudeDelta = Math.abs(coord1.longitude - coord2.longitude);
+
+  // Calculate buffer based on vertical distance
+  const buffer = latitudeDelta * 0.1;
+
+  // Adjust latitude for bottom sheet
+  const adjustedLatitude = middlePoint.latitude - (latitudeDelta + buffer) * bottomSheetHeightPercentage / 2;
+
+  // Increase deltas
+  const increasedLatitudeDelta = (latitudeDelta + buffer) * deltaIncreaseFactor;
+  const increasedLongitudeDelta = (longitudeDelta + buffer) * deltaIncreaseFactor;
+
+  return {
+    latitude: adjustedLatitude,
+    longitude: middlePoint.longitude,
+    latitudeDelta: increasedLatitudeDelta,
+    longitudeDelta: increasedLongitudeDelta,
+  };
+} */
+
+export function calculateMiddlePointAndDelta(
+  coord1: { latitude: number; longitude: number },
+  coord2: { latitude: number; longitude: number },
+  buffer = 0.01,
+  bottomSheetHeightPercentage = 0.4
+) {
   // Calculate middle point
   const middlePoint = {
     latitude: (coord1.latitude + coord2.latitude) / 2,
@@ -110,7 +152,7 @@ export function calculateMiddlePointAndDelta(coord1: { latitude: number, longitu
   const longitudeDelta = Math.abs(coord1.longitude - coord2.longitude) + buffer;
 
   // Adjust latitude for bottom sheet
-  const adjustedLatitude = middlePoint.latitude - (latitudeDelta * bottomSheetHeightPercentage / 2);
+  const adjustedLatitude = middlePoint.latitude - (latitudeDelta * bottomSheetHeightPercentage) / 2;
 
   return {
     latitude: adjustedLatitude,
