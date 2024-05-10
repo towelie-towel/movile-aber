@@ -12,7 +12,7 @@ import * as ExpoLocation from 'expo-location';
 import * as NavigationBar from 'expo-navigation-bar';
 import { useRouter } from 'expo-router';
 import { MotiView } from 'moti';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   StatusBar,
   useColorScheme,
@@ -86,6 +86,8 @@ export default function Home() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { user, isSignedIn, getSession, signOut } = useUser();
+  const [snapPoints, setSnapPoints] = useState<number[]>([195, 360, 550]);
+  const [isInputFocus, setIsInputFocus] = useState(false)
   // const { position } = useWSConnection();
 
   if (Platform.OS === 'android') {
@@ -111,7 +113,6 @@ export default function Home() {
   const animatedIndex = useSharedValue(0);
   const [sheetCurrentSnap, setSheetCurrentSnap] = useState(1);
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
-  const snapPoints = useMemo(() => [195, 360, 550], []);
 
   const topSheetBtnsAnimStyle = useAnimatedStyle(() => {
     return {
@@ -119,25 +120,29 @@ export default function Home() {
         {
           translateY: interpolate(
             animatedIndex.value,
-            [0, 1, 2],
-            [0, -165, -355],
+            snapPoints.map((_, i) => i),
+            snapPoints.map((item) => (item * -1) + 740),
             Extrapolation.CLAMP
           ),
         },
       ],
     };
-  });
+  }, [snapPoints]);
 
   useEffect(() => {
-    // const hideSubscription = Keyboard.addListener('keyboardDidHide', () => {
-    //   bottomSheetModalRef.current?.snapToIndex(0);
-    // });
+    const hideSubscription = Keyboard.addListener('keyboardDidHide', () => {
+      bottomSheetModalRef.current?.snapToIndex(0);
+      console.log(false)
+      setIsInputFocus(false)
+    });
     const showSubscription = Keyboard.addListener('keyboardDidShow', () => {
       bottomSheetModalRef.current?.snapToPosition(700);
+      setIsInputFocus(true)
+      console.log(true)
     });
     getSession();
     return () => {
-      // hideSubscription.remove();
+      hideSubscription.remove();
       showSubscription.remove();
     };
   }, []);
@@ -419,7 +424,7 @@ export default function Home() {
             ref={mapViewRef}
             provider={PROVIDER_GOOGLE}
             customMapStyle={colorScheme === 'dark' ? NightMap : undefined}>
-            <Polyline coordinates={activeRoute?.coords ?? []} strokeWidth={5} strokeColor="#000" />
+            {activeRoute && <Polyline coordinates={activeRoute.coords} strokeWidth={5} strokeColor="#000" />}
             {/* <TaxisMarkers onPressTaxi={() => { }} /> */}
             {/* <UserMarker title="User Marker" description="User Marker Description" userId="123" /> */}
             <AnimatedRouteMarker key={2} />
@@ -484,7 +489,7 @@ export default function Home() {
           {activeRoute && activeRoute.coords.length > 0 && !confirmedTaxi && (
             <Animated.View
               style={topSheetBtnsAnimStyle}
-              className="self-center justify-center items-center absolute bottom-60">
+              className="self-center justify-center items-center absolute top-0">
               <ScaleBtn
                 disabled={findingRide || !selectedTaxiType}
                 className=""
@@ -531,7 +536,7 @@ export default function Home() {
 
           <Animated.View
             style={topSheetBtnsAnimStyle}
-            className="self-end justify-center items-center absolute bottom-60">
+            className="self-end justify-center items-center absolute top-0">
             <ScaleBtn
               className="mt-4"
               onPress={() => {
@@ -546,7 +551,7 @@ export default function Home() {
           {activeRoute && activeRoute.coords.length > 0 && (
             <Animated.View
               style={topSheetBtnsAnimStyle}
-              className="self-start justify-center items-center absolute bottom-60">
+              className="self-start justify-center items-center absolute top-0">
               <ScaleBtn
                 className="mt-4"
                 onPress={() => {
@@ -629,6 +634,8 @@ export default function Home() {
               selectedTaxiType={selectedTaxiType}
               setSelectedTaxiType={setSelectedTaxiType}
               confirmedTaxi={confirmedTaxi}
+              setSnapPoints={setSnapPoints}
+              isInputFocus={isInputFocus}
             />
           </BottomSheetModal>
 
