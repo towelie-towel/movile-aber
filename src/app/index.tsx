@@ -25,7 +25,7 @@ import {
 } from 'react-native';
 import { Drawer } from 'react-native-drawer-layout';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import MapView, { type LatLng, PROVIDER_GOOGLE, Polyline, Marker } from 'react-native-maps';
+import MapView, { type LatLng, PROVIDER_GOOGLE, PROVIDER_DEFAULT, Polyline, Marker } from 'react-native-maps';
 import Animated, {
   Easing,
   Extrapolation,
@@ -36,58 +36,28 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BottomSheetContent } from '~/components/bottomsheet/BottomSheetContent';
-import { CustomHandle } from '~/components/bottomsheet/CustomHandle';
+import { CustomHandle } from '~/components/bottomsheet/hooks/CustomHandle';
 import Ripple from '~/components/common/RippleBtn';
 import { ScaleBtn } from '~/components/common/ScaleBtn';
-import { UserMarkerIconType } from '~/components/markers/AddUserMarker';
 import AnimatedRouteMarker from '~/components/markers/AnimatedRouteMarker';
 // import TaxisMarkers from '~/components/markers/TaxiMarkers';
 // import UserMarker from '~/components/markers/UserMarker';
 import { ColorInstagram, ColorFacebook, ColorTwitter } from '~/components/svgs';
 import Colors from '~/constants/Colors';
 import { NightMap } from '~/constants/NightMap';
+import { drawerItems, Steps } from '~/constants/Configs';
 import { useUser } from '~/context/UserContext';
-import { getData } from '~/lib/storage';
-import { TaxiProfile, TaxiType } from '~/types';
 import { calculateMiddlePointAndDelta } from '~/utils/directions';
-
-const drawerItems: {
-  icon: string;
-  label: string;
-}[] = [
-    {
-      icon: 'map',
-      label: 'Home',
-    },
-    {
-      icon: 'wallet-giftcard',
-      label: 'Wallet',
-    },
-    {
-      icon: 'history',
-      label: 'History',
-    },
-    {
-      icon: 'notifications',
-      label: 'Notifications',
-    },
-    {
-      icon: 'settings',
-      label: 'Settings',
-    },
-  ];
+import type { TaxiProfile, TaxiType } from '~/types';
 
 export default function Home() {
   useKeepAwake();
 
-  const [userMarkers, setUserMarkers] = useState<UserMarkerIconType[]>([]);
   const { width, height } = useWindowDimensions();
   const colorScheme = useColorScheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { user, isSignedIn, getSession, signOut } = useUser();
-  const [snapPoints, setSnapPoints] = useState<number[]>([195, 360, 550]);
-  const [isInputFocus, setIsInputFocus] = useState(false)
+  const { user, userMarkers, isSignedIn, signOut } = useUser();
   // const { position } = useWSConnection();
 
   if (Platform.OS === 'android') {
@@ -99,6 +69,7 @@ export default function Home() {
   const mapViewRef = useRef<MapView>(null);
 
   // search bar & taxi flow
+  const [currentStep, setCurrentStep] = useState<Steps>(Steps.SEARCH);
   const [activeRoute, setActiveRoute] = useState<{ coords: LatLng[] } | null | undefined>(null);
   const [piningLocation, setPiningLocation] = useState(false);
   const [selectedTaxiType, setSelectedTaxiType] = useState<TaxiType | null>(null);
@@ -109,43 +80,24 @@ export default function Home() {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   // bottom sheet
+  const [snapPoints, setSnapPoints] = useState<number[]>([195, 360, 550]);
   const animatedPosition = useSharedValue(0);
   const animatedIndex = useSharedValue(0);
-  const [sheetCurrentSnap, setSheetCurrentSnap] = useState(1);
+  const sheetCurrentSnapRef = useRef(1);
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
 
-  const topSheetBtnsAnimStyle = useAnimatedStyle(() => {
-    return {
-      transform: [
-        {
-          translateY: interpolate(
-            animatedIndex.value,
-            snapPoints.map((_, i) => i),
-            snapPoints.map((item) => (item * -1) + 740),
-            Extrapolation.CLAMP
-          ),
-        },
-      ],
-    };
-  }, [snapPoints]);
-
-  useEffect(() => {
-    const hideSubscription = Keyboard.addListener('keyboardDidHide', () => {
-      bottomSheetModalRef.current?.snapToIndex(0);
-      console.log(false)
-      setIsInputFocus(false)
-    });
-    const showSubscription = Keyboard.addListener('keyboardDidShow', () => {
-      bottomSheetModalRef.current?.snapToPosition(700);
-      setIsInputFocus(true)
-      console.log(true)
-    });
-    getSession();
-    return () => {
-      hideSubscription.remove();
-      showSubscription.remove();
-    };
-  }, []);
+  const topSheetBtnsAnimStyle = useAnimatedStyle(() => ({
+    transform: [
+      {
+        translateY: interpolate(
+          animatedIndex.value,
+          snapPoints.map((_, i) => i),
+          snapPoints.map((item) => (item * -1) + 740),
+          Extrapolation.CLAMP
+        ),
+      },
+    ],
+  }), [snapPoints]);
 
   useEffect(() => {
     if (isSignedIn) {
@@ -161,12 +113,12 @@ export default function Home() {
       accuracy: ExpoLocation.Accuracy.Highest,
     });
     mapViewRef.current?.animateToRegion({
-      latitude: position?.coords.latitude - 0.0025 * sheetCurrentSnap,
+      latitude: position?.coords.latitude - 0.0025 * sheetCurrentSnapRef.current,
       longitude: position?.coords.longitude,
       latitudeDelta: 0.00922,
       longitudeDelta: 0.009121,
     });
-  }, [sheetCurrentSnap]);
+  }, [sheetCurrentSnapRef]);
 
   const animateToActiveRoute = useCallback(() => {
     activeRoute &&
@@ -179,7 +131,7 @@ export default function Home() {
           }
         )
       );
-  }, [activeRoute, sheetCurrentSnap, calculateMiddlePointAndDelta]);
+  }, [activeRoute, sheetCurrentSnapRef, calculateMiddlePointAndDelta]);
   const animateToRoute = useCallback(
     (
       origin: { latitude: number; longitude: number },
@@ -187,7 +139,7 @@ export default function Home() {
     ) => {
       animateToRegion(calculateMiddlePointAndDelta(origin, destination));
     },
-    [sheetCurrentSnap, calculateMiddlePointAndDelta]
+    [sheetCurrentSnapRef, calculateMiddlePointAndDelta]
   );
 
   // renders
@@ -268,11 +220,7 @@ export default function Home() {
 
   return (
     <GestureHandlerRootView
-      onLayout={() => {
-        getData('user_markers').then((data) => {
-          setUserMarkers(data ?? []);
-        });
-      }}
+      onLayout={() => { }}
       className="flex-1">
       <Drawer
         open={drawerOpen}
@@ -422,7 +370,7 @@ export default function Home() {
               longitudeDelta: 0.0221,
             }}
             ref={mapViewRef}
-            provider={PROVIDER_GOOGLE}
+            provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : PROVIDER_DEFAULT}
             customMapStyle={colorScheme === 'dark' ? NightMap : undefined}>
             {activeRoute && <Polyline coordinates={activeRoute.coords} strokeWidth={5} strokeColor="#000" />}
             {/* <TaxisMarkers onPressTaxi={() => { }} /> */}
@@ -504,7 +452,7 @@ export default function Home() {
                           from={{ opacity: 0.7, scale: 0.2, borderRadius: 8 }}
                           animate={{ opacity: 0, scale: 2, borderRadius: 1000 }}
                           transition={{
-                            type: 'timing',
+                            // type: 'timing',
                             duration: 2000,
                             easing: Easing.out(Easing.ease),
                             delay: index * 400,
@@ -574,11 +522,11 @@ export default function Home() {
             handleComponent={renderCustomHandle}
             index={0}
             onChange={(e) => {
-              if (e < sheetCurrentSnap) {
+              if (e < sheetCurrentSnapRef.current) {
                 Keyboard.dismiss();
               }
               LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-              setSheetCurrentSnap(e);
+              sheetCurrentSnapRef.current = e;
             }}
             // enableDynamicSizing
             android_keyboardInputMode="adjustResize"
@@ -623,6 +571,8 @@ export default function Home() {
             }}
             backdropComponent={renderBackdrop}>
             <BottomSheetContent
+              currentStep={currentStep}
+              setCurrentStep={setCurrentStep}
               startPiningLocation={startPiningLocation}
               cancelPiningLocation={cancelPiningLocation}
               confirmPiningLocation={confirmPiningLocation}
@@ -635,7 +585,6 @@ export default function Home() {
               setSelectedTaxiType={setSelectedTaxiType}
               confirmedTaxi={confirmedTaxi}
               setSnapPoints={setSnapPoints}
-              isInputFocus={isInputFocus}
             />
           </BottomSheetModal>
 

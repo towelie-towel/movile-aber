@@ -3,6 +3,8 @@ import { type Session } from '@supabase/supabase-js';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
 import { supabase } from '~/lib/supabase';
+import { UserMarkerIconType } from '~/components/markers/AddUserMarker';
+import { getData } from '~/lib/storage';
 
 const AUTH_LOGS = false;
 
@@ -18,6 +20,7 @@ interface UserContext {
     email?: string;
   }) => Promise<void>;
   user: User | null | undefined;
+  userMarkers: UserMarkerIconType[];
   error: Error | null | undefined;
   isSignedIn: boolean;
   isLoaded: boolean;
@@ -50,6 +53,7 @@ const initialValue: UserContext = {
   user: {
     avatar_url: '',
   },
+  userMarkers: [],
   error: undefined,
   isSignedIn: false,
   isLoaded: false,
@@ -68,6 +72,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [sessionExpired, setSessionExpired] = useState<boolean>();
   const [error, setError] = useState<Error | null>();
   const [user, setUser] = useState<User | null>();
+  const [userMarkers, setUserMarkers] = useState<UserMarkerIconType[]>([]);
   const { isConnected, isInternetReachable } = NetInfo.useNetInfo();
 
   const [isSignedIn, setIsSignedIn] = useState(false);
@@ -232,6 +237,12 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     });
   }, [isConnected]);
 
+  useEffect(() => {
+    getData('user_markers').then((data) => {
+      setUserMarkers(data ?? []);
+    });
+  }, [])
+
   return (
     <UserContext.Provider
       value={{
@@ -239,6 +250,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         sessionExpired,
         user,
         updateUser,
+        userMarkers,
         isSignedIn,
         isLoaded,
         isLoading,

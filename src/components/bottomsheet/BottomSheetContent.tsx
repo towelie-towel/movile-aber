@@ -31,8 +31,11 @@ import {
 import { TaxiProfile, TaxiType } from '~/types';
 import { polylineDecode } from '~/utils/directions';
 import { taxiTypesInfo } from '~/constants/TaxiTypes';
+import { Steps } from '~/constants/Configs';
 
 interface BottomSheetContentProps {
+  currentStep: Steps;
+  setCurrentStep: React.Dispatch<Steps>;
   activeRoute: { coords: LatLng[] } | null | undefined;
   userMarkers: UserMarkerIconType[];
   setActiveRoute: React.Dispatch<{ coords: LatLng[] } | null>;
@@ -48,10 +51,11 @@ interface BottomSheetContentProps {
   setSelectedTaxiType: React.Dispatch<TaxiType | null>;
   confirmedTaxi: TaxiProfile | null;
   setSnapPoints: React.Dispatch<number[]>;
-  isInputFocus: boolean;
 }
 
 export const BottomSheetContent = ({
+  currentStep,
+  setCurrentStep,
   userMarkers,
   setActiveRoute,
   startPiningLocation,
@@ -63,7 +67,6 @@ export const BottomSheetContent = ({
   setSelectedTaxiType,
   confirmedTaxi,
   setSnapPoints,
-  isInputFocus,
 }: BottomSheetContentProps) => {
   const colorScheme = useColorScheme();
   const { width } = useWindowDimensions();
@@ -79,6 +82,7 @@ export const BottomSheetContent = ({
     duration: { value: number; text: string };
   } | null>(null);
   const [isPiningLocation, setIsPiningLocation] = useState(false);
+  const [isPinedLocation, setIsPinedLocation] = useState(false);
 
   const originInputViewRef = useRef<GooglePlacesAutocompleteRef>(null);
   const destinationInputViewRef = useRef<GooglePlacesAutocompleteRef>(null);
@@ -119,6 +123,8 @@ export const BottomSheetContent = ({
           duration: respJson[0].legs[0].duration,
         });
         setSnapPoints([250, 400])
+        setIsPinedLocation(true)
+        setCurrentStep(Steps.TAXI)
         animateToRoute(
           { latitude: piningInfo.origin.latitude, longitude: piningInfo.origin.longitude },
           { latitude: piningInfo.destination.latitude, longitude: piningInfo.destination.longitude }
@@ -184,14 +190,9 @@ export const BottomSheetContent = ({
     setSelectedTaxiType(null)
     // collapse();
   };
-  const toggleFavTypeHandler = () => {
+  const toggleIsPiningLocation = () => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    // setPiningInfo({
-    //   origin: piningInfo?.origin ?? null,
-    //   destination: null,
-    // })
     setIsPiningLocation(!isPiningLocation);
-    // collapse();
   };
 
   const confirmPiningLocationHandler = async () => {
@@ -235,389 +236,247 @@ export const BottomSheetContent = ({
   return (
     <BottomSheetView className="flex-1 bg-[#F8F8F8] dark:bg-[#222222]">
 
+      <View className="w-[90%] h-full self-center overflow-visible">
+        <View className="h-10 flex-row justify-between items-center mx-1.5">
+          <Text className="font-bold text-xl">A donde quieres ir?</Text>
 
+          {viewPinOnMap && (
+            <ScaleBtn onPress={startPiningLocationHandler}>
+              <View className="flex-row items-center gap-2 p-1 px-2 border rounded-lg">
+                <Text className="h-full text-lg font-medium text-center">Fijar en el Mapa</Text>
+                <MaterialCommunityIcons name="map-search-outline" size={22} color="#000" />
+              </View>
+            </ScaleBtn>
+          )}
 
+          {piningLocation && (
+            <View className="flex-row gap-4">
+              <ScaleBtn onPress={confirmPiningLocationHandler}>
+                <View className="p-1 border rounded-lg">
+                  <MaterialCommunityIcons name="check" size={28} color="#000" />
+                </View>
+              </ScaleBtn>
+              <ScaleBtn onPress={cancelPiningLocationHandler}>
+                <View className="p-1 border rounded-lg">
+                  <MaterialCommunityIcons name="cancel" size={28} color="#000" />
+                </View>
+              </ScaleBtn>
+            </View>
+          )}
 
-      <>
-        {!confirmedTaxi ? (
-          <>
-            <View className="w-[90%] h-full self-center overflow-visible">
-              <View className="h-10 flex-row justify-between items-center mx-1.5">
-                <Text className="font-bold text-xl">A donde quieres ir?</Text>
-
-                {viewPinOnMap && (
-                  <ScaleBtn onPress={startPiningLocationHandler}>
-                    <View className="flex-row items-center gap-2 p-1 px-2 border rounded-lg">
-                      <Text className="h-full text-lg font-medium text-center">Fijar en el Mapa</Text>
-                      <MaterialCommunityIcons name="map-search-outline" size={22} color="#000" />
-                    </View>
-                  </ScaleBtn>
-                )}
-
-                {piningLocation && (
-                  <View className="flex-row gap-4">
-                    <ScaleBtn onPress={confirmPiningLocationHandler}>
-                      <View className="p-1 border rounded-lg">
-                        <MaterialCommunityIcons name="check" size={28} color="#000" />
-                      </View>
-                    </ScaleBtn>
-                    <ScaleBtn onPress={cancelPiningLocationHandler}>
-                      <View className="p-1 border rounded-lg">
-                        <MaterialCommunityIcons name="cancel" size={28} color="#000" />
-                      </View>
-                    </ScaleBtn>
-                  </View>
-                )}
-
+          {
+            true && (
+              <>
                 {
-                  piningInfo?.destination && piningInfo.origin && (
-                    <>
-                      {
-                        isPiningLocation ? (
-                          <ScaleBtn onPress={toggleFavTypeHandler}>
-                            <View className="flex-row items-center justify-center gap-1 p-1 border rounded-lg bg-[#FCCB6F]">
-                              <MaterialCommunityIcons name="chevron-left" size={24} color="black" />
-                              <MaterialCommunityIcons name="star" size={24} color="black" />
-                            </View>
-                          </ScaleBtn>
-                        ) : (
-                          <ScaleBtn onPress={toggleFavTypeHandler}>
-                            <View className="flex-row items-center justify-center gap-1 p-1 border rounded-lg bg-[#FCCB6F]">
-                              <MaterialCommunityIcons name="car-multiple" size={24} color="black" />
-                              <MaterialCommunityIcons name="chevron-right" size={24} color="black" />
-                            </View>
-                          </ScaleBtn>
-                        )
-                      }
-                    </>
+                  !isPiningLocation || isPinedLocation ? (
+                    <ScaleBtn onPress={toggleIsPiningLocation}>
+                      <View className="flex-row items-center justify-center p-1 border rounded-lg bg-[#FCCB6F]">
+                        <MaterialCommunityIcons name={"chevron-left"} size={24} color="black" />
+                        <MaterialCommunityIcons name="star" size={24} color="black" />
+                      </View>
+                    </ScaleBtn>
+                  ) : (
+                    <ScaleBtn onPress={toggleIsPiningLocation}>
+                      <View className="flex-row items-center justify-center p-1 border rounded-lg bg-[#FCCB6F]">
+                        <MaterialCommunityIcons name="car-multiple" size={24} color="black" />
+                        <MaterialCommunityIcons name="chevron-right" size={24} color="black" />
+                      </View>
+                    </ScaleBtn>
                   )
                 }
-              </View>
+              </>
+            )
+          }
+        </View>
 
-              <View className="relative z-[1000] w-full h-12 px-0 mt-3 items-center flex-row">
-                <MaterialCommunityIcons name="map-marker-account" size={32} color="#000" />
-                <GooglePlacesAutocomplete
-                  ref={originInputViewRef}
-                  predefinedPlaces={userMarkers.map((marker) => ({
-                    description: marker.name,
-                    geometry: {
-                      location: {
-                        lat: marker.coords.latitude,
-                        lng: marker.coords.longitude,
-                      },
-                    },
-                  }))}
-                  placeholder="Lugar de Origen"
-                  textInputProps={{
-                    placeholderTextColor: colorScheme === 'light' ? '#6C6C6C' : 'black',
-                    onFocus: () => {
-                      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-                      if (piningLocation) cancelPiningLocationHandler();
-                      setViewPinOnMap(true);
-                      setPiningInput('origin');
-                    },
-                    onBlur: () => {
-                      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-                      setViewPinOnMap(false);
-                    },
-                  }}
-                  enablePoweredByContainer={false}
-                  onPress={(data, details) => {
-                    const tokio = async (
-                      _data: GooglePlaceData,
-                      _details: GooglePlaceDetail | null
-                    ) => { };
-                    tokio(data, details);
-                  }}
-                  debounce={400}
-                  styles={{
-                    container: {
-                      position: 'relative',
-                      zIndex: 1000,
-                      overflow: 'visible',
-                    },
-                    textInputContainer: {
-                      position: 'relative',
-                      zIndex: 1000,
-                      overflow: 'hidden',
-                      marginLeft: 12,
-                      height: 46,
-                      borderRadius: 10,
-                      width: width * 0.9 - 48,
-                    },
-                    textInput: {
-                      position: 'relative',
-                      zIndex: 1000,
+        <View className="relative z-[1000] w-full h-12 px-0 mt-3 items-center flex-row">
+          <MaterialCommunityIcons name="map-marker-account" size={32} color="#000" />
+          <GooglePlacesAutocomplete
+            ref={originInputViewRef}
+            predefinedPlaces={userMarkers.map((marker) => ({
+              description: marker.name,
+              geometry: {
+                location: {
+                  lat: marker.coords.latitude,
+                  lng: marker.coords.longitude,
+                },
+              },
+            }))}
+            placeholder="Lugar de Origen"
+            textInputProps={{
+              placeholderTextColor: colorScheme === 'light' ? '#6C6C6C' : 'black',
+              onFocus: () => {
+                LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                if (piningLocation) cancelPiningLocationHandler();
+                setViewPinOnMap(true);
+                setPiningInput('origin');
+              },
+              onBlur: () => {
+                LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                setViewPinOnMap(false);
+              },
+            }}
+            enablePoweredByContainer={false}
+            onPress={(data, details) => {
+              const tokio = async (
+                _data: GooglePlaceData,
+                _details: GooglePlaceDetail | null
+              ) => { };
+              tokio(data, details);
+            }}
+            debounce={400}
+            styles={{
+              container: {
+                position: 'relative',
+                zIndex: 1000,
+                overflow: 'visible',
+              },
+              textInputContainer: {
+                position: 'relative',
+                zIndex: 1000,
+                overflow: 'hidden',
+                marginLeft: 12,
+                height: 46,
+                borderRadius: 10,
+                width: width * 0.9 - 48,
+              },
+              textInput: {
+                position: 'relative',
+                zIndex: 1000,
 
-                      height: '100%',
-                      fontWeight: '400',
-                      borderRadius: 10,
-                      fontSize: 16,
-                      textAlignVertical: 'center',
-                      color: Colors[colorScheme ?? 'light'].text_dark,
-                      backgroundColor: Colors[colorScheme ?? 'light'].background_light1,
+                height: '100%',
+                fontWeight: '400',
+                borderRadius: 10,
+                fontSize: 16,
+                textAlignVertical: 'center',
+                color: Colors[colorScheme ?? 'light'].text_dark,
+                backgroundColor: Colors[colorScheme ?? 'light'].background_light1,
 
-                      borderTopRightRadius: 10,
-                      borderBottomRightRadius: 10,
-                    },
-                    listView: {
-                      position: 'absolute',
-                      zIndex: 1000,
-                      backgroundColor: 'white',
-                      borderRadius: 5,
-                      flex: 1,
-                      elevation: 3,
-                      marginTop: 12,
-                    },
-                  }}
-                  fetchDetails
-                  query={{
-                    key: 'AIzaSyAtcwUbA0jjJ6ARXl5_FqIqYcGbTI_XZEE',
-                    language: 'es',
-                    components: 'country:cu',
-                    location: '23.11848,-82.38052',
-                    radius: 100,
-                  }}
-                />
-              </View>
+                borderTopRightRadius: 10,
+                borderBottomRightRadius: 10,
+              },
+              listView: {
+                position: 'absolute',
+                zIndex: 1000,
+                backgroundColor: 'white',
+                borderRadius: 5,
+                flex: 1,
+                elevation: 3,
+                marginTop: 12,
+              },
+            }}
+            fetchDetails
+            query={{
+              key: 'AIzaSyAtcwUbA0jjJ6ARXl5_FqIqYcGbTI_XZEE',
+              language: 'es',
+              components: 'country:cu',
+              location: '23.11848,-82.38052',
+              radius: 100,
+            }}
+          />
+        </View>
 
-              <View className="relative z-[999] w-full h-12 px-0 mt-5 items-center flex-row">
-                <DashedLine
-                  axis="vertical"
-                  style={{
-                    height: 30,
-                    left: 15,
-                    top: -29,
-                  }}
-                />
-                <MaterialCommunityIcons
-                  className="ml-[-1.5px]"
-                  name="map-marker-radius"
-                  size={32}
-                  color="#000"
-                />
-                <GooglePlacesAutocomplete
-                  ref={destinationInputViewRef}
-                  predefinedPlaces={userMarkers.map((marker) => ({
-                    description: marker.name,
-                    geometry: {
-                      location: {
-                        lat: marker.coords.latitude,
-                        lng: marker.coords.longitude,
-                      },
-                    },
-                  }))}
-                  placeholder="Lugar Destino"
-                  textInputProps={{
-                    placeholderTextColor: colorScheme === 'light' ? '#6C6C6C' : 'black',
-                    onFocus: () => {
-                      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-                      if (piningLocation) cancelPiningLocationHandler();
-                      setViewPinOnMap(true);
-                      setPiningInput('destination');
-                    },
-                    onBlur: () => {
-                      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-                      setViewPinOnMap(false);
-                    },
-                  }}
-                  enablePoweredByContainer={false}
-                  onPress={(data, details) => {
-                    const tokio = async (
-                      _data: GooglePlaceData,
-                      _details: GooglePlaceDetail | null
-                    ) => { };
-                    tokio(data, details);
-                  }}
-                  debounce={400}
-                  styles={{
-                    container: {
-                      position: 'relative',
-                      zIndex: 999,
-                      overflow: 'visible',
-                    },
-                    textInputContainer: {
-                      position: 'relative',
-                      zIndex: 999,
-                      overflow: 'hidden',
-                      marginLeft: 12,
-                      height: 46,
-                      borderRadius: 10,
-                      width: width * 0.9 - 48,
-                    },
-                    textInput: {
-                      position: 'relative',
-                      zIndex: 999,
+        <View className="relative z-[999] w-full h-12 px-0 mt-5 items-center flex-row">
+          <DashedLine
+            axis="vertical"
+            style={{
+              height: 30,
+              left: 15,
+              top: -29,
+            }}
+          />
+          <MaterialCommunityIcons
+            className="ml-[-1.5px]"
+            name="map-marker-radius"
+            size={32}
+            color="#000"
+          />
+          <GooglePlacesAutocomplete
+            ref={destinationInputViewRef}
+            predefinedPlaces={userMarkers.map((marker) => ({
+              description: marker.name,
+              geometry: {
+                location: {
+                  lat: marker.coords.latitude,
+                  lng: marker.coords.longitude,
+                },
+              },
+            }))}
+            placeholder="Lugar Destino"
+            textInputProps={{
+              placeholderTextColor: colorScheme === 'light' ? '#6C6C6C' : 'black',
+              onFocus: () => {
+                LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                if (piningLocation) cancelPiningLocationHandler();
+                setViewPinOnMap(true);
+                setPiningInput('destination');
+              },
+              onBlur: () => {
+                LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                setViewPinOnMap(false);
+              },
+            }}
+            enablePoweredByContainer={false}
+            onPress={(data, details) => {
+              const tokio = async (
+                _data: GooglePlaceData,
+                _details: GooglePlaceDetail | null
+              ) => { };
+              tokio(data, details);
+            }}
+            debounce={400}
+            styles={{
+              container: {
+                position: 'relative',
+                zIndex: 999,
+                overflow: 'visible',
+              },
+              textInputContainer: {
+                position: 'relative',
+                zIndex: 999,
+                overflow: 'hidden',
+                marginLeft: 12,
+                height: 46,
+                borderRadius: 10,
+                width: width * 0.9 - 48,
+              },
+              textInput: {
+                position: 'relative',
+                zIndex: 999,
 
-                      height: '100%',
-                      fontWeight: '400',
-                      borderRadius: 10,
-                      fontSize: 16,
-                      textAlignVertical: 'center',
-                      color: Colors[colorScheme ?? 'light'].text_dark,
-                      backgroundColor: Colors[colorScheme ?? 'light'].background_light1,
+                height: '100%',
+                fontWeight: '400',
+                borderRadius: 10,
+                fontSize: 16,
+                textAlignVertical: 'center',
+                color: Colors[colorScheme ?? 'light'].text_dark,
+                backgroundColor: Colors[colorScheme ?? 'light'].background_light1,
 
-                      borderTopRightRadius: 10,
-                      borderBottomRightRadius: 10,
-                    },
-                    listView: {
-                      position: 'absolute',
-                      zIndex: 999,
-                      backgroundColor: 'white',
-                      borderRadius: 5,
-                      flex: 1,
-                      elevation: 3,
-                      marginTop: 12,
-                    },
-                  }}
-                  fetchDetails
-                  query={{
-                    key: 'AIzaSyAtcwUbA0jjJ6ARXl5_FqIqYcGbTI_XZEE',
-                    language: 'es',
-                    components: 'country:cu',
-                    location: '23.11848,-82.38052',
-                    radius: 100,
-                  }}
-                />
-              </View>
+                borderTopRightRadius: 10,
+                borderBottomRightRadius: 10,
+              },
+              listView: {
+                position: 'absolute',
+                zIndex: 999,
+                backgroundColor: 'white',
+                borderRadius: 5,
+                flex: 1,
+                elevation: 3,
+                marginTop: 12,
+              },
+            }}
+            fetchDetails
+            query={{
+              key: 'AIzaSyAtcwUbA0jjJ6ARXl5_FqIqYcGbTI_XZEE',
+              language: 'es',
+              components: 'country:cu',
+              location: '23.11848,-82.38052',
+              radius: 100,
+            }}
+          />
+        </View>
 
-
-              {!routeInfo || isInputFocus ? (
-                <>
-                  <View className="mx-1.5 mt-7 overflow-visible">
-                    <Text className="font-bold text-xl">Favoritos</Text>
-
-                    <ScrollView horizontal className="w-100 overflow-visible">
-                      <View>
-                        <ScaleBtn
-                          className="mt-3 w-20 h-20 rounded-full border-2 border-[#C1C0C9] items-center justify-center"
-                          onPress={() => { }}>
-                          <FontAwesome6
-                            name="suitcase"
-                            size={32}
-                            color={Colors[colorScheme ?? 'light'].icons}
-                          />
-                        </ScaleBtn>
-                        <Text className="text-lg font-semibold text-center text-[#333]">Trabajo</Text>
-                        <Text className="text-sm text-center text-[#555]">Add</Text>
-                      </View>
-
-                      <View className="ml-5">
-                        <ScaleBtn
-                          className="mt-3 w-20 h-20 rounded-full border-2 border-[#C1C0C9] items-center justify-center"
-                          onPress={() => { }}>
-                          <FontAwesome6
-                            name="house"
-                            size={32}
-                            color={Colors[colorScheme ?? 'light'].icons}
-                          />
-                        </ScaleBtn>
-                        <Text className="text-lg font-semibold text-center text-[#333]">Casa</Text>
-                        <Text className="text-sm text-center text-[#555]">Add</Text>
-                      </View>
-
-                      <View className="ml-5">
-                        <ScaleBtn
-                          className="mt-3 w-20 h-20 rounded-full border-2 border-[#C1C0C9] items-center justify-center"
-                          onPress={() => { }}>
-                          <FontAwesome6
-                            name="plus"
-                            size={32}
-                            color={Colors[colorScheme ?? 'light'].icons}
-                          />
-                        </ScaleBtn>
-                        <Text className="text-lg font-semibold text-center text-[#333]">Add</Text>
-                      </View>
-                    </ScrollView>
-                  </View>
-
-                  <View className="mx-1.5 mt-5 overflow-visible">
-                    <Text className="font-bold text-xl">Recent</Text>
-
-                    <View className="flex-row items-center gap-2 mt-3">
-                      <View className="bg-[#C1C0C9] rounded-full items-center justify-center p-1 text-center">
-                        <MaterialCommunityIcons name="history" size={32} color="white" />
-                      </View>
-                      <View>
-                        <Text numberOfLines={1} className="font-lg font-medium">
-                          23 y 12, Plaza de la Revolucion, La Habana
-                        </Text>
-                      </View>
-                    </View>
-
-                    <View className="flex-row items-center gap-2 mt-3">
-                      <View className="bg-[#C1C0C9] rounded-full items-center justify-center p-1 text-center">
-                        <MaterialCommunityIcons name="history" size={32} color="white" />
-                      </View>
-                      <View>
-                        <Text numberOfLines={1} className="font-lg font-medium">
-                          Pedro Perez e/ Clavel y Mariano, Cerro, La...
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                </>
-              ) : (
-                <View className="w-full h-full self-center mt-5">
-                  <View className="">
-                    {taxiTypesInfo.map(({ slug, Icon, name, pricePerKm, timePerKm }) => {
-                      if (selectedTaxiType === slug) {
-                        return (
-                          <Pressable
-                            onPress={() => setSelectedTaxiType(slug as TaxiType)}
-                            key={name}
-                            className="mx-[-5%] px-[5%] bg-[#FCCB6F] flex-row gap-7 items-center py-3">
-                            <Icon />
-                            <View className="flex-row items-center justify-between flex-1 px-2">
-                              <View>
-                                <Text className="text-white text-xl font-medium">{name}</Text>
-                                <Text className="text-white ">
-                                  {Math.round(Math.random() * 100) / 100} Km
-                                </Text>
-                              </View>
-                              <View>
-                                <Text className="text-white text-lg font-medium text-right">
-                                  ${(pricePerKm * (routeInfo.distance.value / 1000)).toFixed(2)}
-                                </Text>
-                                <Text className="text-white">
-                                  {(timePerKm * (routeInfo.duration.value / 60)).toFixed(2)} min
-                                </Text>
-                              </View>
-                            </View>
-                          </Pressable>
-                        );
-                      }
-                      return (
-                        <Pressable
-                          onPress={() => setSelectedTaxiType(slug as TaxiType)}
-                          key={name}
-                          className="mx-[-5%] px-[5%] flex-row gap-7 items-center py-3">
-                          <Icon />
-                          <View className="flex-row items-center justify-between flex-1 px-2">
-                            <View>
-                              <Text className="text-xl font-medium">{name}</Text>
-                              <Text className="">{Math.round(Math.random() * 100) / 100} Km</Text>
-                            </View>
-                            <View>
-                              <Text className="text-lg font-medium text-right">
-                                ${(pricePerKm * (routeInfo.distance.value / 1000)).toFixed(2)}
-                              </Text>
-                              <Text className="">
-                                {(timePerKm * (routeInfo.duration.value / 60)).toFixed(2)} min
-                              </Text>
-                            </View>
-                          </View>
-                        </Pressable>
-                      );
-                    })}
-                  </View>
-                </View>
-              )}
-
-            </View>
-
-          </>
-        ) : (
+        {currentStep === Steps.RIDE &&
           <View className="w-[90%] h-full self-center">
             <View className="h-20 flex-row justify-between items-center">
               <View className="flex-row gap-3 items-center">
@@ -626,7 +485,7 @@ export const BottomSheetContent = ({
                   source={require('../../../assets/images/taxi_test.png')}
                 />
                 <View className="justify-center">
-                  <Text className="font-bold text-xl">{confirmedTaxi.name}</Text>
+                  <Text className="font-bold text-xl">{confirmedTaxi?.name}</Text>
                   <View className="flex-row items-center">
                     <Text className="text-[#FFCC00] text-lg">★ </Text>
                     <Text className="text-[#C8C7CC]">4.9</Text>
@@ -694,9 +553,141 @@ export const BottomSheetContent = ({
               </View>
             </ScaleBtn>
           </View>
-        )}
-      </>
+        }
 
+        {currentStep === Steps.SEARCH &&
+          <>
+            <View className="mx-1.5 mt-7 overflow-visible">
+              <Text className="font-bold text-xl">Favoritos</Text>
+
+              <ScrollView horizontal className="w-100 overflow-visible">
+                <View>
+                  <ScaleBtn
+                    className="mt-3 w-20 h-20 rounded-full border-2 border-[#C1C0C9] items-center justify-center"
+                    onPress={() => { }}>
+                    <FontAwesome6
+                      name="suitcase"
+                      size={32}
+                      color={Colors[colorScheme ?? 'light'].icons}
+                    />
+                  </ScaleBtn>
+                  <Text className="text-lg font-semibold text-center text-[#333]">Trabajo</Text>
+                  <Text className="text-sm text-center text-[#555]">Add</Text>
+                </View>
+
+                <View className="ml-5">
+                  <ScaleBtn
+                    className="mt-3 w-20 h-20 rounded-full border-2 border-[#C1C0C9] items-center justify-center"
+                    onPress={() => { }}>
+                    <FontAwesome6
+                      name="house"
+                      size={32}
+                      color={Colors[colorScheme ?? 'light'].icons}
+                    />
+                  </ScaleBtn>
+                  <Text className="text-lg font-semibold text-center text-[#333]">Casa</Text>
+                  <Text className="text-sm text-center text-[#555]">Add</Text>
+                </View>
+
+                <View className="ml-5">
+                  <ScaleBtn
+                    className="mt-3 w-20 h-20 rounded-full border-2 border-[#C1C0C9] items-center justify-center"
+                    onPress={() => { }}>
+                    <FontAwesome6
+                      name="plus"
+                      size={32}
+                      color={Colors[colorScheme ?? 'light'].icons}
+                    />
+                  </ScaleBtn>
+                  <Text className="text-lg font-semibold text-center text-[#333]">Add</Text>
+                </View>
+              </ScrollView>
+            </View>
+
+            <View className="mx-1.5 mt-5 overflow-visible">
+              <Text className="font-bold text-xl">Recent</Text>
+
+              <View className="flex-row items-center gap-2 mt-3">
+                <View className="bg-[#C1C0C9] rounded-full items-center justify-center p-1 text-center">
+                  <MaterialCommunityIcons name="history" size={32} color="white" />
+                </View>
+                <View>
+                  <Text numberOfLines={1} className="font-lg font-medium">
+                    23 y 12, Plaza de la Revolucion, La Habana
+                  </Text>
+                </View>
+              </View>
+
+              <View className="flex-row items-center gap-2 mt-3">
+                <View className="bg-[#C1C0C9] rounded-full items-center justify-center p-1 text-center">
+                  <MaterialCommunityIcons name="history" size={32} color="white" />
+                </View>
+                <View>
+                  <Text numberOfLines={1} className="font-lg font-medium">
+                    Pedro Perez e/ Clavel y Mariano, Cerro, La...
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </>}
+        {
+          currentStep === Steps.TAXI && <View className="w-full h-full self-center mt-5">
+            <View className="">
+              {taxiTypesInfo.map(({ slug, Icon, name, pricePerKm, timePerKm }) => {
+                if (selectedTaxiType === slug) {
+                  return (
+                    <Pressable
+                      onPress={() => setSelectedTaxiType(slug as TaxiType)}
+                      key={name}
+                      className="mx-[-10%] px-[10%] bg-[#FCCB6F] flex-row gap-7 items-center py-3">
+                      <Icon />
+                      <View className="flex-row items-center justify-between flex-1 px-2">
+                        <View>
+                          <Text className="text-white text-xl font-medium">{name}</Text>
+                          <Text className="text-white ">
+                            {Math.round(Math.random() * 100) / 100} Km
+                          </Text>
+                        </View>
+                        <View>
+                          <Text className="text-white text-lg font-medium text-right">
+                            ${(pricePerKm * (routeInfo.distance.value / 1000)).toFixed(2)}
+                          </Text>
+                          <Text className="text-white">
+                            {(timePerKm * (routeInfo.duration.value / 60)).toFixed(2)} min
+                          </Text>
+                        </View>
+                      </View>
+                    </Pressable>
+                  );
+                }
+                return (
+                  <Pressable
+                    onPress={() => setSelectedTaxiType(slug as TaxiType)}
+                    key={name}
+                    className="mx-[-10%] px-[10%] flex-row gap-7 items-center py-3">
+                    <Icon />
+                    <View className="flex-row items-center justify-between flex-1 px-2">
+                      <View>
+                        <Text className="text-xl font-medium">{name}</Text>
+                        <Text className="">{Math.round(Math.random() * 100) / 100} Km</Text>
+                      </View>
+                      <View>
+                        <Text className="text-lg font-medium text-right">
+                          ${(pricePerKm * (routeInfo.distance.value / 1000)).toFixed(2)}
+                        </Text>
+                        <Text className="">
+                          {(timePerKm * (routeInfo.duration.value / 60)).toFixed(2)} min
+                        </Text>
+                      </View>
+                    </View>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+        }
+
+      </View>
     </BottomSheetView>
   );
 };
