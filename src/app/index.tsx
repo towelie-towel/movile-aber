@@ -48,7 +48,7 @@ import { NightMap } from '~/constants/NightMap';
 import { drawerItems, Steps } from '~/constants/Configs';
 import { useUser } from '~/context/UserContext';
 import { calculateMiddlePointAndDelta } from '~/utils/directions';
-import type { TaxiProfile, TaxiType } from '~/types';
+import type { TaxiProfile, TaxiType } from '~/constants/TaxiTypes';
 
 export default function Home() {
   useKeepAwake();
@@ -100,7 +100,7 @@ export default function Home() {
   }), [snapPoints]);
 
   useEffect(() => {
-    if (isSignedIn) {
+    if (isSignedIn || true) {
       bottomSheetModalRef.current?.present();
       animateToUserLocation();
     } else {
@@ -202,6 +202,8 @@ export default function Home() {
         plate: 'HAB 123',
         stars: 4.9,
       });
+      setCurrentStep(Steps.RIDE)
+      setFindingRide(true);
     }, 4000);
   }, []);
 
@@ -434,7 +436,7 @@ export default function Home() {
             </View>
           )}
 
-          {activeRoute && activeRoute.coords.length > 0 && !confirmedTaxi && (
+          {activeRoute && activeRoute.coords.length > 0 && currentStep !== Steps.RIDE && (
             <Animated.View
               style={topSheetBtnsAnimStyle}
               className="self-center justify-center items-center absolute top-0">
@@ -455,7 +457,7 @@ export default function Home() {
                             // type: 'timing',
                             duration: 2000,
                             easing: Easing.out(Easing.ease),
-                            delay: index * 400,
+                            delay: 1000,
                             repeatReverse: false,
                             repeat: Infinity,
                           }}

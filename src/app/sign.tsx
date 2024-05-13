@@ -22,6 +22,7 @@ import { useToast } from 'react-native-toast-notifications';
 import { ScaleBtn } from '~/components/common/ScaleBtn';
 import { View } from '~/components/common/Themed';
 import Colors from '~/constants/Colors';
+import { useUser } from '~/context/UserContext';
 import { supabase } from '~/lib/supabase';
 import { isValidPassword, isValidPhone } from '~/utils/validators';
 
@@ -149,6 +150,7 @@ export default function Sign() {
 const SignInTab = () => {
   const colorScheme = useColorScheme();
   const toast = useToast();
+  const { getSession } = useUser()
   const [phone, setPhone] = useState('');
   const [phoneError, setPhoneError] = useState('');
   const [showPhonePopover, setShowPhonePopover] = useState(false);
@@ -160,39 +162,48 @@ const SignInTab = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSignIn = async () => {
-    setIsLoading(true);
-    const [phoneOk, phoneErr] = isValidPhone(phone.trim());
-    const [passwordOk, passwordErr] = isValidPassword(password);
+    try {
+      setIsLoading(true);
+      const [phoneOk, phoneErr] = isValidPhone(phone.trim());
+      const [passwordOk, passwordErr] = isValidPassword(password);
 
-    if (!phoneOk) {
-      setPhoneError(phoneErr);
-      setShowPhonePopover(true);
-      setIsLoading(false);
-      return;
-    } else if (!passwordOk) {
-      setPasswordError(passwordErr);
-      setShowPasswordPopover(true);
-      setIsLoading(false);
-      return;
-    }
+      if (!phoneOk) {
+        setPhoneError(phoneErr);
+        setShowPhonePopover(true);
+        setIsLoading(false);
+        return;
+      } else if (!passwordOk) {
+        setPasswordError(passwordErr);
+        setShowPasswordPopover(true);
+        setIsLoading(false);
+        return;
+      }
 
-    const { error } = await supabase.auth.signInWithPassword({
-      phone: '+53' + phone.trim(),
-      password,
-    });
-    if (error) {
-      console.error(JSON.stringify(error, null, 2));
-      toast.show(error.message, {
-        type: 'danger',
-        placement: 'top',
-        duration: 4000,
-        animationType: 'slide-in',
+      console.log("before signInWithPassword")
+      const { error } = await supabase.auth.signInWithPassword({
+        phone: '+53' + phone.trim(),
+        password,
       });
+      console.log("after signInWithPassword", error)
+      if (error) {
+        console.error(JSON.stringify(error, null, 2));
+        toast.show(error.message, {
+          type: 'danger',
+          placement: 'top',
+          duration: 4000,
+          animationType: 'slide-in',
+        });
+        setIsLoading(false);
+        return;
+      }
+      setIsLoading(false);
+      router.replace('/');
+    } catch (error) {
+      console.error(JSON.stringify(error, null, 2));
+      console.log(error)
       setIsLoading(false);
       return;
     }
-    setIsLoading(false);
-    router.replace('/');
   };
 
   return (

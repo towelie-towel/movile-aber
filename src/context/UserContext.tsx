@@ -226,9 +226,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       void getSession();
     }
 
-    supabase.auth.onAuthStateChange((_event, session) => {
+    supabase.auth.onAuthStateChange((_event, resSession) => {
       if (AUTH_LOGS) console.log('♻️ ——© AuthState Changed ——©' + _event);
-      const expired = session?.expires_at && new Date(session.expires_at) < new Date();
+      const expired = resSession?.expires_at && new Date(resSession.expires_at) < new Date();
       setSessionExpired(Boolean(expired));
 
       if (!session || expired) {

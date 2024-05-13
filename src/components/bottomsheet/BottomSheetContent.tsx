@@ -28,7 +28,7 @@ import {
   GooglePlaceDetail,
   GooglePlacesAutocompleteRef,
 } from '~/lib/google-places-autocomplete/GooglePlacesAutocomplete';
-import { TaxiProfile, TaxiType } from '~/types';
+import { TaxiProfile, TaxiType } from '~/constants/TaxiTypes';
 import { polylineDecode } from '~/utils/directions';
 import { taxiTypesInfo } from '~/constants/TaxiTypes';
 import { Steps } from '~/constants/Configs';
@@ -70,7 +70,7 @@ export const BottomSheetContent = ({
 }: BottomSheetContentProps) => {
   const colorScheme = useColorScheme();
   const { width } = useWindowDimensions();
-  const { collapse, snapToIndex } = useBottomSheet();
+  const { collapse, snapToIndex, snapToPosition } = useBottomSheet();
   const [viewPinOnMap, setViewPinOnMap] = useState(false);
   const [piningInput, setPiningInput] = useState<'origin' | 'destination'>('destination');
   const [piningInfo, setPiningInfo] = useState<{
@@ -81,8 +81,6 @@ export const BottomSheetContent = ({
     distance: { value: number; text: string };
     duration: { value: number; text: string };
   } | null>(null);
-  const [isPiningLocation, setIsPiningLocation] = useState(false);
-  const [isPinedLocation, setIsPinedLocation] = useState(false);
 
   const originInputViewRef = useRef<GooglePlacesAutocompleteRef>(null);
   const destinationInputViewRef = useRef<GooglePlacesAutocompleteRef>(null);
@@ -92,21 +90,27 @@ export const BottomSheetContent = ({
   }, []);
 
   useEffect(() => {
-    if (routeInfo) {
-      if (confirmedTaxi) setSnapPoints([360])
-      else setSnapPoints([250, 400])
+    switch (currentStep) {
+      case Steps.SEARCH:
+        setSnapPoints([195, 360, 550])
+        break;
+      case Steps.TAXI:
+        setSnapPoints([250, 400])
+        break;
+      case Steps.RIDE:
+        setSnapPoints([360])
+        break;
+
+      default:
+        break;
     }
-    else {
-      setSnapPoints([195, 360, 550])
-      fetchOrigin();
-    }
-  }, [routeInfo, confirmedTaxi])
+  }, [currentStep])
 
   useEffect(() => {
     const tokio = async () => {
       if (piningInfo?.destination && piningInfo?.origin) {
         const resp = await fetch(
-          `http://192.168.1.101:6942/route?from=${piningInfo.origin.latitude},${piningInfo.origin.longitude}&to=${piningInfo.destination.latitude},${piningInfo.destination.longitude}`
+          `http://172.20.10.12:6942/route?from=${piningInfo.origin.latitude},${piningInfo.origin.longitude}&to=${piningInfo.destination.latitude},${piningInfo.destination.longitude}`
         );
         const respJson = await resp.json();
         const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map(
@@ -122,8 +126,6 @@ export const BottomSheetContent = ({
           distance: respJson[0].legs[0].distance,
           duration: respJson[0].legs[0].duration,
         });
-        setSnapPoints([250, 400])
-        setIsPinedLocation(true)
         setCurrentStep(Steps.TAXI)
         animateToRoute(
           { latitude: piningInfo.origin.latitude, longitude: piningInfo.origin.longitude },
@@ -174,27 +176,10 @@ export const BottomSheetContent = ({
     originInputViewRef.current?.blur();
     destinationInputViewRef.current?.blur();
   };
-
   const cancelPiningLocationHandler = () => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     cancelPiningLocation();
   };
-  const cancelRideHandler = () => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    // setPiningInfo({
-    //   origin: piningInfo?.origin ?? null,
-    //   destination: null,
-    // })
-    setActiveRoute(null);
-    setRouteInfo(null);
-    setSelectedTaxiType(null)
-    // collapse();
-  };
-  const toggleIsPiningLocation = () => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setIsPiningLocation(!isPiningLocation);
-  };
-
   const confirmPiningLocationHandler = async () => {
     try {
       const location = await confirmPiningLocation();
@@ -232,6 +217,26 @@ export const BottomSheetContent = ({
       }
     }
   };
+  const cancelRideHandler = () => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    // setPiningInfo({
+    //   origin: piningInfo?.origin ?? null,
+    //   destination: null,
+    // })
+    setActiveRoute(null);
+    setRouteInfo(null);
+    setSelectedTaxiType(null)
+    // collapse();
+  };
+
+  const goBackToSearch = () => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setCurrentStep(Steps.SEARCH);
+  };
+  const goToPinnedRouteTaxi = () => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setCurrentStep(Steps.TAXI);
+  };
 
   return (
     <BottomSheetView className="flex-1 bg-[#F8F8F8] dark:bg-[#222222]">
@@ -240,7 +245,7 @@ export const BottomSheetContent = ({
         <View className="h-10 flex-row justify-between items-center mx-1.5">
           <Text className="font-bold text-xl">A donde quieres ir?</Text>
 
-          {viewPinOnMap && (
+          {viewPinOnMap && !piningLocation && (
             <ScaleBtn onPress={startPiningLocationHandler}>
               <View className="flex-row items-center gap-2 p-1 px-2 border rounded-lg">
                 <Text className="h-full text-lg font-medium text-center">Fijar en el Mapa</Text>
@@ -264,29 +269,28 @@ export const BottomSheetContent = ({
             </View>
           )}
 
-          {
-            true && (
-              <>
-                {
-                  !isPiningLocation || isPinedLocation ? (
-                    <ScaleBtn onPress={toggleIsPiningLocation}>
-                      <View className="flex-row items-center justify-center p-1 border rounded-lg bg-[#FCCB6F]">
-                        <MaterialCommunityIcons name={"chevron-left"} size={24} color="black" />
-                        <MaterialCommunityIcons name="star" size={24} color="black" />
-                      </View>
-                    </ScaleBtn>
-                  ) : (
-                    <ScaleBtn onPress={toggleIsPiningLocation}>
-                      <View className="flex-row items-center justify-center p-1 border rounded-lg bg-[#FCCB6F]">
-                        <MaterialCommunityIcons name="car-multiple" size={24} color="black" />
-                        <MaterialCommunityIcons name="chevron-right" size={24} color="black" />
-                      </View>
-                    </ScaleBtn>
-                  )
-                }
-              </>
-            )
-          }
+          {!viewPinOnMap && !piningLocation && <>
+            {
+              currentStep === Steps.TAXI &&
+              <ScaleBtn onPress={goBackToSearch}>
+                <View className="flex-row items-center justify-center p-1 border rounded-lg bg-[#FCCB6F]">
+                  <MaterialCommunityIcons name={"chevron-left"} size={24} color="black" />
+                  <MaterialCommunityIcons name="star" size={24} color="black" />
+                </View>
+              </ScaleBtn>
+            }
+
+            {
+              currentStep === Steps.SEARCH && piningInfo?.origin && piningInfo.destination &&
+              <ScaleBtn onPress={goToPinnedRouteTaxi}>
+                <View className="flex-row items-center justify-center p-1 border rounded-lg bg-[#FCCB6F]">
+                  <MaterialCommunityIcons name="car-multiple" size={24} color="black" />
+                  <MaterialCommunityIcons name="chevron-right" size={24} color="black" />
+                </View>
+              </ScaleBtn>
+            }
+          </>}
+
         </View>
 
         <View className="relative z-[1000] w-full h-12 px-0 mt-3 items-center flex-row">
@@ -310,6 +314,7 @@ export const BottomSheetContent = ({
                 if (piningLocation) cancelPiningLocationHandler();
                 setViewPinOnMap(true);
                 setPiningInput('origin');
+                snapToPosition(750)
               },
               onBlur: () => {
                 LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -410,6 +415,7 @@ export const BottomSheetContent = ({
                 if (piningLocation) cancelPiningLocationHandler();
                 setViewPinOnMap(true);
                 setPiningInput('destination');
+                snapToPosition(750)
               },
               onBlur: () => {
                 LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -629,7 +635,9 @@ export const BottomSheetContent = ({
                 </View>
               </View>
             </View>
-          </>}
+          </>
+        }
+
         {
           currentStep === Steps.TAXI && <View className="w-full h-full self-center mt-5">
             <View className="">
