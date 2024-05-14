@@ -6,7 +6,7 @@ import { supabase } from '~/lib/supabase';
 import { UserMarkerIconType } from '~/components/markers/AddUserMarker';
 import { getData } from '~/lib/storage';
 
-const AUTH_LOGS = false;
+const AUTH_LOGS = true;
 
 interface UserContext {
   session: Session | null | undefined;
@@ -18,12 +18,12 @@ interface UserContext {
     slug?: string;
     avatar_url?: string;
     email?: string;
+    role?: string;
   }) => Promise<void>;
   user: User | null | undefined;
   userMarkers: UserMarkerIconType[];
   error: Error | null | undefined;
   isSignedIn: boolean;
-  isLoaded: boolean;
   isLoading: boolean;
   isError: boolean;
 }
@@ -56,7 +56,6 @@ const initialValue: UserContext = {
   userMarkers: [],
   error: undefined,
   isSignedIn: false,
-  isLoaded: false,
   isLoading: false,
   isError: false,
 };
@@ -73,11 +72,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [error, setError] = useState<Error | null>();
   const [user, setUser] = useState<User | null>();
   const [userMarkers, setUserMarkers] = useState<UserMarkerIconType[]>([]);
-  const { isConnected, isInternetReachable } = NetInfo.useNetInfo();
+  const { isConnected } = NetInfo.useNetInfo();
 
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [isError, setIsError] = useState(false);
-  const [isLoaded, setIsLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   const getSession = async () => {
@@ -125,7 +123,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       }
     } finally {
       setIsLoading(false);
-      setIsLoaded(true);
     }
   };
 
@@ -158,7 +155,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     } finally {
       setSessionExpired(undefined);
       setIsLoading(false);
-      setIsLoaded(true);
     }
   };
 
@@ -167,47 +163,51 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     slug,
     avatar_url,
     email,
+    role,
   }: {
     username?: string;
     slug?: string;
     avatar_url?: string;
     email?: string;
+    role?: string;
   }) => {
     setIsLoading(true);
     try {
       const { error } = await supabase
         .from('profiles')
         .update({
-          username: username ? username : undefined,
-          slug: slug ? slug : undefined,
-          avatar_url: avatar_url ? avatar_url : undefined,
-          email: email ? email : undefined,
+          username,
+          slug,
+          avatar_url,
+          email,
+          role,
         })
-        .eq('id', 1);
+        .eq('id', user?.id);
       if (error) {
-        console.error('⭕ updateUser ——© (PostgresError internam error)');
+        console.error('⭕ updateUser ——© (PostgresError internam error)', error);
         setIsError(true);
         setError({ ...error, name: 'PostgresError' });
       } else {
         if (AUTH_LOGS) console.log('👤 signOut ——© (signed out succesful)');
         setUser({
           ...user,
-          username: username ? username : user?.username,
-          slug: slug ? slug : user?.slug,
-          avatar_url: avatar_url ? avatar_url : user?.avatar_url,
-          email: email ? email : user?.email,
+          username: username ?? user?.username,
+          slug: slug ?? user?.slug,
+          avatar_url: avatar_url ?? user?.avatar_url,
+          email: email ?? user?.email,
+          role: role ?? user?.role,
         });
         setIsError(false);
         setError(null);
       }
     } catch (error) {
       if (error instanceof Error) {
+        console.log(error)
         setIsError(true);
         setError(error);
       }
     } finally {
       setIsLoading(false);
-      setIsLoaded(true);
     }
   };
 
@@ -217,7 +217,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     const expired = session?.expires_at && new Date(session.expires_at) < new Date();
     setSessionExpired(Boolean(expired));
 
-    if (!isInternetReachable) {
+    if (!isConnected) {
       if (AUTH_LOGS) console.log('Internet is not reachable');
       return;
     }
@@ -226,7 +226,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       void getSession();
     }
 
-    supabase.auth.onAuthStateChange((_event, resSession) => {
+    const authSub = supabase.auth.onAuthStateChange((_event, resSession) => {
       if (AUTH_LOGS) console.log('♻️ ——© AuthState Changed ——©' + _event);
       const expired = resSession?.expires_at && new Date(resSession.expires_at) < new Date();
       setSessionExpired(Boolean(expired));
@@ -235,6 +235,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         void getSession();
       }
     });
+    return () => {
+      authSub.data.subscription.unsubscribe()
+    }
   }, [isConnected]);
 
   useEffect(() => {
@@ -252,7 +255,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         updateUser,
         userMarkers,
         isSignedIn,
-        isLoaded,
         isLoading,
         isError,
         error,

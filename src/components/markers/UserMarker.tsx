@@ -6,7 +6,7 @@ import { Circle, type MapMarkerProps } from 'react-native-maps';
 import AnimatedMarker from './AnimatedMarker';
 
 import Colors from '~/constants/Colors';
-import { useWSConnection } from '~/context/WSContext';
+import { useWSConnection } from '~/context/client/WSContext';
 
 const UserMarker = ({
   description,

@@ -20,7 +20,6 @@ import type { Address, LatLng } from 'react-native-maps';
 
 import { ConfortSVG } from '../svgs';
 import { ScaleBtn } from '~/components/common/ScaleBtn';
-import { UserMarkerIconType } from '~/components/markers/AddUserMarker';
 import Colors from '~/constants/Colors';
 import {
   GooglePlacesAutocomplete,
@@ -32,12 +31,12 @@ import { TaxiProfile, TaxiType } from '~/constants/TaxiTypes';
 import { polylineDecode } from '~/utils/directions';
 import { taxiTypesInfo } from '~/constants/TaxiTypes';
 import { Steps } from '~/constants/Configs';
+import { useUser } from '~/context/UserContext';
 
 interface BottomSheetContentProps {
   currentStep: Steps;
   setCurrentStep: React.Dispatch<Steps>;
   activeRoute: { coords: LatLng[] } | null | undefined;
-  userMarkers: UserMarkerIconType[];
   setActiveRoute: React.Dispatch<{ coords: LatLng[] } | null>;
   startPiningLocation: () => void;
   cancelPiningLocation: () => void;
@@ -50,13 +49,11 @@ interface BottomSheetContentProps {
   selectedTaxiType: string | null;
   setSelectedTaxiType: React.Dispatch<TaxiType | null>;
   confirmedTaxi: TaxiProfile | null;
-  setSnapPoints: React.Dispatch<number[]>;
 }
 
 export const BottomSheetContent = ({
   currentStep,
   setCurrentStep,
-  userMarkers,
   setActiveRoute,
   startPiningLocation,
   cancelPiningLocation,
@@ -66,11 +63,11 @@ export const BottomSheetContent = ({
   selectedTaxiType,
   setSelectedTaxiType,
   confirmedTaxi,
-  setSnapPoints,
 }: BottomSheetContentProps) => {
   const colorScheme = useColorScheme();
   const { width } = useWindowDimensions();
   const { collapse, snapToIndex, snapToPosition } = useBottomSheet();
+  const { userMarkers } = useUser()
   const [viewPinOnMap, setViewPinOnMap] = useState(false);
   const [piningInput, setPiningInput] = useState<'origin' | 'destination'>('destination');
   const [piningInfo, setPiningInfo] = useState<{
@@ -90,27 +87,10 @@ export const BottomSheetContent = ({
   }, []);
 
   useEffect(() => {
-    switch (currentStep) {
-      case Steps.SEARCH:
-        setSnapPoints([195, 360, 550])
-        break;
-      case Steps.TAXI:
-        setSnapPoints([250, 400])
-        break;
-      case Steps.RIDE:
-        setSnapPoints([360])
-        break;
-
-      default:
-        break;
-    }
-  }, [currentStep])
-
-  useEffect(() => {
     const tokio = async () => {
       if (piningInfo?.destination && piningInfo?.origin) {
         const resp = await fetch(
-          `http://172.20.10.12:6942/route?from=${piningInfo.origin.latitude},${piningInfo.origin.longitude}&to=${piningInfo.destination.latitude},${piningInfo.destination.longitude}`
+          `http://192.168.1.104:6942/route?from=${piningInfo.origin.latitude},${piningInfo.origin.longitude}&to=${piningInfo.destination.latitude},${piningInfo.destination.longitude}`
         );
         const respJson = await resp.json();
         const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map(
@@ -566,7 +546,7 @@ export const BottomSheetContent = ({
             <View className="mx-1.5 mt-7 overflow-visible">
               <Text className="font-bold text-xl">Favoritos</Text>
 
-              <ScrollView horizontal className="w-100 overflow-visible">
+              <ScrollView keyboardShouldPersistTaps="always" horizontal className="w-100 overflow-visible">
                 <View>
                   <ScaleBtn
                     className="mt-3 w-20 h-20 rounded-full border-2 border-[#C1C0C9] items-center justify-center"
@@ -658,10 +638,10 @@ export const BottomSheetContent = ({
                         </View>
                         <View>
                           <Text className="text-white text-lg font-medium text-right">
-                            ${(pricePerKm * (routeInfo.distance.value / 1000)).toFixed(2)}
+                            ${(pricePerKm * (routeInfo?.distance.value ?? 0 / 1000)).toFixed(2)}
                           </Text>
                           <Text className="text-white">
-                            {(timePerKm * (routeInfo.duration.value / 60)).toFixed(2)} min
+                            {(timePerKm * (routeInfo?.duration.value ?? 0 / 60)).toFixed(2)} min
                           </Text>
                         </View>
                       </View>
@@ -681,10 +661,10 @@ export const BottomSheetContent = ({
                       </View>
                       <View>
                         <Text className="text-lg font-medium text-right">
-                          ${(pricePerKm * (routeInfo.distance.value / 1000)).toFixed(2)}
+                          ${(pricePerKm * (routeInfo?.distance.value ?? 0 / 1000)).toFixed(2)}
                         </Text>
                         <Text className="">
-                          {(timePerKm * (routeInfo.duration.value / 60)).toFixed(2)} min
+                          {(timePerKm * (routeInfo?.duration.value ?? 0 / 60)).toFixed(2)} min
                         </Text>
                       </View>
                     </View>

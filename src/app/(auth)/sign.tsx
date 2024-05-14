@@ -22,7 +22,6 @@ import { useToast } from 'react-native-toast-notifications';
 import { ScaleBtn } from '~/components/common/ScaleBtn';
 import { View } from '~/components/common/Themed';
 import Colors from '~/constants/Colors';
-import { useUser } from '~/context/UserContext';
 import { supabase } from '~/lib/supabase';
 import { isValidPassword, isValidPhone } from '~/utils/validators';
 
@@ -150,7 +149,6 @@ export default function Sign() {
 const SignInTab = () => {
   const colorScheme = useColorScheme();
   const toast = useToast();
-  const { getSession } = useUser()
   const [phone, setPhone] = useState('');
   const [phoneError, setPhoneError] = useState('');
   const [showPhonePopover, setShowPhonePopover] = useState(false);
