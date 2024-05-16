@@ -10,7 +10,7 @@ type PressBtnProps = {
   children: React.ReactNode;
 } & PressableProps;
 
-export const ScaleBtn: React.FC<PressBtnProps> = ({
+const ScaleBtn: React.FC<PressBtnProps> = ({
   containerStyle,
   scaleReduction = 0.95,
   onPress,
@@ -58,3 +58,5 @@ export const ScaleBtn: React.FC<PressBtnProps> = ({
     </Animated.View>
   );
 };
+
+export default ScaleBtn;

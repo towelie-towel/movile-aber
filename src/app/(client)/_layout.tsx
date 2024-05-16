@@ -6,9 +6,10 @@ import { WSProvider } from '~/context/client/WSContext';
 import { useUser } from '~/context/UserContext';
 
 const ClientLayout = () => {
-    const { user, isLoading, isSignedIn } = useUser();
+    const { profile, isInitializing, isSignedIn } = useUser();
+    console.log("client", profile?.role)
 
-    if (isLoading) {
+    if (isInitializing) {
         return <Text>Loading...</Text>;
     }
 
@@ -16,7 +17,7 @@ const ClientLayout = () => {
         return <Redirect href="/sign" />;
     }
 
-    if (user?.role === "taxi") {
+    if (profile?.role === "taxi") {
         return <Redirect href="taximap" />;
     }
 

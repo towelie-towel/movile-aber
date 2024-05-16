@@ -2,13 +2,14 @@
 import { Stack, Redirect } from 'expo-router';
 import { Text } from 'react-native';
 
-import { WSProvider } from '~/context/client/WSContext';
+import { WSProvider } from '~/context/taxi/WSContext';
 import { useUser } from '~/context/UserContext';
 
 const TaxiLayout = () => {
-    const { user, isLoading, isSignedIn } = useUser();
+    const { profile, isInitializing, isSignedIn } = useUser();
+    console.log("taxi", profile?.role)
 
-    if (isLoading) {
+    if (isInitializing) {
         return <Text>Loading...</Text>;
     }
 
@@ -16,7 +17,7 @@ const TaxiLayout = () => {
         return <Redirect href="/sign" />;
     }
 
-    if (user?.role === "client") {
+    if (profile?.role === "client") {
         return <Redirect href="(client)" />;
     }
 

@@ -15,7 +15,6 @@ const AnimatedMarker: React.FC<AnimatedMarkerParams> = ({
   heading,
   headingAnimated,
   children,
-  style,
   ...restProps
 }) => {
   const { width, height } = Dimensions.get('window');
@@ -35,72 +34,58 @@ const AnimatedMarker: React.FC<AnimatedMarkerParams> = ({
     })
   );
 
-  const animateTo = useCallback(
-    (toLatitude: number, toLongitude: number, heading: number) => {
-      if (Platform.OS === 'android') {
-        if (anim_marker_ref) {
-          anim_marker_ref.current?.animateMarkerToCoordinate(
-            {
-              latitude: toLatitude,
-              longitude: toLongitude,
-            },
-            2000
-          );
-        }
-      } else {
-        anim_marker_coords_ref.current
-          .timing({
-            duration: 2000,
-            easing: Easing.linear,
-            toValue: 0,
-            useNativeDriver: false,
-            latitudeDelta: 0,
-            longitudeDelta: 0,
-            latitude: toLatitude,
-            longitude: toLongitude,
-          })
-          .start();
-      }
-      if (heading) {
-        Animated.timing(animatedHeading, {
-          toValue: heading,
-          duration: 100,
-          useNativeDriver: true,
-        }).start();
-      }
-    },
-    [animatedHeading]
-  );
+  useEffect(() => {
+    if (Platform.OS === 'android') {
+      anim_marker_ref?.current?.animateMarkerToCoordinate(
+        {
+          latitude: latitude,
+          longitude: longitude,
+        },
+      );
+    } else {
+      anim_marker_coords_ref.current
+        .timing({
+          easing: Easing.linear,
+          toValue: 0,
+          useNativeDriver: false,
+          latitudeDelta: 0,
+          longitudeDelta: 0,
+          latitude: latitude,
+          longitude: longitude,
+        })
+        .start();
+    }
+  }, [latitude, longitude]);
 
   useEffect(() => {
-    animateTo(latitude, longitude, heading);
-  }, [latitude, longitude, animateTo, heading]);
+    Animated.timing(animatedHeading, {
+      toValue: heading,
+      useNativeDriver: true,
+    }).start();
+  }, [heading]);
 
   return (
     <MarkerAnimated
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
-      coordinate={anim_marker_coords_ref.current}
-      ref={(_ref) => (anim_marker_ref.current = _ref)}
+      coordinate={anim_marker_coords_ref.current} ref={(_ref) => (anim_marker_ref.current = _ref)}
       tracksViewChanges={false}
+      rotation={!headingAnimated ? heading : undefined}
       {...restProps}
-      style={style}
-      rotation={!headingAnimated ? heading : undefined}>
+    >
       <Animated.View
         style={
           headingAnimated
             ? {
-                ...(heading !== -1 && {
-                  transform: [
-                    {
-                      rotate: animatedHeading.interpolate({
-                        inputRange: [0, 360],
-                        outputRange: ['0deg', '360deg'],
-                      }),
-                    },
-                  ],
-                }),
-              }
+              transform: [
+                {
+                  rotate: animatedHeading.interpolate({
+                    inputRange: [0, 360],
+                    outputRange: ['0deg', '360deg'],
+                  }),
+                },
+              ],
+            }
             : {}
         }>
         {children}

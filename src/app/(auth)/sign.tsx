@@ -19,7 +19,7 @@ import { Path, Svg } from 'react-native-svg';
 import { SceneMap, TabBar, TabView } from 'react-native-tab-view';
 import { useToast } from 'react-native-toast-notifications';
 
-import { ScaleBtn } from '~/components/common/ScaleBtn';
+import ScaleBtn from '~/components/common/ScaleBtn';
 import { View } from '~/components/common/Themed';
 import Colors from '~/constants/Colors';
 import { supabase } from '~/lib/supabase';
@@ -177,14 +177,12 @@ const SignInTab = () => {
         return;
       }
 
-      console.log("before signInWithPassword")
       const { error } = await supabase.auth.signInWithPassword({
         phone: '+53' + phone.trim(),
         password,
       });
-      console.log("after signInWithPassword", error)
       if (error) {
-        console.error(JSON.stringify(error, null, 2));
+        console.error(error);
         toast.show(error.message, {
           type: 'danger',
           placement: 'top',
@@ -197,8 +195,7 @@ const SignInTab = () => {
       setIsLoading(false);
       router.replace('/');
     } catch (error) {
-      console.error(JSON.stringify(error, null, 2));
-      console.log(error)
+      console.error(error);
       setIsLoading(false);
       return;
     }
@@ -458,7 +455,7 @@ const SignUpTab = () => {
       },
     });
     if (error) {
-      console.error(JSON.stringify(error, null, 2));
+      console.error(error);
       setInputCronemberg({
         ...inputCronemberg,
         phoneError: error.message,

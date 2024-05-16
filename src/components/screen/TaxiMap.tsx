@@ -11,7 +11,6 @@ import { useKeepAwake } from 'expo-keep-awake';
 import * as ExpoLocation from 'expo-location';
 import * as NavigationBar from 'expo-navigation-bar';
 import { useRouter } from 'expo-router';
-import { MotiView } from 'moti';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
     StatusBar,
@@ -20,7 +19,7 @@ import {
     View,
     Platform,
     Keyboard,
-    useWindowDimensions,
+    // useWindowDimensions,
     LayoutAnimation,
     Switch
 } from 'react-native';
@@ -28,7 +27,6 @@ import { Drawer } from 'react-native-drawer-layout';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import MapView, { type LatLng, PROVIDER_GOOGLE, PROVIDER_DEFAULT, Polyline, Marker } from 'react-native-maps';
 import Animated, {
-    Easing,
     Extrapolation,
     interpolate,
     useAnimatedStyle,
@@ -36,19 +34,18 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { BottomSheetContent } from '~/components/bottomsheet/BottomSheetContent';
+import BottomSheetTaxiContent from '~/components/bottomsheet/BottomSheetTaxiContent';
 import { CustomHandle } from '~/components/bottomsheet/hooks/CustomHandle';
-import Ripple from '~/components/common/RippleBtn';
-import { ScaleBtn } from '~/components/common/ScaleBtn';
+import { Ripple, ScaleBtn } from '~/components/common';
 import AnimatedRouteMarker from '~/components/markers/AnimatedRouteMarker';
-// import TaxisMarkers from '~/components/markers/TaxiMarkers';
-// import UserMarker from '~/components/markers/UserMarker';
+import UserMarker from '~/components/markers/UserMarker';
 import { ColorInstagram, ColorFacebook, ColorTwitter } from '~/components/svgs';
 import Colors from '~/constants/Colors';
 import { NightMap } from '~/constants/NightMap';
-import { drawerItems, Steps } from '~/constants/Configs';
+import { drawerItems, RideInfo, TaxiSteps } from '~/constants/Configs';
 import { useUser } from '~/context/UserContext';
 import { calculateMiddlePointAndDelta } from '~/utils/directions';
+import TestRideData from '~/constants/TestRideData.json'
 
 export default function ClientMap() {
     useKeepAwake();
@@ -57,8 +54,7 @@ export default function ClientMap() {
     const colorScheme = useColorScheme();
     const insets = useSafeAreaInsets();
     const router = useRouter();
-    const { user, userMarkers, isSignedIn, signOut, updateUser } = useUser();
-    console.log(user)
+    const { profile, userMarkers, isSignedIn, signOut, toggleUserRole } = useUser();
     // const { position } = useWSConnection();
 
     if (Platform.OS === 'android') {
@@ -70,8 +66,9 @@ export default function ClientMap() {
     const mapViewRef = useRef<MapView>(null);
 
     // taxi flow
-    const [currentStep, setCurrentStep] = useState<Steps>(Steps.SEARCH);
-    const [activeRoute, setActiveRoute] = useState<{ coords: LatLng[] } | null | undefined>(null);
+    const [currentStep, setCurrentStep] = useState<TaxiSteps>(TaxiSteps.WAITING);
+    const [rideInfo, setRideInfo] = useState<RideInfo | null>(null);
+    const [activeRoute, setActiveRoute] = useState<{ coords: LatLng[] } | null>(null);
     const [findingRide, setFindingRide] = useState(false);
 
     // drawer
@@ -99,13 +96,13 @@ export default function ClientMap() {
 
     useEffect(() => {
         switch (currentStep) {
-            case Steps.SEARCH:
+            case TaxiSteps.WAITING:
                 setSnapPoints([195, 360, 550])
                 break;
-            case Steps.TAXI:
+            case TaxiSteps.CONFIRM:
                 setSnapPoints([250, 400])
                 break;
-            case Steps.RIDE:
+            case TaxiSteps.RIDE:
                 setSnapPoints([360])
                 break;
 
@@ -133,8 +130,18 @@ export default function ClientMap() {
             latitudeDelta: 0.00922,
             longitudeDelta: 0.009121,
         });
-    }, [sheetCurrentSnapRef]);
-
+    }, [sheetCurrentSnapRef, mapViewRef]);
+    const animateToRegion = useCallback(
+        (region: {
+            latitudeDelta: number;
+            longitudeDelta: number;
+            latitude: number;
+            longitude: number;
+        }, duration?: number) => {
+            mapViewRef.current?.animateToRegion(region, duration);
+        },
+        [mapViewRef]
+    );
     const animateToActiveRoute = useCallback(() => {
         activeRoute &&
             animateToRegion(
@@ -146,7 +153,7 @@ export default function ClientMap() {
                     }
                 )
             );
-    }, [activeRoute, sheetCurrentSnapRef, calculateMiddlePointAndDelta]);
+    }, [activeRoute, sheetCurrentSnapRef, animateToRegion]);
     const animateToRoute = useCallback(
         (
             origin: { latitude: number; longitude: number },
@@ -154,8 +161,17 @@ export default function ClientMap() {
         ) => {
             animateToRegion(calculateMiddlePointAndDelta(origin, destination));
         },
-        [sheetCurrentSnapRef, calculateMiddlePointAndDelta]
+        [animateToRegion]
     );
+
+    const findRideHandler = useCallback(() => {
+        setFindingRide(true);
+        setTimeout(() => {
+            setFindingRide(false);
+            setCurrentStep(TaxiSteps.CONFIRM);
+            setRideInfo(TestRideData)
+        }, 5000);
+    }, [])
 
     // renders
     const renderCustomHandle = useCallback(
@@ -181,18 +197,6 @@ export default function ClientMap() {
         []
     );
 
-    const animateToRegion = useCallback(
-        (region: {
-            latitudeDelta: number;
-            longitudeDelta: number;
-            latitude: number;
-            longitude: number;
-        }) => {
-            mapViewRef.current?.animateToRegion(region);
-        },
-        []
-    );
-
     return (
         <GestureHandlerRootView
             onLayout={() => { }}
@@ -212,12 +216,12 @@ export default function ClientMap() {
                                     <View>
                                         <Switch
                                             trackColor={{ false: '#767577', true: '#81b0ff' }}
-                                            thumbColor={user?.role === "taxi" ? '#f5dd4b' : '#f4f3f4'}
+                                            thumbColor={profile?.role === "taxi" ? '#f5dd4b' : '#f4f3f4'}
                                             ios_backgroundColor="#3e3e3e"
                                             onValueChange={() => {
-                                                updateUser({ role: user?.role === "taxi" ? "client" : "taxi" });
+                                                toggleUserRole();
                                             }}
-                                            value={user?.role === "taxi"}
+                                            value={profile?.role === "taxi"}
                                         />
                                     </View>
                                     <View
@@ -241,7 +245,7 @@ export default function ClientMap() {
                                         />
                                     </View>
                                     <Text className="text-[#FFFFFF] text-xl font-semibold mt-2.5">
-                                        {user?.username ?? 'Not signed'}
+                                        {profile?.username ?? 'Not signed'}
                                     </Text>
                                     {!isSignedIn ? (
                                         <ScaleBtn className="mt-4" onPress={() => router.push('sign')}>
@@ -264,7 +268,7 @@ export default function ClientMap() {
                                 </View>
                             </View>
 
-                            {user ? (
+                            {isSignedIn ? (
                                 <View className="ml-[-4px] flex-1 bg-[#F8F8F8] dark:bg-[#222222]">
                                     {drawerItems.map((item, index) => {
                                         return (
@@ -340,7 +344,7 @@ export default function ClientMap() {
                 }}>
                 <BottomSheetModalProvider>
                     <MapView
-                        showsUserLocation
+                        // showsUserLocation
                         style={{ width: '100%', height: '100%' }}
                         onTouchMove={() => { }}
                         onTouchStart={() => { }}
@@ -357,10 +361,11 @@ export default function ClientMap() {
                         }}
                         ref={mapViewRef}
                         provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : PROVIDER_DEFAULT}
-                        customMapStyle={colorScheme === 'dark' ? NightMap : undefined}>
+                        customMapStyle={colorScheme === 'dark' ? NightMap : undefined}
+                    >
+
                         {activeRoute && <Polyline coordinates={activeRoute.coords} strokeWidth={5} strokeColor="#000" />}
-                        {/* <TaxisMarkers onPressTaxi={() => { }} /> */}
-                        {/* <UserMarker title="User Marker" description="User Marker Description" userId="123" /> */}
+                        <UserMarker activeCircle activeWaves={findingRide} />
                         <AnimatedRouteMarker key={2} />
 
                         {userMarkers.map((marker) => (
@@ -405,48 +410,17 @@ export default function ClientMap() {
                         </View>
                     </ScaleBtn>
 
-                    {currentStep !== Steps.RIDE && (
+                    {currentStep === TaxiSteps.WAITING && (
                         <Animated.View
                             style={topSheetBtnsAnimStyle}
                             className="self-center justify-center items-center absolute top-0">
                             <ScaleBtn
                                 disabled={findingRide}
                                 className=""
-                                onPress={() => {
-
-                                }}>
+                                onPress={findRideHandler}>
                                 <View className="bg-[#FCCB6F] w-40 h-14 rounded-lg p-3">
-                                    {findingRide &&
-                                        [...Array(3).keys()].map((index) => {
-                                            return (
-                                                <MotiView
-                                                    from={{ opacity: 0.7, scale: 0.2, borderRadius: 8 }}
-                                                    animate={{ opacity: 0, scale: 2, borderRadius: 1000 }}
-                                                    transition={{
-                                                        // type: 'timing',
-                                                        duration: 2000,
-                                                        easing: Easing.out(Easing.ease),
-                                                        delay: 1000,
-                                                        repeatReverse: false,
-                                                        repeat: Infinity,
-                                                    }}
-                                                    key={index}
-                                                    style={[
-                                                        {
-                                                            backgroundColor: '#FCCB6F',
-                                                            borderRadius: 100,
-                                                            width: 160,
-                                                            height: 56,
-                                                            position: 'absolute',
-                                                            left: -10,
-                                                            top: -2,
-                                                        },
-                                                    ]}
-                                                />
-                                            );
-                                        })}
                                     <Text className="text-center text-lg font-bold w-auto text-[#fff]">
-                                        {findingRide ? 'Finding Ride' : 'Request Ride'}
+                                        {findingRide ? 'Finding Ride' : 'Recieve Ride'}
                                     </Text>
                                 </View>
                             </ScaleBtn>
@@ -512,9 +486,7 @@ export default function ClientMap() {
                             backgroundColor: 'transparent',
                         }}
                         handleIndicatorStyle={{
-                            backgroundColor:
-                /* sheetCurrentSnap === 2 ? 'transparent' :  */ Colors[colorScheme ?? 'light']
-                                    .border,
+                            backgroundColor: Colors[colorScheme ?? 'light'].border,
                         }}
                         handleStyle={{
                             backgroundColor: 'transparent',
@@ -540,8 +512,15 @@ export default function ClientMap() {
                             shadowRadius: 4,
                             elevation: 2,
                         }}
-                        backdropComponent={renderBackdrop}>
-                        <View></View>
+                        backdropComponent={renderBackdrop}
+                    >
+                        <BottomSheetTaxiContent
+                            currentStep={currentStep}
+                            rideInfo={rideInfo}
+                            activeRoute={activeRoute}
+                            setActiveRoute={setActiveRoute}
+                            setCurrentStep={setCurrentStep}
+                        />
                     </BottomSheetModal>
 
                     <StatusBar

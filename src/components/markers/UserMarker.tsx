@@ -1,49 +1,76 @@
-import { MaterialIcons } from '@expo/vector-icons';
 import React, { memo } from 'react';
-import { useColorScheme } from 'react-native';
-import { Circle, type MapMarkerProps } from 'react-native-maps';
+import { View } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
+import { Circle } from 'react-native-maps';
 
 import AnimatedMarker from './AnimatedMarker';
-
-import Colors from '~/constants/Colors';
 import { useWSConnection } from '~/context/client/WSContext';
+import { MotiView } from '@motify/components';
+import { Easing } from 'react-native-reanimated';
 
-const UserMarker = ({
-  description,
-  title,
-  userId,
-  ...props
-}: { description: string; title: string; userId: string } & Omit<MapMarkerProps, 'coordinate'>) => {
-  const colorScheme = useColorScheme();
+type UserMarkerProps = {
+  activeCircle?: boolean;
+  activeWaves?: boolean;
+}
+
+const UserMarker = ({ activeCircle = false, activeWaves = false }: UserMarkerProps) => {
   const { position, heading } = useWSConnection();
 
-  if (!position || !heading) {
+  if (!position) {
     return;
   }
 
   return (
     <>
       <AnimatedMarker
-        {...props}
-        heading={heading.trueHeading}
-        headingAnimated={false}
+        heading={heading?.trueHeading ?? 0}
+        headingAnimated={true}
         latitude={position.coords.latitude}
         longitude={position.coords.longitude}
         anchor={{ x: 0.5, y: 0.6 }}
-        flat>
-        <MaterialIcons name="location-on" size={24} color={Colors[colorScheme ?? 'light'].text} />
+        flat
+      >
+        <MaterialIcons name="location-on" size={24} className='text-blackx' />
+        {activeWaves &&
+          [...Array(3).keys()].map((index) => (
+            <View key={index} className='flex-1 absolute top-[-13px] left-[-13px]'>
+              <MotiView
+                from={{ opacity: 0.7, scale: 0.2 }}
+                animate={{ opacity: 0, scale: 2 }}
+                // @ts-ignore
+                transition={{
+                  type: "timing",
+                  duration: 2000,
+                  easing: Easing.out(Easing.ease),
+                  delay: 1000 * index,
+                  repeatReverse: false,
+                  repeat: Infinity,
+                }}
+                style={[
+                  {
+                    backgroundColor: '#FCCB6F',
+                    borderRadius: 1000,
+                    height: 50,
+                    width: 50,
+                  },
+                ]}
+              />
+            </View>
+          ))
+        }
       </AnimatedMarker>
-      <Circle
+      {activeCircle && <Circle
         center={{
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
         }}
-        radius={(position.coords.accuracy ?? 0) > 100 ? 100 : position.coords.accuracy ?? 0}
+        radius={position.coords.accuracy ?? 0}
         strokeColor="rgba(0, 150, 255, 0.5)"
         fillColor="rgba(0, 150, 255, 0.5)"
-      />
+      />}
     </>
   );
 };
 
 export default memo(UserMarker);
+

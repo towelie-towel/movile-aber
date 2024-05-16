@@ -19,7 +19,7 @@ import {
 import type { Address, LatLng } from 'react-native-maps';
 
 import { ConfortSVG } from '../svgs';
-import { ScaleBtn } from '~/components/common/ScaleBtn';
+import { ScaleBtn } from '~/components/common';
 import Colors from '~/constants/Colors';
 import {
   GooglePlacesAutocomplete,
@@ -27,16 +27,16 @@ import {
   GooglePlaceDetail,
   GooglePlacesAutocompleteRef,
 } from '~/lib/google-places-autocomplete/GooglePlacesAutocomplete';
-import { TaxiProfile, TaxiType } from '~/constants/TaxiTypes';
+import type { TaxiProfile, TaxiType } from '~/constants/TaxiTypes';
 import { polylineDecode } from '~/utils/directions';
 import { taxiTypesInfo } from '~/constants/TaxiTypes';
-import { Steps } from '~/constants/Configs';
+import { ClientSteps } from '~/constants/Configs';
 import { useUser } from '~/context/UserContext';
 
 interface BottomSheetContentProps {
-  currentStep: Steps;
-  setCurrentStep: React.Dispatch<Steps>;
-  activeRoute: { coords: LatLng[] } | null | undefined;
+  currentStep: ClientSteps;
+  setCurrentStep: React.Dispatch<ClientSteps>;
+  activeRoute: { coords: LatLng[] } | null;
   setActiveRoute: React.Dispatch<{ coords: LatLng[] } | null>;
   startPiningLocation: () => void;
   cancelPiningLocation: () => void;
@@ -54,6 +54,7 @@ interface BottomSheetContentProps {
 export const BottomSheetContent = ({
   currentStep,
   setCurrentStep,
+  activeRoute,
   setActiveRoute,
   startPiningLocation,
   cancelPiningLocation,
@@ -90,7 +91,7 @@ export const BottomSheetContent = ({
     const tokio = async () => {
       if (piningInfo?.destination && piningInfo?.origin) {
         const resp = await fetch(
-          `http://192.168.1.104:6942/route?from=${piningInfo.origin.latitude},${piningInfo.origin.longitude}&to=${piningInfo.destination.latitude},${piningInfo.destination.longitude}`
+          `http://192.168.1.105:6942/route?from=${piningInfo.origin.latitude},${piningInfo.origin.longitude}&to=${piningInfo.destination.latitude},${piningInfo.destination.longitude}`
         );
         const respJson = await resp.json();
         const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map(
@@ -106,7 +107,7 @@ export const BottomSheetContent = ({
           distance: respJson[0].legs[0].distance,
           duration: respJson[0].legs[0].duration,
         });
-        setCurrentStep(Steps.TAXI)
+        setCurrentStep(ClientSteps.TAXI)
         animateToRoute(
           { latitude: piningInfo.origin.latitude, longitude: piningInfo.origin.longitude },
           { latitude: piningInfo.destination.latitude, longitude: piningInfo.destination.longitude }
@@ -140,7 +141,7 @@ export const BottomSheetContent = ({
     const respJson = await resp.json();
 
     if (respJson.items.length > 0) {
-      const streetInfo = `${respJson.items[0].address.street.replace('Calle ', '')} e/ ${respJson.items[1].address.street.replace('Calle ', '')} y ${respJson.items[2].address.street.replace('Calle ', '')}, ${respJson.items[2].address.district}, ${respJson.items[2].address.district}, Habana, Cuba`;
+      const streetInfo = `${respJson.items[0].address.street.replace('Calle ', '')} e/ ${respJson.items[1].address.street.replace('Calle ', '')} y ${respJson.items[2].address.street.replace('Calle ', '')}, ${respJson.items[2].address.district}, Habana, Cuba`;
       return { address: streetInfo, latitude: currentPosition.coords.latitude, longitude: currentPosition.coords.longitude }
     } else {
       console.log('No street address found in the response.');
@@ -211,11 +212,11 @@ export const BottomSheetContent = ({
 
   const goBackToSearch = () => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setCurrentStep(Steps.SEARCH);
+    setCurrentStep(ClientSteps.SEARCH);
   };
   const goToPinnedRouteTaxi = () => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setCurrentStep(Steps.TAXI);
+    setCurrentStep(ClientSteps.TAXI);
   };
 
   return (
@@ -251,7 +252,7 @@ export const BottomSheetContent = ({
 
           {!viewPinOnMap && !piningLocation && <>
             {
-              currentStep === Steps.TAXI &&
+              currentStep === ClientSteps.TAXI &&
               <ScaleBtn onPress={goBackToSearch}>
                 <View className="flex-row items-center justify-center p-1 border rounded-lg bg-[#FCCB6F]">
                   <MaterialCommunityIcons name={"chevron-left"} size={24} color="black" />
@@ -261,7 +262,7 @@ export const BottomSheetContent = ({
             }
 
             {
-              currentStep === Steps.SEARCH && piningInfo?.origin && piningInfo.destination &&
+              currentStep === ClientSteps.SEARCH && piningInfo?.origin && piningInfo.destination &&
               <ScaleBtn onPress={goToPinnedRouteTaxi}>
                 <View className="flex-row items-center justify-center p-1 border rounded-lg bg-[#FCCB6F]">
                   <MaterialCommunityIcons name="car-multiple" size={24} color="black" />
@@ -462,7 +463,7 @@ export const BottomSheetContent = ({
           />
         </View>
 
-        {currentStep === Steps.RIDE &&
+        {currentStep === ClientSteps.RIDE &&
           <View className="w-[90%] h-full self-center">
             <View className="h-20 flex-row justify-between items-center">
               <View className="flex-row gap-3 items-center">
@@ -541,7 +542,7 @@ export const BottomSheetContent = ({
           </View>
         }
 
-        {currentStep === Steps.SEARCH &&
+        {currentStep === ClientSteps.SEARCH &&
           <>
             <View className="mx-1.5 mt-7 overflow-visible">
               <Text className="font-bold text-xl">Favoritos</Text>
@@ -619,7 +620,7 @@ export const BottomSheetContent = ({
         }
 
         {
-          currentStep === Steps.TAXI && <View className="w-full h-full self-center mt-5">
+          currentStep === ClientSteps.TAXI && <View className="w-full h-full self-center mt-5">
             <View className="">
               {taxiTypesInfo.map(({ slug, Icon, name, pricePerKm, timePerKm }) => {
                 if (selectedTaxiType === slug) {

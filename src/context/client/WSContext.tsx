@@ -1,7 +1,7 @@
 import NetInfo from '@react-native-community/netinfo';
 import * as ExpoLocation from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
-import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 
 const WS_LOGS = true;
 const LOCATION_TASK_NAME = 'background-location-task';
@@ -45,10 +45,10 @@ const requestPermissions = async () => {
   const { status: foregroundStatus } = await ExpoLocation.requestForegroundPermissionsAsync();
 
   if (foregroundStatus === 'granted') {
-    if (WS_LOGS) console.log('✅ requestPermissions ==> foregroundStatus = granted');
+    if (WS_LOGS) console.log('foregroundStatus permissions granted');
     /* const { status: backgroundStatus } = await ExpoLocation.requestBackgroundPermissionsAsync();
     if (backgroundStatus === 'granted') {
-      if (WS_LOGS) console.log('✅ requestPermissions ==> backgroundStatus = granted');
+      if (WS_LOGS) console.log('backgroundStatus permissions granted');
       await ExpoLocation.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
         accuracy: ExpoLocation.Accuracy.Balanced,
       });
@@ -67,22 +67,22 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
   const positionSubscription = useRef<ExpoLocation.LocationSubscription | null>();
   const headingSubscription = useRef<ExpoLocation.LocationSubscription | null>();
 
-  const { isConnected, isInternetReachable } = NetInfo.useNetInfo();
+  const { isConnected } = NetInfo.useNetInfo();
 
-  const sendStringToServer = (message: string) => {
+  const sendStringToServer = useCallback((message: string) => {
     if (ws.current?.readyState === WebSocket.OPEN) {
       ws.current?.send(message);
     } else {
-      console.error('❌ sendStringToServer ==> !WebSocket.OPEN');
+      console.error('');
     }
-  };
+  }, [ws]);
 
-  const handleWebSocketMessage = (event: MessageEvent<string>) => {
+  const handleWebSocketMessage = useCallback((event: MessageEvent<string>) => {
     const message = event.data;
     if (typeof message !== 'string') {
       return;
     }
-    if (WS_LOGS) console.log('✅ handleWebSocketMessage ==> message = ', message);
+    if (WS_LOGS) console.log('handleWebSocketMessage: ', message);
     const taxis = message
       .replace('taxis-', '')
       .split('$')
@@ -97,49 +97,41 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
           userId: id ?? '',
         };
       });
-    if (WS_LOGS)
-      console.log('🚀 ~ file: WSContext.tsx:79 ~ handleWebSocketMessage ~ taxis:', taxis);
     setWsTaxis(taxis);
-  };
+  }, [setWsTaxis]);
 
-  const asyncNewWebSocket = () => {
+  const asyncNewWebSocket = useCallback(() => {
     const protocol = `map-client`;
 
-    if (WS_LOGS) console.log('🌊 asyncNewWebSocket ==> websuckItToMeBBy ', protocol);
+    if (WS_LOGS) console.log('new Web Socket initializing', protocol);
     const suckItToMeBBy = new WebSocket(
-      `ws://192.168.1.104:6942/subscribe?id=03563972-fab9-4744-b9a7-15f8d35d38c9&lat=51.5073509&lon=-0.1277581999999997&head=51`,
+      `ws://192.168.1.105:6942/subscribe?id=03563972-fab9-4744-b9a7-15f8d35d38c9&lat=51.5073509&lon=-0.1277581999999997&head=51`,
       protocol
     );
 
     // TODO: stream depending the role
     suckItToMeBBy.addEventListener('open', (_event) => {
-      if (WS_LOGS) console.log('🎯 asyncNewWebSocket ==> (Connection opened)');
+      if (WS_LOGS) console.log('WS Connection opened');
     });
 
     suckItToMeBBy.addEventListener('close', (_event) => {
-      if (WS_LOGS) console.log('❌ asyncNewWebSocket ==> (Connection closed)');
-
-      setTimeout(() => {
-        resetConnection();
-      }, 5000);
+      if (WS_LOGS) console.log('WS Connection closed');
     });
 
     suckItToMeBBy.addEventListener('error', (_error) => {
       if (WS_LOGS)
-        console.log('💥 asyncNewWebSocket ==> (Connection error)', JSON.stringify(_error, null, 2));
+        console.error('WS Connection error', JSON.stringify(_error, null, 2));
     });
 
     suckItToMeBBy.addEventListener('message', handleWebSocketMessage);
 
     return suckItToMeBBy;
-  };
+  }, [handleWebSocketMessage]);
 
-  const trackPosition = async () => {
+  const trackPosition = useCallback(async () => {
     await requestPermissions();
-    if (WS_LOGS) console.log('📌 trackPosition ');
 
     if (positionSubscription.current) {
-      if (WS_LOGS) console.log('🌬️ trackPosition ==> positionSubscription = true ');
       return;
     }
 
@@ -151,95 +143,81 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
         timeInterval: 2000,
       },
       (newPosition) => {
-        try {
-          if (streamingTo) {
-            sendStringToServer(`${newPosition.coords.latitude},${newPosition.coords.longitude}`);
-          }
-          console.log(newPosition);
-          // if (
-          //   (newPosition.coords.accuracy ?? 0) > (position?.coords.accuracy ?? 0)  // The time at which this position information was obtained, in milliseconds since epoch
-          // )
-          setPosition(newPosition);
-        } catch (error) {
-          console.error(error);
-        }
+        setPosition(newPosition);
       }
     );
 
-    if (WS_LOGS) console.log('📌 trackPosition ==> (Setted position subscriptions)');
+    if (WS_LOGS) console.log('Setted position subscriptions');
     positionSubscription.current = posSubscrition;
-  };
+  }, [positionSubscription, setPosition]);
 
-  const trackHeading = async () => {
+  const trackHeading = useCallback(async () => {
     if (headingSubscription.current) {
-      if (WS_LOGS) console.log('🌬️ trackHeading ==> headingSubscription = true ');
       return;
     }
     const headSubscrition = await ExpoLocation.watchHeadingAsync((newHeading) => {
       setHeading(newHeading);
     });
 
-    if (WS_LOGS) console.log('📌 trackPosition ==> (Setted heading subscriptions)');
+    if (WS_LOGS) console.log('Setted heading subscriptions');
     headingSubscription.current = headSubscrition;
-  };
+  }, [headingSubscription]);
 
-  const resetConnection = async () => {
-    if (!isConnected || !isInternetReachable) {
+  const resetConnection = useCallback(async () => {
+    if (!isConnected) {
       // console.warn('💣 ==> No internet connection ==> ');
       return;
     }
 
     try {
       if (!ws.current) {
-        if (WS_LOGS) console.log('🎯 resetConnection ==> initializasing web socket');
+        if (WS_LOGS) console.log('initializasing web socket');
         ws.current = await asyncNewWebSocket();
       } else if (ws.current.readyState === WebSocket.OPEN) {
-        console.warn('🌬️ resetConnection ==> a connection is already open');
+        console.warn('a ws connection is already open');
       } else if (ws.current.readyState === WebSocket.CLOSED) {
         if (WS_LOGS) console.log('🚿 resetConnection ==> reseting connection');
         ws.current = await asyncNewWebSocket();
       } else {
-        console.error(
-          '🪠 resetConnection ==> ws.current.readyState = "CONNECTING" || "CLOSING" ',
-          JSON.stringify(ws.current, null, 2)
-        );
+        console.error("ws connection is not OPEN or CLOSED");
         // TODO: handle CONNECTING and CLOSING cases
       }
     } catch (error) {
       console.error(error);
     }
-  };
+  }, [isConnected, ws, asyncNewWebSocket]);
 
   useEffect(() => {
     if (!positionSubscription.current) {
-      if (WS_LOGS) console.log('📭 <== useEffect ==> WSContext.tsx ==> [] (📌trackPosition) ');
       void trackPosition();
     }
     if (!headingSubscription.current) {
-      if (WS_LOGS) console.log('📭 <== useEffect ==> WSContext.tsx ==> [] (📌trackHeading) ');
       void trackHeading();
     }
 
     return () => {
-      if (WS_LOGS)
-        console.log(
-          '📪 <== useEffect-return ==> WSContext.tsx ==> [] (🔪position/heading subscriptions)'
-        );
+      if (WS_LOGS) console.log('removing position and heading subscriptions', positionSubscription, headingSubscription);
       if (positionSubscription.current) {
         positionSubscription.current.remove();
         positionSubscription.current = null;
+        if (WS_LOGS) console.log('removed position subscriptions');
       }
       if (headingSubscription.current) {
         headingSubscription.current.remove();
         headingSubscription.current = null;
+        if (WS_LOGS) console.log('removed heading subscriptions');
       }
     };
   }, []);
 
   useEffect(() => {
-    if (WS_LOGS)
-      console.log('📭 <== useEffect ==> WSContext.tsx ==> [isConnected] (📈resetConnection)');
+    if (WS_LOGS) console.log('WSContext.tsx -> useEffect [isConnected]', isConnected);
     void resetConnection();
+    return () => {
+      if (WS_LOGS) console.log('removing ws subscription', ws);
+      if (ws.current?.readyState === WebSocket.OPEN)
+        ws.current?.close()
+    }
   }, [isConnected]);
 
   return (
@@ -263,8 +241,6 @@ TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }) => {
     return;
   }
   if (data) {
-    const { locations } = data;
-    // do something with the locations captured in the background
-    if (WS_LOGS) console.log(locations);
+    if (WS_LOGS) console.log(data);
   }
 });

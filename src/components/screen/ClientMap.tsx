@@ -11,7 +11,7 @@ import { useKeepAwake } from 'expo-keep-awake';
 import * as ExpoLocation from 'expo-location';
 import * as NavigationBar from 'expo-navigation-bar';
 import { useRouter } from 'expo-router';
-import { MotiView } from 'moti';
+import { MotiView } from '@motify/components';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
     StatusBar,
@@ -39,14 +39,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BottomSheetContent } from '~/components/bottomsheet/BottomSheetContent';
 import { CustomHandle } from '~/components/bottomsheet/hooks/CustomHandle';
 import Ripple from '~/components/common/RippleBtn';
-import { ScaleBtn } from '~/components/common/ScaleBtn';
+import ScaleBtn from '~/components/common/ScaleBtn';
 import AnimatedRouteMarker from '~/components/markers/AnimatedRouteMarker';
 // import TaxisMarkers from '~/components/markers/TaxiMarkers';
 // import UserMarker from '~/components/markers/UserMarker';
 import { ColorInstagram, ColorFacebook, ColorTwitter } from '~/components/svgs';
 import Colors from '~/constants/Colors';
 import { NightMap } from '~/constants/NightMap';
-import { drawerItems, Steps } from '~/constants/Configs';
+import { drawerItems, ClientSteps } from '~/constants/Configs';
 import { useUser } from '~/context/UserContext';
 import { calculateMiddlePointAndDelta } from '~/utils/directions';
 import type { TaxiProfile, TaxiType } from '~/constants/TaxiTypes';
@@ -58,8 +58,7 @@ export default function ClientMap() {
     const colorScheme = useColorScheme();
     const insets = useSafeAreaInsets();
     const router = useRouter();
-    const { user, userMarkers, isSignedIn, signOut, updateUser } = useUser();
-    console.log(user)
+    const { profile, userMarkers, isSignedIn, signOut, toggleUserRole } = useUser();
     // const { position } = useWSConnection();
 
     if (Platform.OS === 'android') {
@@ -71,8 +70,8 @@ export default function ClientMap() {
     const mapViewRef = useRef<MapView>(null);
 
     // search bar & taxi flow
-    const [currentStep, setCurrentStep] = useState<Steps>(Steps.SEARCH);
-    const [activeRoute, setActiveRoute] = useState<{ coords: LatLng[] } | null | undefined>(null);
+    const [currentStep, setCurrentStep] = useState<ClientSteps>(ClientSteps.SEARCH);
+    const [activeRoute, setActiveRoute] = useState<{ coords: LatLng[] } | null>(null);
     const [piningLocation, setPiningLocation] = useState(false);
     const [selectedTaxiType, setSelectedTaxiType] = useState<TaxiType | null>(null);
     const [findingRide, setFindingRide] = useState(false);
@@ -103,13 +102,13 @@ export default function ClientMap() {
 
     useEffect(() => {
         switch (currentStep) {
-            case Steps.SEARCH:
+            case ClientSteps.SEARCH:
                 setSnapPoints([195, 360, 550])
                 break;
-            case Steps.TAXI:
+            case ClientSteps.TAXI:
                 setSnapPoints([250, 400])
                 break;
-            case Steps.RIDE:
+            case ClientSteps.RIDE:
                 setSnapPoints([360])
                 break;
 
@@ -137,7 +136,7 @@ export default function ClientMap() {
             latitudeDelta: 0.00922,
             longitudeDelta: 0.009121,
         });
-    }, [sheetCurrentSnapRef]);
+    }, []);
 
     const animateToActiveRoute = useCallback(() => {
         activeRoute &&
@@ -150,7 +149,7 @@ export default function ClientMap() {
                     }
                 )
             );
-    }, [activeRoute, sheetCurrentSnapRef, calculateMiddlePointAndDelta]);
+    }, [activeRoute]);
     const animateToRoute = useCallback(
         (
             origin: { latitude: number; longitude: number },
@@ -158,7 +157,7 @@ export default function ClientMap() {
         ) => {
             animateToRegion(calculateMiddlePointAndDelta(origin, destination));
         },
-        [sheetCurrentSnapRef, calculateMiddlePointAndDelta]
+        []
     );
 
     // renders
@@ -221,7 +220,7 @@ export default function ClientMap() {
                 plate: 'HAB 123',
                 stars: 4.9,
             });
-            setCurrentStep(Steps.RIDE)
+            setCurrentStep(ClientSteps.RIDE)
             setFindingRide(true);
         }, 4000);
     }, []);
@@ -258,12 +257,12 @@ export default function ClientMap() {
                                     <View>
                                         <Switch
                                             trackColor={{ false: '#767577', true: '#81b0ff' }}
-                                            thumbColor={user?.role === "taxi" ? '#f5dd4b' : '#f4f3f4'}
+                                            thumbColor={profile?.role === "taxi" ? '#f5dd4b' : '#f4f3f4'}
                                             ios_backgroundColor="#3e3e3e"
                                             onValueChange={() => {
-                                                updateUser({ role: user?.role === "taxi" ? "client" : "taxi" });
+                                                toggleUserRole();
                                             }}
-                                            value={user?.role === "taxi"}
+                                            value={profile?.role === "taxi"}
                                         />
                                     </View>
                                     <View
@@ -287,7 +286,7 @@ export default function ClientMap() {
                                         />
                                     </View>
                                     <Text className="text-[#FFFFFF] text-xl font-semibold mt-2.5">
-                                        {user?.username ?? 'Not signed'}
+                                        {profile?.username ?? 'Not signed'}
                                     </Text>
                                     {!isSignedIn ? (
                                         <ScaleBtn className="mt-4" onPress={() => router.push('sign')}>
@@ -310,7 +309,7 @@ export default function ClientMap() {
                                 </View>
                             </View>
 
-                            {user ? (
+                            {isSignedIn ? (
                                 <View className="ml-[-4px] flex-1 bg-[#F8F8F8] dark:bg-[#222222]">
                                     {drawerItems.map((item, index) => {
                                         return (
@@ -466,7 +465,7 @@ export default function ClientMap() {
                         </View>
                     )}
 
-                    {activeRoute && activeRoute.coords.length > 0 && currentStep !== Steps.RIDE && (
+                    {activeRoute && activeRoute.coords.length > 0 && currentStep !== ClientSteps.RIDE && (
                         <Animated.View
                             style={topSheetBtnsAnimStyle}
                             className="self-center justify-center items-center absolute top-0">

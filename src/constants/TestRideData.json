@@ -1,0 +1,201 @@
+{
+    "price": 3000,
+    "origin": {
+        "address": "Pedro Pérez e/ Mariano y Nueva, Cerro, Cerro, Habana, Cuba",
+        "latitude": 23.118504767732002,
+        "longitude": -82.38062239872363
+    },
+    "destination": {
+        "latitude": 23.14043736412193,
+        "longitude": -82.3863172135302,
+        "address": "19 e/ K y J, Plaza de la Revolución, Habana, Cuba"
+    },
+    "activeRoute": {
+        "coords": [
+            {
+                "latitude": 23.11852,
+                "longitude": -82.38062
+            },
+            {
+                "latitude": 23.11882,
+                "longitude": -82.38125
+            },
+            {
+                "latitude": 23.11905,
+                "longitude": -82.3818
+            },
+            {
+                "latitude": 23.11931,
+                "longitude": -82.38232
+            },
+            {
+                "latitude": 23.11968,
+                "longitude": -82.3832
+            },
+            {
+                "latitude": 23.11976,
+                "longitude": -82.38315
+            },
+            {
+                "latitude": 23.12088,
+                "longitude": -82.38251
+            },
+            {
+                "latitude": 23.12121,
+                "longitude": -82.38378
+            },
+            {
+                "latitude": 23.12138,
+                "longitude": -82.38443
+            },
+            {
+                "latitude": 23.12155,
+                "longitude": -82.38443
+            },
+            {
+                "latitude": 23.1219,
+                "longitude": -82.38434
+            },
+            {
+                "latitude": 23.12222,
+                "longitude": -82.38425
+            },
+            {
+                "latitude": 23.12238,
+                "longitude": -82.38428
+            },
+            {
+                "latitude": 23.12268,
+                "longitude": -82.38448
+            },
+            {
+                "latitude": 23.12333,
+                "longitude": -82.38433
+            },
+            {
+                "latitude": 23.12446,
+                "longitude": -82.38413
+            },
+            {
+                "latitude": 23.12449,
+                "longitude": -82.38422
+            },
+            {
+                "latitude": 23.12633,
+                "longitude": -82.38375
+            },
+            {
+                "latitude": 23.12836,
+                "longitude": -82.38327
+            },
+            {
+                "latitude": 23.1299,
+                "longitude": -82.38284
+            },
+            {
+                "latitude": 23.13012,
+                "longitude": -82.38279
+            },
+            {
+                "latitude": 23.13029,
+                "longitude": -82.38283
+            },
+            {
+                "latitude": 23.13032,
+                "longitude": -82.38271
+            },
+            {
+                "latitude": 23.13041,
+                "longitude": -82.38275
+            },
+            {
+                "latitude": 23.13054,
+                "longitude": -82.38284
+            },
+            {
+                "latitude": 23.13097,
+                "longitude": -82.38325
+            },
+            {
+                "latitude": 23.13203,
+                "longitude": -82.38409
+            },
+            {
+                "latitude": 23.1329,
+                "longitude": -82.3849
+            },
+            {
+                "latitude": 23.13323,
+                "longitude": -82.38519
+            },
+            {
+                "latitude": 23.13355,
+                "longitude": -82.38535
+            },
+            {
+                "latitude": 23.13369,
+                "longitude": -82.38537
+            },
+            {
+                "latitude": 23.13382,
+                "longitude": -82.38544
+            },
+            {
+                "latitude": 23.13395,
+                "longitude": -82.38556
+            },
+            {
+                "latitude": 23.13401,
+                "longitude": -82.38566
+            },
+            {
+                "latitude": 23.13403,
+                "longitude": -82.38574
+            },
+            {
+                "latitude": 23.1346,
+                "longitude": -82.38629
+            },
+            {
+                "latitude": 23.13543,
+                "longitude": -82.38701
+            },
+            {
+                "latitude": 23.13599,
+                "longitude": -82.38754
+            },
+            {
+                "latitude": 23.13629,
+                "longitude": -82.38781
+            },
+            {
+                "latitude": 23.13733,
+                "longitude": -82.3887
+            },
+            {
+                "latitude": 23.13766,
+                "longitude": -82.38828
+            },
+            {
+                "latitude": 23.1394,
+                "longitude": -82.38611
+            },
+            {
+                "latitude": 23.1402,
+                "longitude": -82.38683
+            },
+            {
+                "latitude": 23.14052,
+                "longitude": -82.38639
+            }
+        ]
+    },
+    "distance": {
+        "text": "3.2 km",
+        "value": 3210
+    },
+    "duration": {
+        "value": 567,
+        "text": "9m27s"
+    }
+}

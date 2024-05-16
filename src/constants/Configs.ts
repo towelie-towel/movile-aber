@@ -26,10 +26,44 @@ export const drawerItems: {
     },
   ];
 
-export enum Steps {
-  SEARCH = 'SEARCH',
-  TAXI = 'TAXI',
-  RIDE = 'RIDE',
+export enum ClientSteps {
+  SEARCH = 1,
+  TAXI = 2,
+  RIDE = 3,
+}
+
+export enum TaxiSteps {
+  WAITING = 1,
+  CONFIRM = 2,
+  RIDE = 3,
+}
+
+export enum UserRoles {
+  CLIENT = 'client',
+  TAXI = 'taxi',
+  ADMIN = 'admin',
+}
+
+export interface RideInfo {
+  price: number;
+  distance: {
+    text: string;
+    value: number;
+  };
+  duration: {
+    value: number;
+    text: string;
+  };
+  origin: {
+    address: string,
+    latitude: number,
+    longitude: number
+  },
+  destination: {
+    latitude: number,
+    longitude: number,
+    address: string
+  }
 }
 
 export interface configs {

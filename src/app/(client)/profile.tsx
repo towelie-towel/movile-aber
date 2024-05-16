@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { ScaleBtn } from '~/components/common/ScaleBtn';
+import ScaleBtn from '~/components/common/ScaleBtn';
 
 const ProfileScreen = () => {
   const insets = useSafeAreaInsets();
@@ -211,8 +211,8 @@ const ProfileScreen = () => {
           onScroll={
             Platform.OS === 'ios'
               ? Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
-                  useNativeDriver: false,
-                })
+                useNativeDriver: false,
+              })
               : undefined
           }
           scrollEventThrottle={16}>

@@ -19,7 +19,7 @@ import Popover, { PopoverMode, PopoverPlacement } from 'react-native-popover-vie
 import Svg, { Path } from 'react-native-svg';
 
 import AbsoluteLoading from '~/components/common/AbsoluteLoading';
-import { ScaleBtn } from '~/components/common/ScaleBtn';
+import ScaleBtn from '~/components/common/ScaleBtn';
 import { View } from '~/components/common/Themed';
 import Colors from '~/constants/Colors';
 import { useUser } from '~/context/UserContext';

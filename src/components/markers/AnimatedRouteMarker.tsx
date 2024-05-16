@@ -38,22 +38,16 @@ const AnimatedRouteMarker = () => {
         anim_route_ref.current = new_direction ?? [];
       })
       .catch((err) => {
-        console.log('🚀 ~ file: AnimatedRouteMarker.tsx:36 ~ useEffect ~ err:', err);
       });
 
     const interbal_sub = setInterval(() => {
       _getLiveLocation();
     }, 3000);
-    console.log(
-      '🚀 ~ file: AnimatedRouteMarker.tsx:52 ~ constinterbal_sub=setInterval ~ interbal_sub:',
-      interbal_sub
-    );
 
     return () => {
       clearInterval(interbal_sub);
-      console.log('🚀 ~ file: AnimatedRouteMarker.tsx:56 ~ return ~ clearInterval:', clearInterval);
     };
-  }, [_getLiveLocation]);
+  }, []);
 
   return (
     <>
@@ -70,7 +64,6 @@ const AnimatedRouteMarker = () => {
               },
             }}
             onPress={() => {
-              console.log('🚀 ~ file: AnimatedRouteMarker.tsx:69 ~ onPress ~ onPress');
             }}
             latitude={current_coords.latitude}
             longitude={current_coords.longitude}

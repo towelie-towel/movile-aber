@@ -1,16 +1,92 @@
 import NetInfo from '@react-native-community/netinfo';
-import { type Session } from '@supabase/supabase-js';
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import { User, type Session } from '@supabase/supabase-js';
+import React, { createContext, useCallback, useContext, useEffect, useReducer } from 'react';
 
 import { supabase } from '~/lib/supabase';
 import { UserMarkerIconType } from '~/components/markers/AddUserMarker';
 import { getData } from '~/lib/storage';
+import { UserRoles } from '~/constants/Configs';
 
 const AUTH_LOGS = true;
 
-interface UserContext {
-  session: Session | null | undefined;
-  sessionExpired: boolean | undefined;
+type State = {
+  session: Session | null;
+  profile: Profile | null;
+  userMarkers: UserMarkerIconType[];
+  error: Error | null;
+  isError: boolean;
+  isSessionExpired: boolean | null;
+  isSignedIn: boolean;
+  isInitializing: boolean;
+}
+
+type Action =
+  | { type: 'GET_SESSION_ERROR', payload: Error }
+  | { type: 'GET_PROFILE_ERROR', payload: Error }
+  | { type: 'GET_SESSION_SUCCESS', payload: Session }
+  | { type: 'GET_PROFILE_SUCCESS', payload: Profile }
+  | { type: 'GET_USER_SUCCESS', payload: User }
+  | { type: 'UPDATE_PROFILE_SUCCESS', payload: Profile }
+  | { type: 'SIGN_OUT_SUCCESS' }
+  | { type: 'SET_SESSION_EXPIRED', payload: boolean | null }
+  | { type: 'SET_ERROR', payload: Error | null }
+  | { type: 'SET_PROFILE', payload: Profile | null }
+  | { type: 'SET_USER_MARKERS', payload: UserMarkerIconType[] }
+  | { type: 'SET_SIGNED_IN', payload: boolean }
+  | { type: 'SET_IS_ERROR', payload: boolean }
+  | { type: 'SET_IS_INITIALIZED' };
+
+function reducer(state: State, action: Action): State {
+  switch (action.type) {
+    case 'GET_PROFILE_ERROR':
+      return { ...state, error: action.payload, isError: true, session: null, isSessionExpired: null };
+    case 'GET_SESSION_ERROR':
+      return { ...state, error: action.payload, isError: true, session: null, isSessionExpired: null };
+    case 'GET_SESSION_SUCCESS':
+      return {
+        ...state,
+        session: action.payload,
+        isSignedIn: true,
+        isSessionExpired: false,
+        isError: false,
+        error: null
+      };
+    case 'GET_PROFILE_SUCCESS':
+      return {
+        ...state,
+        profile: {
+          ...state.profile,
+          id: action.payload.id,
+          phone: action.payload.phone,
+          username: action.payload.username,
+          slug: action.payload.slug,
+          role: action.payload.role,
+        },
+        isError: false,
+        error: null
+      };
+    case 'UPDATE_PROFILE_SUCCESS':
+      return { ...state, profile: action.payload, isError: false, error: null };
+    case 'SIGN_OUT_SUCCESS':
+      return { isSessionExpired: null, session: null, profile: null, isSignedIn: false, error: null, isError: false, isInitializing: false, userMarkers: [] };
+    case 'SET_SESSION_EXPIRED':
+      return { ...state, isSessionExpired: action.payload };
+    case 'SET_ERROR':
+      return { ...state, error: action.payload, isError: action.payload !== null };
+    case 'SET_PROFILE':
+      return { ...state, profile: action.payload };
+    case 'SET_USER_MARKERS':
+      return { ...state, userMarkers: action.payload };
+    case 'SET_SIGNED_IN':
+      return { ...state, isSignedIn: action.payload };
+    case 'SET_IS_INITIALIZED':
+      return { ...state, isInitializing: false };
+    default:
+      return state;
+  }
+}
+
+type UserContext = {
   getSession: () => Promise<void>;
   signOut: () => Promise<void>;
   updateUser: (params: {
@@ -20,18 +96,13 @@ interface UserContext {
     email?: string;
     role?: string;
   }) => Promise<void>;
-  user: User | null | undefined;
-  userMarkers: UserMarkerIconType[];
-  error: Error | null | undefined;
-  isSignedIn: boolean;
-  isLoading: boolean;
-  isError: boolean;
-}
+  toggleUserRole: () => Promise<void>;
+} & State
 
-interface User {
+type Profile = {
   id?: string | null;
   username?: string | null;
-  role?: string | null;
+  role?: UserRoles;
   email?: string | null;
   phone?: string | null;
   slug?: string | null;
@@ -39,8 +110,14 @@ interface User {
 }
 
 const initialValue: UserContext = {
-  session: undefined,
-  sessionExpired: undefined,
+  session: null,
+  profile: null,
+  userMarkers: [],
+  error: null,
+  isError: false,
+  isSessionExpired: null,
+  isSignedIn: false,
+  isInitializing: true,
   getSession: async () => {
     throw new Error('Function not initizaliced yet');
   },
@@ -50,14 +127,9 @@ const initialValue: UserContext = {
   updateUser: async () => {
     throw new Error('Function not initizaliced yet');
   },
-  user: {
-    avatar_url: '',
+  toggleUserRole: async () => {
+    throw new Error('Function not initizaliced yet');
   },
-  userMarkers: [],
-  error: undefined,
-  isSignedIn: false,
-  isLoading: false,
-  isError: false,
 };
 
 const UserContext = createContext(initialValue);
@@ -67,307 +139,212 @@ export const useUser = () => {
 };
 
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
-  const [session, setSession] = useState<Session | null>();
-  const [sessionExpired, setSessionExpired] = useState<boolean>();
-  const [error, setError] = useState<Error | null>();
-  const [user, setUser] = useState<User | null>();
-  const [userMarkers, setUserMarkers] = useState<UserMarkerIconType[]>([]);
+  const [state, dispatch] = useReducer(reducer, {
+    session: null,
+    isSessionExpired: null,
+    error: null,
+    profile: null,
+    userMarkers: [],
+    isSignedIn: false,
+    isError: false,
+    isInitializing: true,
+  });
   const { isConnected } = NetInfo.useNetInfo();
 
-  const [isSignedIn, setIsSignedIn] = useState(false);
-  const [isError, setIsError] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const getSession = async () => {
-    setIsLoading(true);
+  const getSession = useCallback(async () => {
     try {
       const {
         data: { session: resSession },
         error,
       } = await supabase.auth.getSession();
       if (error) {
-        console.error('⭕ getSession ——© (auth internal error)');
-        setSession(null);
-        setSessionExpired(undefined);
-        setIsError(true);
-        setError(error);
+        dispatch({ type: 'GET_SESSION_ERROR', payload: error });
       } else if (resSession === null) {
-        console.warn('☢️ getSession ——© (session is null)');
-        setSession(null);
-        setIsError(true);
-        setError(new Error('Session is null'));
+        dispatch({ type: 'GET_SESSION_ERROR', payload: new Error('Session is null') });
       } else {
-        if (AUTH_LOGS) console.log('👤 getSession ——© (fetched session succesful)');
-        setSession(resSession);
-        setSessionExpired(undefined);
-        setSessionExpired(false);
-        setUser({
-          id: resSession?.user.id,
-          phone: resSession?.user.phone,
-          email: resSession?.user.email,
-          username: resSession?.user.user_metadata.username,
-          slug: resSession?.user.user_metadata.slug,
-          role: resSession?.user.user_metadata.role,
-          ...user,
-        });
-        setIsSignedIn(true);
-        setIsError(false);
-        setError(null);
+        console.log("getSession success", JSON.stringify(resSession, null, 2))
+        dispatch({ type: 'GET_SESSION_SUCCESS', payload: resSession });
       }
     } catch (error) {
-      console.error('⭕ getSession ——© (auth error)');
+      console.error(error);
       if (error instanceof Error) {
-        setSessionExpired(undefined);
-        setIsError(true);
-        setError(error);
+        dispatch({ type: 'GET_SESSION_ERROR', payload: error });
+      }
+    }
+  }, [dispatch]);
+
+  const getProfile = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select<any, Profile>()
+        .eq("id", state.session?.user.id);
+      if (error) {
+        dispatch({ type: 'GET_PROFILE_ERROR', payload: { ...error, name: "Get Profile Error" } });
+      } else if (data === null || data.length === 0) {
+        dispatch({ type: 'GET_PROFILE_ERROR', payload: new Error('Profile not found') });
+      } else {
+        console.log("getProfile success", JSON.stringify(data[0], null, 2))
+        dispatch({ type: 'GET_PROFILE_SUCCESS', payload: data[0] });
+      }
+    } catch (error) {
+      console.error(error);
+      if (error instanceof Error) {
+        dispatch({ type: 'GET_PROFILE_ERROR', payload: error });
       }
     } finally {
-      setIsLoading(false);
+      dispatch({ type: 'SET_IS_INITIALIZED' });
     }
-  };
+  }, [state.session, dispatch]);
 
-  const signOut = async () => {
-    setIsLoading(true);
+  const signOut = useCallback(async () => {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) {
-        console.error('⭕ signOut ——© (auth internal error)');
+        console.error(error);
         // Case intern error
-        setIsError(true);
-        setError(error);
-        setSession(null);
+        dispatch({ type: 'SET_ERROR', payload: error });
       } else {
         // Case Succes
-        if (AUTH_LOGS) console.log('👤 signOut ——© (signed out succesful)');
-        setSession(null);
-        setUser(null);
-        setIsSignedIn(false);
-        setIsError(false);
-        setError(null);
+        if (AUTH_LOGS) console.log('signed out succesful');
+        dispatch({ type: 'SIGN_OUT_SUCCESS' });
       }
     } catch (error) {
-      console.error('⭕ signOut ——© (error)');
+      console.error(error);
       if (error instanceof Error) {
-        setIsError(true);
-        setError(error);
-        setSession(null);
+        dispatch({ type: 'SET_ERROR', payload: error });
       }
-    } finally {
-      setSessionExpired(undefined);
-      setIsLoading(false);
     }
-  };
+  }, [dispatch]);
 
-  const updateUser = async ({
+  const updateUser = useCallback(async ({
     username,
     slug,
     avatar_url,
     email,
-    role,
   }: {
     username?: string;
     slug?: string;
     avatar_url?: string;
     email?: string;
-    role?: string;
   }) => {
-    setIsLoading(true);
     try {
-      const { error } = await supabase
+      const { error, data } = await supabase
         .from('profiles')
         .update({
           username,
           slug,
           avatar_url,
           email,
-          role,
+          updated_at: new Date().toISOString()
         })
-        .eq('id', user?.id);
+        .eq('id', state.profile?.id);
       if (error) {
-        console.error('⭕ updateUser ——© (PostgresError internam error)', error);
-        setIsError(true);
-        setError({ ...error, name: 'PostgresError' });
+        console.error(error);
+        dispatch({ type: 'SET_ERROR', payload: { ...error, name: 'PostgresError' } });
       } else {
-        if (AUTH_LOGS) console.log('👤 signOut ——© (signed out succesful)');
-        setUser({
-          ...user,
-          username: username ?? user?.username,
-          slug: slug ?? user?.slug,
-          avatar_url: avatar_url ?? user?.avatar_url,
-          email: email ?? user?.email,
-          role: role ?? user?.role,
+        if (AUTH_LOGS) console.log('update user succesful', JSON.stringify(data, null, 2));
+        dispatch({
+          type: 'UPDATE_PROFILE_SUCCESS', payload: {
+            ...state.profile,
+            username: username ?? state.profile?.username,
+            slug: slug ?? state.profile?.slug,
+            avatar_url: avatar_url ?? state.profile?.avatar_url,
+            email: email ?? state.profile?.email,
+          }
         });
-        setIsError(false);
-        setError(null);
       }
     } catch (error) {
       if (error instanceof Error) {
-        console.log(error)
-        setIsError(true);
-        setError(error);
+        console.error(error)
+        dispatch({ type: 'SET_ERROR', payload: error });
       }
-    } finally {
-      setIsLoading(false);
     }
-  };
+  }, [state.profile, dispatch]);
+
+  const toggleUserRole = useCallback(async () => {
+    try {
+      const { error, data } = await supabase
+        .from('profiles')
+        .update({
+          role: state.profile?.role === "client" ? UserRoles.TAXI : UserRoles.CLIENT,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', state.profile?.id);
+      if (error) {
+        console.error(error);
+        dispatch({ type: 'SET_ERROR', payload: { ...error, name: 'PostgresError' } });
+      } else {
+        if (AUTH_LOGS) console.log('update user role succesful', JSON.stringify(data, null, 2));
+        dispatch({
+          type: 'UPDATE_PROFILE_SUCCESS', payload: {
+            ...state.profile,
+            role: state.profile?.role === "client" ? UserRoles.TAXI : UserRoles.CLIENT,
+          }
+        });
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error(error)
+        dispatch({ type: 'SET_ERROR', payload: error });
+      }
+    }
+  }, [state.profile, dispatch]);
 
   useEffect(() => {
     if (AUTH_LOGS)
-      console.log('📭 ©—— useEffect ——© context/UserContext.tsx ——© [] (getSession)');
-    const expired = session?.expires_at && new Date(session.expires_at) < new Date();
-    setSessionExpired(Boolean(expired));
+      console.log('UserContext.tsx -> useEffect [isConnected]', isConnected);
+    const expired = !!state.session?.expires_at && new Date(state.session.expires_at) < new Date();
+    dispatch({ type: 'SET_SESSION_EXPIRED', payload: expired });
 
     if (!isConnected) {
       if (AUTH_LOGS) console.log('Internet is not reachable');
       return;
     }
 
-    if (!session || expired) {
+    if (!state.session || expired) {
       void getSession();
     }
 
     const authSub = supabase.auth.onAuthStateChange((_event, resSession) => {
-      if (AUTH_LOGS) console.log('♻️ ——© AuthState Changed ——©' + _event);
-      const expired = resSession?.expires_at && new Date(resSession.expires_at) < new Date();
-      setSessionExpired(Boolean(expired));
+      if (AUTH_LOGS) console.log('AuthState Changed' + _event);
 
-      if (!session || expired) {
+      if (!resSession) {
         void getSession();
+      } else {
+        dispatch({ type: 'GET_SESSION_SUCCESS', payload: resSession });
       }
     });
+
     return () => {
       authSub.data.subscription.unsubscribe()
     }
   }, [isConnected]);
 
   useEffect(() => {
+    if (AUTH_LOGS)
+      console.log('UserContext.tsx -> useEffect []');
     getData('user_markers').then((data) => {
-      setUserMarkers(data ?? []);
+      dispatch({ type: 'SET_USER_MARKERS', payload: data ?? [] });
     });
   }, [])
+
+  useEffect(() => {
+    if (AUTH_LOGS)
+      console.log('UserContext.tsx -> useEffect [state.session]');
+    if (state.session) getProfile();
+  }, [state.session])
 
   return (
     <UserContext.Provider
       value={{
-        session,
-        sessionExpired,
-        user,
+        ...state,
         updateUser,
-        userMarkers,
-        isSignedIn,
-        isLoading,
-        isError,
-        error,
         getSession,
         signOut,
+        toggleUserRole,
       }}>
       {children}
     </UserContext.Provider>
   );
 };
-
-/* 
-async function getProfile() {
-        try {
-            setLoading(true)
-            if (!session?.user) throw new Error('No user on the session!')
-
-            const { data, error, status } = await supabase
-                .from('profiles')
-                .select(`username, website, avatar_url`)
-                .eq('id', session?.user.id)
-                .single()
-            if (error && status !== 406) {
-                throw error
-            }
-
-            if (data) {
-                setUsername(data.username)
-                setWebsite(data.website)
-                setAvatarUrl(data.avatar_url)
-            }
-        } catch (error) {
-            if (error instanceof Error) {
-                Alert.alert(error.message)
-            }
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    async function updateUser({
-        username,
-        website,
-        avatar_url,
-    }: {
-        username: string
-        website: string
-        avatar_url: string
-    }) {
-        try {
-            setLoading(true)
-            if (!session?.user) throw new Error('No user on the session!')
-
-            const updates = {
-                id: session?.user.id,
-                username,
-                website,
-                avatar_url,
-                updated_at: new Date(),
-            }
-
-            const { error } = await supabase.from('profiles').upsert(updates)
-
-            if (error) {
-                throw error
-            }
-        } catch (error) {
-            if (error instanceof Error) {
-                Alert.alert(error.message)
-            }
-        } finally {
-            setLoading(false)
-        }
-    }
-*/
-
-/* 
-can a postgres database hold a function for when updating a table row field, 
-another table row with a specific id also update a field?, put an example
-
-Yes, a PostgreSQL database can hold a function that triggers an update on 
-another table row when a specific field in a table row is updated. 
-This can be achieved using database triggers. 
- 
-Here's an example of how you can accomplish this: 
- 
-Let's say we have two tables:  table1  and  table2 . 
-We want to update a field in  table2  whenever a specific field in  table1  is updated. 
- 
-First, we need to create a trigger function that performs the desired update on  table2 :
-CREATE OR REPLACE FUNCTION update_table2_field()
-RETURNS TRIGGER AS $$
-BEGIN
-  UPDATE table2
-  SET field_to_update = NEW.new_value
-  WHERE id = <specific_id>;
-  RETURN NEW;
-END;
-$ LANGUAGE plpgsql;
-  
-In this example,  NEW.new_value  represents the new value of the field being updated in  table1 , 
-and  <specific_id>  is the specific ID of the row in  table2  that you want to update. 
- 
-Next, we create a trigger on  table1  that calls the trigger function whenever the desired field is updated:
-CREATE TRIGGER table1_update_trigger
-AFTER UPDATE OF field_to_watch ON table1
-FOR EACH ROW
-EXECUTE FUNCTION update_table2_field();
-In this trigger,  field_to_watch  is the field in  table1  that you want to monitor for updates. 
- 
-Now, whenever the specified field in  table1  is updated, the trigger function will be executed, 
-updating the corresponding row in  table2 . 
- 
-Please note that you will need to adapt the table and column names, as well as the specific logic, 
-to match your database schema and requirements.
-*/
