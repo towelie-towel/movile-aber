@@ -4,7 +4,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Circle } from 'react-native-maps';
 
 import AnimatedMarker from './AnimatedMarker';
-import { useWSConnection } from '~/context/client/WSContext';
+import { useWSConnection } from '~/context/WSContext';
 import { MotiView } from '@motify/components';
 import { Easing } from 'react-native-reanimated';
 

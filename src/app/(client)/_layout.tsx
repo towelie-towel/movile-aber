@@ -2,7 +2,7 @@
 import { Stack, Redirect } from 'expo-router';
 import { Text } from 'react-native';
 
-import { WSProvider } from '~/context/client/WSContext';
+import { WSProvider } from '~/context/WSContext';
 import { useUser } from '~/context/UserContext';
 
 const ClientLayout = () => {

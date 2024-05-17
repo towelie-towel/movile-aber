@@ -15,7 +15,6 @@ type State = {
   userMarkers: UserMarkerIconType[];
   error: Error | null;
   isError: boolean;
-  isSessionExpired: boolean | null;
   isSignedIn: boolean;
   isInitializing: boolean;
 }
@@ -28,9 +27,9 @@ type Action =
   | { type: 'GET_USER_SUCCESS', payload: User }
   | { type: 'UPDATE_PROFILE_SUCCESS', payload: Profile }
   | { type: 'SIGN_OUT_SUCCESS' }
-  | { type: 'SET_SESSION_EXPIRED', payload: boolean | null }
   | { type: 'SET_ERROR', payload: Error | null }
   | { type: 'SET_PROFILE', payload: Profile | null }
+  | { type: 'SET_SESSION', payload: Session | null }
   | { type: 'SET_USER_MARKERS', payload: UserMarkerIconType[] }
   | { type: 'SET_SIGNED_IN', payload: boolean }
   | { type: 'SET_IS_ERROR', payload: boolean }
@@ -39,15 +38,14 @@ type Action =
 function reducer(state: State, action: Action): State {
   switch (action.type) {
     case 'GET_PROFILE_ERROR':
-      return { ...state, error: action.payload, isError: true, session: null, isSessionExpired: null };
+      return { ...state, error: action.payload, isError: true, session: null };
     case 'GET_SESSION_ERROR':
-      return { ...state, error: action.payload, isError: true, session: null, isSessionExpired: null };
+      return { ...state, error: action.payload, isError: true, session: null };
     case 'GET_SESSION_SUCCESS':
       return {
         ...state,
         session: action.payload,
         isSignedIn: true,
-        isSessionExpired: false,
         isError: false,
         error: null
       };
@@ -68,13 +66,13 @@ function reducer(state: State, action: Action): State {
     case 'UPDATE_PROFILE_SUCCESS':
       return { ...state, profile: action.payload, isError: false, error: null };
     case 'SIGN_OUT_SUCCESS':
-      return { isSessionExpired: null, session: null, profile: null, isSignedIn: false, error: null, isError: false, isInitializing: false, userMarkers: [] };
-    case 'SET_SESSION_EXPIRED':
-      return { ...state, isSessionExpired: action.payload };
+      return { session: null, profile: null, isSignedIn: false, error: null, isError: false, isInitializing: false, userMarkers: [] };
     case 'SET_ERROR':
       return { ...state, error: action.payload, isError: action.payload !== null };
     case 'SET_PROFILE':
       return { ...state, profile: action.payload };
+    case 'SET_SESSION':
+      return { ...state, session: action.payload, isSignedIn: action.payload !== null };
     case 'SET_USER_MARKERS':
       return { ...state, userMarkers: action.payload };
     case 'SET_SIGNED_IN':
@@ -115,7 +113,6 @@ const initialValue: UserContext = {
   userMarkers: [],
   error: null,
   isError: false,
-  isSessionExpired: null,
   isSignedIn: false,
   isInitializing: true,
   getSession: async () => {
@@ -141,7 +138,6 @@ export const useUser = () => {
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [state, dispatch] = useReducer(reducer, {
     session: null,
-    isSessionExpired: null,
     error: null,
     profile: null,
     userMarkers: [],
@@ -154,16 +150,16 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const getSession = useCallback(async () => {
     try {
       const {
-        data: { session: resSession },
+        data: { session: currentSession },
         error,
       } = await supabase.auth.getSession();
       if (error) {
         dispatch({ type: 'GET_SESSION_ERROR', payload: error });
-      } else if (resSession === null) {
+      } else if (currentSession === null) {
         dispatch({ type: 'GET_SESSION_ERROR', payload: new Error('Session is null') });
       } else {
-        console.log("getSession success", JSON.stringify(resSession, null, 2))
-        dispatch({ type: 'GET_SESSION_SUCCESS', payload: resSession });
+        console.log("getSession success", JSON.stringify(currentSession, null, 2))
+        dispatch({ type: 'GET_SESSION_SUCCESS', payload: currentSession });
       }
     } catch (error) {
       console.error(error);
@@ -173,12 +169,12 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [dispatch]);
 
-  const getProfile = useCallback(async () => {
+  const getProfile = useCallback(async (id?: string) => {
     try {
       const { data, error } = await supabase
         .from("profiles")
         .select<any, Profile>()
-        .eq("id", state.session?.user.id);
+        .eq("id", id ?? state.session?.user.id);
       if (error) {
         dispatch({ type: 'GET_PROFILE_ERROR', payload: { ...error, name: "Get Profile Error" } });
       } else if (data === null || data.length === 0) {
@@ -295,7 +291,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     if (AUTH_LOGS)
       console.log('UserContext.tsx -> useEffect [isConnected]', isConnected);
     const expired = !!state.session?.expires_at && new Date(state.session.expires_at) < new Date();
-    dispatch({ type: 'SET_SESSION_EXPIRED', payload: expired });
 
     if (!isConnected) {
       if (AUTH_LOGS) console.log('Internet is not reachable');
@@ -305,20 +300,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     if (!state.session || expired) {
       void getSession();
     }
-
-    const authSub = supabase.auth.onAuthStateChange((_event, resSession) => {
-      if (AUTH_LOGS) console.log('AuthState Changed' + _event);
-
-      if (!resSession) {
-        void getSession();
-      } else {
-        dispatch({ type: 'GET_SESSION_SUCCESS', payload: resSession });
-      }
-    });
-
-    return () => {
-      authSub.data.subscription.unsubscribe()
-    }
   }, [isConnected]);
 
   useEffect(() => {
@@ -327,6 +308,21 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     getData('user_markers').then((data) => {
       dispatch({ type: 'SET_USER_MARKERS', payload: data ?? [] });
     });
+
+    const authSub = supabase.auth.onAuthStateChange((_event, currentSession) => {
+      if (AUTH_LOGS) console.log('AuthState Changed: ' + _event);
+
+      if (currentSession && currentSession.user) {
+        getProfile(currentSession.user.id);
+        dispatch({ type: 'GET_SESSION_SUCCESS', payload: currentSession });
+      } else {
+        dispatch({ type: 'SET_SESSION', payload: null });
+      }
+    });
+
+    return () => {
+      authSub.data.subscription.unsubscribe()
+    }
   }, [])
 
   useEffect(() => {
