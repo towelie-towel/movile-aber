@@ -2,7 +2,7 @@ import { MaterialCommunityIcons, FontAwesome6, AntDesign } from '@expo/vector-ic
 import { BottomSheetView, useBottomSheet } from '@gorhom/bottom-sheet';
 import { Image } from 'expo-image';
 import * as ExpoLocation from 'expo-location';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -10,9 +10,6 @@ import {
   useWindowDimensions,
   LayoutAnimation,
   Keyboard,
-  StyleSheet,
-  StyleProp,
-  ViewStyle,
   Pressable,
   ScrollView,
 } from 'react-native';
@@ -32,20 +29,16 @@ import { polylineDecode } from '~/utils/directions';
 import { taxiTypesInfo } from '~/constants/TaxiTypes';
 import { ClientSteps } from '~/constants/Configs';
 import { useUser } from '~/context/UserContext';
+import DashedLine from './DashedLine';
 
 interface BottomSheetContentProps {
   currentStep: ClientSteps;
   setCurrentStep: React.Dispatch<ClientSteps>;
-  activeRoute: { coords: LatLng[] } | null;
   setActiveRoute: React.Dispatch<{ coords: LatLng[] } | null>;
   startPiningLocation: () => void;
   cancelPiningLocation: () => void;
   confirmPiningLocation: () => Promise<{ latitude: number; longitude: number; address?: Address }>;
   piningLocation: boolean;
-  animateToRoute: (
-    origin: { latitude: number; longitude: number },
-    destination: { latitude: number; longitude: number }
-  ) => void;
   selectedTaxiType: string | null;
   setSelectedTaxiType: React.Dispatch<TaxiType | null>;
   confirmedTaxi: TaxiProfile | null;
@@ -54,13 +47,11 @@ interface BottomSheetContentProps {
 export const BottomSheetContent = ({
   currentStep,
   setCurrentStep,
-  activeRoute,
   setActiveRoute,
   startPiningLocation,
   cancelPiningLocation,
   confirmPiningLocation,
   piningLocation,
-  animateToRoute,
   selectedTaxiType,
   setSelectedTaxiType,
   confirmedTaxi,
@@ -108,10 +99,6 @@ export const BottomSheetContent = ({
           duration: respJson[0].legs[0].duration,
         });
         setCurrentStep(ClientSteps.TAXI)
-        animateToRoute(
-          { latitude: piningInfo.origin.latitude, longitude: piningInfo.origin.longitude },
-          { latitude: piningInfo.destination.latitude, longitude: piningInfo.destination.longitude }
-        );
       }
     }
     tokio()
@@ -680,59 +667,3 @@ export const BottomSheetContent = ({
     </BottomSheetView>
   );
 };
-
-const DashedLine = ({
-  axis = 'horizontal',
-  dashGap = 2,
-  dashLength = 4,
-  dashThickness = 2,
-  dashColor = '#000',
-  dashStyle,
-  style,
-}: {
-  axis?: 'horizontal' | 'vertical';
-  dashGap?: number;
-  dashLength?: number;
-  dashThickness?: number;
-  dashColor?: string;
-  dashStyle?: StyleProp<ViewStyle>;
-  style?: StyleProp<ViewStyle>;
-}) => {
-  const [lineLength, setLineLength] = useState(0);
-  const isRow = axis === 'horizontal';
-  const numOfDashes = Math.ceil(lineLength / (dashGap + dashLength));
-
-  const dashStyles = useMemo(
-    () => ({
-      width: isRow ? dashLength : dashThickness,
-      height: isRow ? dashThickness : dashLength,
-      marginRight: isRow ? dashGap : 0,
-      marginBottom: isRow ? 0 : dashGap,
-      backgroundColor: dashColor,
-    }),
-    [dashColor, dashGap, dashLength, dashThickness, isRow]
-  );
-
-  return (
-    <View
-      onLayout={(event) => {
-        const { width, height } = event.nativeEvent.layout;
-        setLineLength(isRow ? width : height);
-      }}
-      style={[style, isRow ? styles.row : styles.column]}>
-      {[...Array(numOfDashes)].map((_, i) => {
-        // eslint-disable-next-line react/no-array-index-key
-        return <View key={i} style={[dashStyles, dashStyle]} />;
-      })}
-    </View>
-  );
-};
-
-const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-  },
-  column: {
-    flexDirection: 'column',
-  },
-});

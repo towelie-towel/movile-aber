@@ -1,5 +1,4 @@
 {
-    "price": 3000,
     "origin": {
         "latitude": 23.133293381495083,
         "longitude": -82.39382428666123,
@@ -10,232 +9,20 @@
         "longitude": -82.37683734202062,
         "address": "San Martín e/ Espada y San Francisco, Centro Habana, Habana, Cuba"
     },
-    "respJson": [
-        {
-            "summary": "Calle Rda.",
-            "legs": [
-                {
-                    "steps": [
-                        {
-                            "html_instructions": "Dirígete hacia el <b>nordeste</b>",
-                            "distance": {
-                                "text": "0,7 km",
-                                "value": 656
-                            },
-                            "start_location": {
-                                "lat": 23.1333489,
-                                "lng": -82.3938699
-                            },
-                            "end_location": {
-                                "lat": 23.1371289,
-                                "lng": -82.38895459999999
-                            },
-                            "polyline": {
-                                "points": "mfelCtp{uNiAiB?AcCiDAA{BwC{CcEAAeCgD?Ai@}@yAyB"
-                            },
-                            "steps": null,
-                            "transit_details": null,
-                            "travel_mode": "DRIVING",
-                            "duration": {
-                                "value": 112,
-                                "text": "1m52s"
-                            }
-                        },
-                        {
-                            "html_instructions": "Gira a la <b>derecha</b>",
-                            "distance": {
-                                "text": "0,4 km",
-                                "value": 389
-                            },
-                            "start_location": {
-                                "lat": 23.1371289,
-                                "lng": -82.38895459999999
-                            },
-                            "end_location": {
-                                "lat": 23.1344076,
-                                "lng": -82.3865768
-                            },
-                            "polyline": {
-                                "points": "a~elC|qzuNzCcCx@i@@AfDyCDKxCcC"
-                            },
-                            "steps": null,
-                            "transit_details": null,
-                            "travel_mode": "DRIVING",
-                            "duration": {
-                                "value": 94,
-                                "text": "1m34s"
-                            }
-                        },
-                        {
-                            "html_instructions": "Gira a la <b>izquierda</b>.",
-                            "distance": {
-                                "text": "0,3 km",
-                                "value": 324
-                            },
-                            "start_location": {
-                                "lat": 23.1344076,
-                                "lng": -82.3865768
-                            },
-                            "end_location": {
-                                "lat": 23.1346263,
-                                "lng": -82.38351039999999
-                            },
-                            "polyline": {
-                                "points": "amelCbczuNe@y@ACGWIa@ESCSAKDcB?KDg@DmA?C@q@Bs@@I?_B"
-                            },
-                            "steps": null,
-                            "transit_details": null,
-                            "travel_mode": "DRIVING",
-                            "duration": {
-                                "value": 93,
-                                "text": "1m33s"
-                            }
-                        },
-                        {
-                            "html_instructions": "Continúa por <b>Calle Rda.</b>",
-                            "distance": {
-                                "text": "0,2 km",
-                                "value": 239
-                            },
-                            "start_location": {
-                                "lat": 23.1346263,
-                                "lng": -82.38351039999999
-                            },
-                            "end_location": {
-                                "lat": 23.1355088,
-                                "lng": -82.3814755
-                            },
-                            "polyline": {
-                                "points": "mnelC|oyuN?UAIAGGKEEACe@c@]g@O_@AG?AE[Gm@?AMiAKe@EOGKOI"
-                            },
-                            "steps": null,
-                            "transit_details": null,
-                            "travel_mode": "DRIVING",
-                            "duration": {
-                                "value": 43,
-                                "text": "43s"
-                            }
-                        },
-                        {
-                            "html_instructions": "Gira a la <b>derecha</b>",
-                            "distance": {
-                                "text": "0,3 km",
-                                "value": 324
-                            },
-                            "start_location": {
-                                "lat": 23.1355088,
-                                "lng": -82.3814755
-                            },
-                            "end_location": {
-                                "lat": 23.1356742,
-                                "lng": -82.37831369999999
-                            },
-                            "polyline": {
-                                "points": "}selCfcyuN?OOaFIiEE}D"
-                            },
-                            "steps": null,
-                            "transit_details": null,
-                            "travel_mode": "DRIVING",
-                            "duration": {
-                                "value": 68,
-                                "text": "1m8s"
-                            }
-                        },
-                        {
-                            "html_instructions": "Gira a la <b>derecha</b> en la 3.ª bocacalle hacia <b>10 de Octubre</b>/<wbr/><b>Infanta</b>",
-                            "distance": {
-                                "text": "87 m",
-                                "value": 87
-                            },
-                            "start_location": {
-                                "lat": 23.1356742,
-                                "lng": -82.37831369999999
-                            },
-                            "end_location": {
-                                "lat": 23.1348937,
-                                "lng": -82.3783016
-                            },
-                            "polyline": {
-                                "points": "}telCloxuNfA?rAA"
-                            },
-                            "steps": null,
-                            "transit_details": null,
-                            "travel_mode": "DRIVING",
-                            "duration": {
-                                "value": 16,
-                                "text": "16s"
-                            }
-                        },
-                        {
-                            "html_instructions": "Gira a la <b>izquierda</b> en la 1.ª bocacalle hacia <b>San Martin</b><div style=\"font-size:0.9em\">El destino está a la derecha.</div>",
-                            "distance": {
-                                "text": "0,1 km",
-                                "value": 149
-                            },
-                            "start_location": {
-                                "lat": 23.1348937,
-                                "lng": -82.3783016
-                            },
-                            "end_location": {
-                                "lat": 23.1349809,
-                                "lng": -82.37684589999999
-                            },
-                            "polyline": {
-                                "points": "apelCjoxuNEmAEkB?CEcB"
-                            },
-                            "steps": null,
-                            "transit_details": null,
-                            "travel_mode": "DRIVING",
-                            "duration": {
-                                "value": 20,
-                                "text": "20s"
-                            }
-                        }
-                    ],
-                    "distance": {
-                        "text": "2,2 km",
-                        "value": 2168
-                    },
-                    "start_location": {
-                        "lat": 23.1333489,
-                        "lng": -82.3938699
-                    },
-                    "end_location": {
-                        "lat": 23.1349809,
-                        "lng": -82.37684589999999
-                    },
-                    "start_address": "462 Calle 21, La Habana, Cuba",
-                    "end_address": "4JPF+289, San Martin, La Habana, Cuba",
-                    "via_waypoint": [],
-                    "duration": {
-                        "value": 446,
-                        "text": "7m26s"
-                    },
-                    "duration_in_traffic": {
-                        "value": 0,
-                        "text": ""
-                    },
-                    "arrival_time": null,
-                    "departure_time": null
-                }
-            ],
-            "waypoint_order": [],
-            "overview_polyline": {
-                "points": "mfelCtp{uNiAkBeCkD_LeOi@_AyAyBzCcCz@k@fDyCDKxCcCe@y@I[UuADoBJuBFsB?uBCQMQg@g@]g@O_@AI[uCQu@GKOIOqFOgKzCAKyDEgB"
-            },
-            "bounds": {
-                "northeast": {
-                    "lat": 23.1371289,
-                    "lng": -82.37684589999999
-                },
-                "southwest": {
-                    "lat": 23.1333489,
-                    "lng": -82.3938699
-                }
-            },
-            "copyrights": "Map data ©2024",
-            "warnings": [],
-            "fare": null
-        }
-    ]
+    "client": {
+        "name": "Jorge",
+        "phone": "55555555"
+    },
+    "price": 3000,
+    "distance": {
+        "text": "2.2 km",
+        "value": 2168
+    },
+    "duration": {
+        "text": "7 mins",
+        "value": 446
+    },
+    "overview_polyline": {
+        "points": "mfelCtp{uNiAkBeCkD_LeOi@_AyAyBzCcCz@k@fDyCDKxCcCe@y@I[UuADoBJuBFsB?uBCQMQg@g@]g@O_@AI[uCQu@GKOIOqFOgKzCAKyDEgB"
+    }
 }

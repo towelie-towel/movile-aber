@@ -118,6 +118,15 @@ export default function ClientMap() {
     }, [currentStep])
 
     useEffect(() => {
+        if (activeRoute) (
+            animateToRoute(
+                { latitude: activeRoute.coords[0].latitude, longitude: activeRoute.coords[0].longitude },
+                { latitude: activeRoute.coords[activeRoute.coords.length - 1].latitude, longitude: activeRoute.coords[activeRoute.coords.length - 1].longitude }
+            )
+        )
+    }, [activeRoute])
+
+    useEffect(() => {
         if (isSignedIn) {
             bottomSheetModalRef.current?.present();
             animateToUserLocation();
@@ -608,9 +617,7 @@ export default function ClientMap() {
                             cancelPiningLocation={cancelPiningLocation}
                             confirmPiningLocation={confirmPiningLocation}
                             piningLocation={piningLocation}
-                            activeRoute={activeRoute}
                             setActiveRoute={setActiveRoute}
-                            animateToRoute={animateToRoute}
                             selectedTaxiType={selectedTaxiType}
                             setSelectedTaxiType={setSelectedTaxiType}
                             confirmedTaxi={confirmedTaxi}

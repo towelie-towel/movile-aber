@@ -35,7 +35,8 @@ export enum ClientSteps {
 export enum TaxiSteps {
   WAITING = 1,
   CONFIRM = 2,
-  RIDE = 3,
+  PICKUP = 3,
+  RIDE = 4,
 }
 
 export enum UserRoles {
@@ -45,25 +46,32 @@ export enum UserRoles {
 }
 
 export interface RideInfo {
+  client: {
+    name: string;
+    phone: string;
+  };
+  origin: {
+    address: string;
+    latitude: number;
+    longitude: number;
+  };
+  destination: {
+    latitude: number;
+    longitude: number;
+    address: string;
+  };
   price: number;
   distance: {
     text: string;
     value: number;
   };
   duration: {
-    value: number;
     text: string;
+    value: number;
   };
-  origin: {
-    address: string,
-    latitude: number,
-    longitude: number
-  },
-  destination: {
-    latitude: number,
-    longitude: number,
-    address: string
-  }
+  overview_polyline: {
+    points: string;
+  };
 }
 
 export interface configs {

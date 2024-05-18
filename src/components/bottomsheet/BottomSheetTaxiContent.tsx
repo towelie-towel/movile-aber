@@ -1,41 +1,24 @@
 import { MaterialCommunityIcons, FontAwesome6, AntDesign } from '@expo/vector-icons';
-import { BottomSheetView, useBottomSheet } from '@gorhom/bottom-sheet';
+import { BottomSheetView } from '@gorhom/bottom-sheet';
 import { Image } from 'expo-image';
-import * as ExpoLocation from 'expo-location';
-import React, { useEffect, useMemo, useState } from 'react';
-import {
-    View,
-    Text,
-    useColorScheme,
-    useWindowDimensions,
-    LayoutAnimation,
-    Keyboard,
-    StyleSheet,
-    StyleProp,
-    ViewStyle,
-    Pressable,
-    ScrollView,
-} from 'react-native';
-import type { LatLng } from 'react-native-maps';
+import React from 'react';
+import { View, Text } from 'react-native';
 
 import { ConfortSVG } from '../svgs';
 import ScaleBtn from '~/components/common/ScaleBtn';
 import { RideInfo, TaxiSteps } from '~/constants/Configs';
+import DashedLine from './DashedLine';
 
 interface BottomSheetTaxiContentProps {
     currentStep: TaxiSteps;
     setCurrentStep: React.Dispatch<TaxiSteps>;
     rideInfo: RideInfo | null;
-    activeRoute: { coords: LatLng[] } | null;
-    setActiveRoute: React.Dispatch<{ coords: LatLng[] } | null>;
 }
 
 const BottomSheetTaxiContent = ({
     currentStep,
     setCurrentStep,
     rideInfo,
-    activeRoute,
-    setActiveRoute,
 }: BottomSheetTaxiContentProps) => {
 
     return (
@@ -44,7 +27,7 @@ const BottomSheetTaxiContent = ({
             <View className="w-[90%] h-full self-center overflow-visible">
 
                 {currentStep === TaxiSteps.CONFIRM &&
-                    <View className="w-[90%] h-full self-center">
+                    <View className="w-full h-full self-center">
                         <View className="h-20 flex-row justify-between items-center">
                             <View className="flex-row gap-3 items-center">
                                 <Image
@@ -52,7 +35,7 @@ const BottomSheetTaxiContent = ({
                                     source={require('../../../assets/images/taxi_test.png')}
                                 />
                                 <View className="justify-center">
-                                    <Text className="font-bold text-xl">{"aaaa"}</Text>
+                                    <Text className="font-bold text-xl">{rideInfo?.client.name}</Text>
                                     <View className="flex-row items-center">
                                         <Text className="text-[#FFCC00] text-lg">★ </Text>
                                         <Text className="text-[#C8C7CC]">4.9</Text>
@@ -79,22 +62,22 @@ const BottomSheetTaxiContent = ({
                             <View className="flex-row items-center justify-between flex-1 mx-1">
                                 <View className="gap-2">
                                     <Text className="text-xl font-medium text-[#C8C7CC] text-center">Distance</Text>
-                                    <Text className="text-xl font-bold">aaa Km</Text>
+                                    <Text className="text-xl font-bold">{rideInfo?.distance.text}</Text>
                                 </View>
                                 <View className="gap-2">
                                     <Text className="text-xl font-medium text-[#C8C7CC] text-center">Time</Text>
-                                    <Text className="text-xl font-bold">aaa Km</Text>
+                                    <Text className="text-xl font-bold">{rideInfo?.duration.text}</Text>
                                 </View>
                                 <View className="gap-2">
                                     <Text className="text-lg font-medium text-[#C8C7CC] text-center">Price</Text>
-                                    <Text className="text-xl font-bold">aa min</Text>
+                                    <Text className="text-xl font-bold">{rideInfo?.price}</Text>
                                 </View>
                             </View>
                         </View>
 
                         <View className="relative z-[1000] w-full h-12 px-0 mt-3 items-center flex-row py-1">
                             <MaterialCommunityIcons name="map-marker-account" size={32} color="#000" />
-                            <Text className="font-medium text-[#242E42]">{"qaaaa"}</Text>
+                            <Text className="font-medium text-[#242E42]">{rideInfo?.origin.address}</Text>
                         </View>
                         <View className="relative z-[999] w-full h-12 px-0 mt-3 items-center flex-row">
                             <DashedLine
@@ -111,14 +94,25 @@ const BottomSheetTaxiContent = ({
                                 size={32}
                                 color="#000"
                             />
-                            <Text className="font-medium text-[#242E42]">{"bbbbb"}</Text>
+                            <Text className="font-medium text-[#242E42]">{rideInfo?.destination.address}</Text>
                         </View>
 
-                        <ScaleBtn className="mt-4 w-full gap-3" onPress={() => { }}>
-                            <View className="h-18 flex-row items-center justify-center bg-[#242E42] rounded-xl p-3">
-                                <Text className="text-white font-bold text-xl">Cancel</Text>
-                            </View>
-                        </ScaleBtn>
+                        <View className='flex-row mt-4 w-full h-18 gap-3 justify-between'>
+                            <ScaleBtn containerStyle={{ flex: 1 }} className="" onPress={() => {
+                                setCurrentStep(TaxiSteps.PICKUP);
+                            }}>
+                                <View className="flex-row items-center justify-center bg-[#389938] rounded-xl p-3">
+                                    <Text className="text-white font-bold text-xl">Accept</Text>
+                                </View>
+                            </ScaleBtn>
+
+                            <ScaleBtn containerStyle={{ flex: 1 }} className="" onPress={() => { }}>
+                                <View className="flex-row items-center justify-center bg-[#c14236] rounded-xl p-3">
+                                    <Text className="text-white font-bold text-xl">Reject</Text>
+                                </View>
+                            </ScaleBtn>
+                        </View>
+
                     </View>
                 }
 
@@ -126,61 +120,5 @@ const BottomSheetTaxiContent = ({
         </BottomSheetView>
     );
 };
-
-const DashedLine = ({
-    axis = 'horizontal',
-    dashGap = 2,
-    dashLength = 4,
-    dashThickness = 2,
-    dashColor = '#000',
-    dashStyle,
-    style,
-}: {
-    axis?: 'horizontal' | 'vertical';
-    dashGap?: number;
-    dashLength?: number;
-    dashThickness?: number;
-    dashColor?: string;
-    dashStyle?: StyleProp<ViewStyle>;
-    style?: StyleProp<ViewStyle>;
-}) => {
-    const [lineLength, setLineLength] = useState(0);
-    const isRow = axis === 'horizontal';
-    const numOfDashes = Math.ceil(lineLength / (dashGap + dashLength));
-
-    const dashStyles = useMemo(
-        () => ({
-            width: isRow ? dashLength : dashThickness,
-            height: isRow ? dashThickness : dashLength,
-            marginRight: isRow ? dashGap : 0,
-            marginBottom: isRow ? 0 : dashGap,
-            backgroundColor: dashColor,
-        }),
-        [dashColor, dashGap, dashLength, dashThickness, isRow]
-    );
-
-    return (
-        <View
-            onLayout={(event) => {
-                const { width, height } = event.nativeEvent.layout;
-                setLineLength(isRow ? width : height);
-            }}
-            style={[style, isRow ? styles.row : styles.column]}>
-            {[...Array(numOfDashes)].map((_, i) => {
-                // eslint-disable-next-line react/no-array-index-key
-                return <View key={i} style={[dashStyles, dashStyle]} />;
-            })}
-        </View>
-    );
-};
-
-const styles = StyleSheet.create({
-    row: {
-        flexDirection: 'row',
-    },
-    column: {
-        flexDirection: 'column',
-    },
-});
 
 export default BottomSheetTaxiContent;

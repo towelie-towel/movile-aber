@@ -44,7 +44,7 @@ import Colors from '~/constants/Colors';
 import { NightMap } from '~/constants/NightMap';
 import { drawerItems, RideInfo, TaxiSteps } from '~/constants/Configs';
 import { useUser } from '~/context/UserContext';
-import { calculateMiddlePointAndDelta } from '~/utils/directions';
+import { calculateMiddlePointAndDelta, polylineDecode } from '~/utils/directions';
 import TestRideData from '~/constants/TestRideData.json'
 
 export default function ClientMap() {
@@ -93,6 +93,15 @@ export default function ClientMap() {
             },
         ],
     }), [snapPoints]);
+
+    useEffect(() => {
+        if (activeRoute) (
+            animateToRoute(
+                { latitude: activeRoute.coords[0].latitude, longitude: activeRoute.coords[0].longitude },
+                { latitude: activeRoute.coords[activeRoute.coords.length - 1].latitude, longitude: activeRoute.coords[activeRoute.coords.length - 1].longitude }
+            )
+        )
+    }, [activeRoute])
 
     useEffect(() => {
         switch (currentStep) {
@@ -168,8 +177,16 @@ export default function ClientMap() {
         setFindingRide(true);
         setTimeout(() => {
             setFindingRide(false);
-            setCurrentStep(TaxiSteps.CONFIRM);
             setRideInfo(TestRideData)
+
+            const decodedCoords = polylineDecode(TestRideData.overview_polyline.points).map(
+                (point) => ({ latitude: point[0]!, longitude: point[1]! })
+            );
+            setActiveRoute({
+                coords: decodedCoords,
+            });
+
+            setCurrentStep(TaxiSteps.CONFIRM);
         }, 5000);
     }, [])
 
@@ -433,7 +450,20 @@ export default function ClientMap() {
                         <ScaleBtn
                             className="mt-4"
                             onPress={() => {
-                                animateToUserLocation();
+                                // animateToUserLocation();
+                                /* mapViewRef.current?.fitToElements({
+                                    edgePadding: {
+                                        top: 100,
+                                        right: 100,
+                                        bottom: 100,
+                                        left: 100,
+                                    },
+                                    animated: true,
+                                }) */
+
+                                mapViewRef.current?.animateCamera({
+                                    pitch: 60,
+                                })
                             }}>
                             <View className="bg-[#fff] rounded-lg p-3 shadow mr-5">
                                 <FontAwesome6 name="location-arrow" size={24} color="black" />
@@ -517,8 +547,6 @@ export default function ClientMap() {
                         <BottomSheetTaxiContent
                             currentStep={currentStep}
                             rideInfo={rideInfo}
-                            activeRoute={activeRoute}
-                            setActiveRoute={setActiveRoute}
                             setCurrentStep={setCurrentStep}
                         />
                     </BottomSheetModal>
