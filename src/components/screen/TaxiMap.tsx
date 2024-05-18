@@ -78,7 +78,7 @@ export default function ClientMap() {
     const [snapPoints, setSnapPoints] = useState<number[]>([195, 360, 550]);
     const animatedPosition = useSharedValue(0);
     const animatedIndex = useSharedValue(0);
-    const sheetCurrentSnapRef = useRef(1);
+    const sheetCurrentSnapRef = useRef(0);
     const bottomSheetModalRef = useRef<BottomSheetModal>(null);
 
     const topSheetBtnsAnimStyle = useAnimatedStyle(() => ({
@@ -100,7 +100,7 @@ export default function ClientMap() {
                 setSnapPoints([195, 360, 550])
                 break;
             case TaxiSteps.CONFIRM:
-                setSnapPoints([250, 400])
+                setSnapPoints([360, 400])
                 break;
             case TaxiSteps.RIDE:
                 setSnapPoints([360])
@@ -365,7 +365,7 @@ export default function ClientMap() {
                     >
 
                         {activeRoute && <Polyline coordinates={activeRoute.coords} strokeWidth={5} strokeColor="#000" />}
-                        <UserMarker activeCircle activeWaves={findingRide} />
+                        <UserMarker activeWaves={findingRide} />
                         <AnimatedRouteMarker key={2} />
 
                         {userMarkers.map((marker) => (

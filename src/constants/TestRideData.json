@@ -1,201 +1,241 @@
 {
     "price": 3000,
     "origin": {
-        "address": "Pedro Pérez e/ Mariano y Nueva, Cerro, Cerro, Habana, Cuba",
-        "latitude": 23.118504767732002,
-        "longitude": -82.38062239872363
+        "latitude": 23.133293381495083,
+        "longitude": -82.39382428666123,
+        "address": "21 e/ A y B, Plaza de la Revolución, Habana, Cuba"
     },
     "destination": {
-        "latitude": 23.14043736412193,
-        "longitude": -82.3863172135302,
-        "address": "19 e/ K y J, Plaza de la Revolución, Habana, Cuba"
+        "latitude": 23.134868793665653,
+        "longitude": -82.37683734202062,
+        "address": "San Martín e/ Espada y San Francisco, Centro Habana, Habana, Cuba"
     },
-    "activeRoute": {
-        "coords": [
-            {
-                "latitude": 23.11852,
-                "longitude": -82.38062
+    "respJson": [
+        {
+            "summary": "Calle Rda.",
+            "legs": [
+                {
+                    "steps": [
+                        {
+                            "html_instructions": "Dirígete hacia el <b>nordeste</b>",
+                            "distance": {
+                                "text": "0,7 km",
+                                "value": 656
+                            },
+                            "start_location": {
+                                "lat": 23.1333489,
+                                "lng": -82.3938699
+                            },
+                            "end_location": {
+                                "lat": 23.1371289,
+                                "lng": -82.38895459999999
+                            },
+                            "polyline": {
+                                "points": "mfelCtp{uNiAiB?AcCiDAA{BwC{CcEAAeCgD?Ai@}@yAyB"
+                            },
+                            "steps": null,
+                            "transit_details": null,
+                            "travel_mode": "DRIVING",
+                            "duration": {
+                                "value": 112,
+                                "text": "1m52s"
+                            }
+                        },
+                        {
+                            "html_instructions": "Gira a la <b>derecha</b>",
+                            "distance": {
+                                "text": "0,4 km",
+                                "value": 389
+                            },
+                            "start_location": {
+                                "lat": 23.1371289,
+                                "lng": -82.38895459999999
+                            },
+                            "end_location": {
+                                "lat": 23.1344076,
+                                "lng": -82.3865768
+                            },
+                            "polyline": {
+                                "points": "a~elC|qzuNzCcCx@i@@AfDyCDKxCcC"
+                            },
+                            "steps": null,
+                            "transit_details": null,
+                            "travel_mode": "DRIVING",
+                            "duration": {
+                                "value": 94,
+                                "text": "1m34s"
+                            }
+                        },
+                        {
+                            "html_instructions": "Gira a la <b>izquierda</b>.",
+                            "distance": {
+                                "text": "0,3 km",
+                                "value": 324
+                            },
+                            "start_location": {
+                                "lat": 23.1344076,
+                                "lng": -82.3865768
+                            },
+                            "end_location": {
+                                "lat": 23.1346263,
+                                "lng": -82.38351039999999
+                            },
+                            "polyline": {
+                                "points": "amelCbczuNe@y@ACGWIa@ESCSAKDcB?KDg@DmA?C@q@Bs@@I?_B"
+                            },
+                            "steps": null,
+                            "transit_details": null,
+                            "travel_mode": "DRIVING",
+                            "duration": {
+                                "value": 93,
+                                "text": "1m33s"
+                            }
+                        },
+                        {
+                            "html_instructions": "Continúa por <b>Calle Rda.</b>",
+                            "distance": {
+                                "text": "0,2 km",
+                                "value": 239
+                            },
+                            "start_location": {
+                                "lat": 23.1346263,
+                                "lng": -82.38351039999999
+                            },
+                            "end_location": {
+                                "lat": 23.1355088,
+                                "lng": -82.3814755
+                            },
+                            "polyline": {
+                                "points": "mnelC|oyuN?UAIAGGKEEACe@c@]g@O_@AG?AE[Gm@?AMiAKe@EOGKOI"
+                            },
+                            "steps": null,
+                            "transit_details": null,
+                            "travel_mode": "DRIVING",
+                            "duration": {
+                                "value": 43,
+                                "text": "43s"
+                            }
+                        },
+                        {
+                            "html_instructions": "Gira a la <b>derecha</b>",
+                            "distance": {
+                                "text": "0,3 km",
+                                "value": 324
+                            },
+                            "start_location": {
+                                "lat": 23.1355088,
+                                "lng": -82.3814755
+                            },
+                            "end_location": {
+                                "lat": 23.1356742,
+                                "lng": -82.37831369999999
+                            },
+                            "polyline": {
+                                "points": "}selCfcyuN?OOaFIiEE}D"
+                            },
+                            "steps": null,
+                            "transit_details": null,
+                            "travel_mode": "DRIVING",
+                            "duration": {
+                                "value": 68,
+                                "text": "1m8s"
+                            }
+                        },
+                        {
+                            "html_instructions": "Gira a la <b>derecha</b> en la 3.ª bocacalle hacia <b>10 de Octubre</b>/<wbr/><b>Infanta</b>",
+                            "distance": {
+                                "text": "87 m",
+                                "value": 87
+                            },
+                            "start_location": {
+                                "lat": 23.1356742,
+                                "lng": -82.37831369999999
+                            },
+                            "end_location": {
+                                "lat": 23.1348937,
+                                "lng": -82.3783016
+                            },
+                            "polyline": {
+                                "points": "}telCloxuNfA?rAA"
+                            },
+                            "steps": null,
+                            "transit_details": null,
+                            "travel_mode": "DRIVING",
+                            "duration": {
+                                "value": 16,
+                                "text": "16s"
+                            }
+                        },
+                        {
+                            "html_instructions": "Gira a la <b>izquierda</b> en la 1.ª bocacalle hacia <b>San Martin</b><div style=\"font-size:0.9em\">El destino está a la derecha.</div>",
+                            "distance": {
+                                "text": "0,1 km",
+                                "value": 149
+                            },
+                            "start_location": {
+                                "lat": 23.1348937,
+                                "lng": -82.3783016
+                            },
+                            "end_location": {
+                                "lat": 23.1349809,
+                                "lng": -82.37684589999999
+                            },
+                            "polyline": {
+                                "points": "apelCjoxuNEmAEkB?CEcB"
+                            },
+                            "steps": null,
+                            "transit_details": null,
+                            "travel_mode": "DRIVING",
+                            "duration": {
+                                "value": 20,
+                                "text": "20s"
+                            }
+                        }
+                    ],
+                    "distance": {
+                        "text": "2,2 km",
+                        "value": 2168
+                    },
+                    "start_location": {
+                        "lat": 23.1333489,
+                        "lng": -82.3938699
+                    },
+                    "end_location": {
+                        "lat": 23.1349809,
+                        "lng": -82.37684589999999
+                    },
+                    "start_address": "462 Calle 21, La Habana, Cuba",
+                    "end_address": "4JPF+289, San Martin, La Habana, Cuba",
+                    "via_waypoint": [],
+                    "duration": {
+                        "value": 446,
+                        "text": "7m26s"
+                    },
+                    "duration_in_traffic": {
+                        "value": 0,
+                        "text": ""
+                    },
+                    "arrival_time": null,
+                    "departure_time": null
+                }
+            ],
+            "waypoint_order": [],
+            "overview_polyline": {
+                "points": "mfelCtp{uNiAkBeCkD_LeOi@_AyAyBzCcCz@k@fDyCDKxCcCe@y@I[UuADoBJuBFsB?uBCQMQg@g@]g@O_@AI[uCQu@GKOIOqFOgKzCAKyDEgB"
             },
-            {
-                "latitude": 23.11882,
-                "longitude": -82.38125
+            "bounds": {
+                "northeast": {
+                    "lat": 23.1371289,
+                    "lng": -82.37684589999999
+                },
+                "southwest": {
+                    "lat": 23.1333489,
+                    "lng": -82.3938699
+                }
             },
-            {
-                "latitude": 23.11905,
-                "longitude": -82.3818
-            },
-            {
-                "latitude": 23.11931,
-                "longitude": -82.38232
-            },
-            {
-                "latitude": 23.11968,
-                "longitude": -82.3832
-            },
-            {
-                "latitude": 23.11976,
-                "longitude": -82.38315
-            },
-            {
-                "latitude": 23.12088,
-                "longitude": -82.38251
-            },
-            {
-                "latitude": 23.12121,
-                "longitude": -82.38378
-            },
-            {
-                "latitude": 23.12138,
-                "longitude": -82.38443
-            },
-            {
-                "latitude": 23.12155,
-                "longitude": -82.38443
-            },
-            {
-                "latitude": 23.1219,
-                "longitude": -82.38434
-            },
-            {
-                "latitude": 23.12222,
-                "longitude": -82.38425
-            },
-            {
-                "latitude": 23.12238,
-                "longitude": -82.38428
-            },
-            {
-                "latitude": 23.12268,
-                "longitude": -82.38448
-            },
-            {
-                "latitude": 23.12333,
-                "longitude": -82.38433
-            },
-            {
-                "latitude": 23.12446,
-                "longitude": -82.38413
-            },
-            {
-                "latitude": 23.12449,
-                "longitude": -82.38422
-            },
-            {
-                "latitude": 23.12633,
-                "longitude": -82.38375
-            },
-            {
-                "latitude": 23.12836,
-                "longitude": -82.38327
-            },
-            {
-                "latitude": 23.1299,
-                "longitude": -82.38284
-            },
-            {
-                "latitude": 23.13012,
-                "longitude": -82.38279
-            },
-            {
-                "latitude": 23.13029,
-                "longitude": -82.38283
-            },
-            {
-                "latitude": 23.13032,
-                "longitude": -82.38271
-            },
-            {
-                "latitude": 23.13041,
-                "longitude": -82.38275
-            },
-            {
-                "latitude": 23.13054,
-                "longitude": -82.38284
-            },
-            {
-                "latitude": 23.13097,
-                "longitude": -82.38325
-            },
-            {
-                "latitude": 23.13203,
-                "longitude": -82.38409
-            },
-            {
-                "latitude": 23.1329,
-                "longitude": -82.3849
-            },
-            {
-                "latitude": 23.13323,
-                "longitude": -82.38519
-            },
-            {
-                "latitude": 23.13355,
-                "longitude": -82.38535
-            },
-            {
-                "latitude": 23.13369,
-                "longitude": -82.38537
-            },
-            {
-                "latitude": 23.13382,
-                "longitude": -82.38544
-            },
-            {
-                "latitude": 23.13395,
-                "longitude": -82.38556
-            },
-            {
-                "latitude": 23.13401,
-                "longitude": -82.38566
-            },
-            {
-                "latitude": 23.13403,
-                "longitude": -82.38574
-            },
-            {
-                "latitude": 23.1346,
-                "longitude": -82.38629
-            },
-            {
-                "latitude": 23.13543,
-                "longitude": -82.38701
-            },
-            {
-                "latitude": 23.13599,
-                "longitude": -82.38754
-            },
-            {
-                "latitude": 23.13629,
-                "longitude": -82.38781
-            },
-            {
-                "latitude": 23.13733,
-                "longitude": -82.3887
-            },
-            {
-                "latitude": 23.13766,
-                "longitude": -82.38828
-            },
-            {
-                "latitude": 23.1394,
-                "longitude": -82.38611
-            },
-            {
-                "latitude": 23.1402,
-                "longitude": -82.38683
-            },
-            {
-                "latitude": 23.14052,
-                "longitude": -82.38639
-            }
-        ]
-    },
-    "distance": {
-        "text": "3.2 km",
-        "value": 3210
-    },
-    "duration": {
-        "value": 567,
-        "text": "9m27s"
-    }
+            "copyrights": "Map data ©2024",
+            "warnings": [],
+            "fare": null
+        }
+    ]
 }

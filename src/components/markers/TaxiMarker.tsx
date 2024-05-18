@@ -40,56 +40,35 @@ function TaxiMarker({
     })
   );
 
-  const animateTo = (toLatitude: number, toLongitude: number, toHeading: number) => {
-    if (heading) {
-      Animated.timing(animatedHeading, {
-        toValue: toHeading ?? 0,
-        duration: 300,
-        useNativeDriver: false,
-        easing: Easing.linear,
-      }).start(() => {
-        if (Platform.OS === 'android') {
-          if (anim_marker_ref) {
-            anim_marker_ref.current?.animateMarkerToCoordinate(
-              {
-                latitude: toLatitude,
-                longitude: toLongitude,
-              },
-              1000
-            );
-          }
-          setTimeout(() => {
-            anim_marker_coords_ref.current.setValue({
-              latitude: toLatitude,
-              longitude: toLongitude,
-              latitudeDelta: LATITUDE_DELTA,
-              longitudeDelta: LONGITUDE_DELTA,
-            });
-          }, 1000);
-        } else {
-          anim_marker_coords_ref.current
-            .timing({
-              duration: 1000,
-              easing: Easing.linear,
-              toValue: 0,
-              useNativeDriver: false,
-              latitudeDelta: 0,
-              longitudeDelta: 0,
-              latitude: toLatitude,
-              longitude: toLongitude,
-            })
-            .start();
-        }
-      });
+  useEffect(() => {
+    if (Platform.OS === 'android') {
+      anim_marker_ref?.current?.animateMarkerToCoordinate(
+        {
+          latitude: latitude,
+          longitude: longitude,
+        },
+      );
+    } else {
+      anim_marker_coords_ref.current
+        .timing({
+          easing: Easing.linear,
+          toValue: 0,
+          useNativeDriver: false,
+          latitudeDelta: 0,
+          longitudeDelta: 0,
+          latitude: latitude,
+          longitude: longitude,
+        })
+        .start();
     }
-  };
+  }, [latitude, longitude]);
 
   useEffect(() => {
-    animateTo(latitude, longitude, heading);
-  }, [latitude, longitude, heading]);
-  /* useEffect(() => {
-    console.log('Updated values:', latitude, longitude, heading);
-  }, [latitude, longitude, heading]); */
+    Animated.timing(animatedHeading, {
+      toValue: heading,
+      useNativeDriver: true,
+    }).start();
+  }, [heading]);
 
   return (
     <Marker.Animated

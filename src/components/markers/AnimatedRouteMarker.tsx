@@ -3,7 +3,6 @@ import { type LatLng } from 'react-native-maps';
 // import { useColorScheme } from 'react-native';
 
 import TaxiMarker from './TaxiMarker';
-
 import { getDirections } from '~/utils/directions';
 
 const AnimatedRouteMarker = () => {

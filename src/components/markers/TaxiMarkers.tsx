@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import TaxiMarker from './TaxiMarker';
 
 import { IMarker } from '~/constants/Markers';
-import { useWSConnection } from '~/context/client/WSContext';
+import { useWSConnection } from '~/context/WSContext';
 
 interface props {
   onPressTaxi: (taxiId: string) => void;
@@ -18,7 +18,7 @@ const TaxisMarkers = ({ onPressTaxi }: props) => {
   useEffect(() => {
     const fetchTaxi = async () => {
       const resp = await fetch(
-        `http://192.168.1.105:6942/taxis?ids=${wsTaxis?.map((taxi) => taxi.userId).join(',')}`,
+        `http://172.20.10.12:6942/taxis?ids=${wsTaxis?.map((taxi) => taxi.userId).join(',')}`,
         {
           method: 'GET',
           headers: {

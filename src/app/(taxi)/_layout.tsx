@@ -7,7 +7,6 @@ import { useUser } from '~/context/UserContext';
 
 const TaxiLayout = () => {
     const { profile, isInitializing, isSignedIn } = useUser();
-    console.log("taxi", profile?.role)
 
     if (isInitializing) {
         return <Text>Loading...</Text>;

@@ -7,7 +7,6 @@ import { useUser } from '~/context/UserContext';
 
 const ClientLayout = () => {
     const { profile, isInitializing, isSignedIn } = useUser();
-    console.log("client", profile?.role)
 
     if (isInitializing) {
         return <Text>Loading...</Text>;

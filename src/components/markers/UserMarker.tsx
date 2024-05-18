@@ -7,6 +7,7 @@ import AnimatedMarker from './AnimatedMarker';
 import { useWSConnection } from '~/context/WSContext';
 import { MotiView } from '@motify/components';
 import { Easing } from 'react-native-reanimated';
+import { TaxiSVG } from '../svgs';
 
 type UserMarkerProps = {
   activeCircle?: boolean;
@@ -30,7 +31,7 @@ const UserMarker = ({ activeCircle = false, activeWaves = false }: UserMarkerPro
         anchor={{ x: 0.5, y: 0.6 }}
         flat
       >
-        <MaterialIcons name="location-on" size={24} className='text-blackx' />
+        <TaxiSVG />
         {activeWaves &&
           [...Array(3).keys()].map((index) => (
             <View key={index} className='flex-1 absolute top-[-13px] left-[-13px]'>

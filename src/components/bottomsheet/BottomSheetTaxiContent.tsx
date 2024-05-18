@@ -20,10 +20,6 @@ import type { LatLng } from 'react-native-maps';
 
 import { ConfortSVG } from '../svgs';
 import ScaleBtn from '~/components/common/ScaleBtn';
-import Colors from '~/constants/Colors';
-import { polylineDecode } from '~/utils/directions';
-import type { TaxiType } from '~/constants/TaxiTypes';
-import type { taxiTypesInfo } from '~/constants/TaxiTypes';
 import { RideInfo, TaxiSteps } from '~/constants/Configs';
 
 interface BottomSheetTaxiContentProps {
@@ -41,9 +37,6 @@ const BottomSheetTaxiContent = ({
     activeRoute,
     setActiveRoute,
 }: BottomSheetTaxiContentProps) => {
-    const colorScheme = useColorScheme();
-    const { width } = useWindowDimensions();
-    // const { collapse, snapToIndex, snapToPosition } = useBottomSheet();
 
     return (
         <BottomSheetView className="flex-1 bg-[#F8F8F8] dark:bg-[#222222]">
