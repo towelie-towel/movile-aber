@@ -11,14 +11,14 @@ import DashedLine from './DashedLine';
 
 interface BottomSheetTaxiContentProps {
     currentStep: TaxiSteps;
-    setCurrentStep: React.Dispatch<TaxiSteps>;
     rideInfo: RideInfo | null;
+    startPickUpHandler: () => Promise<void>
 }
 
 const BottomSheetTaxiContent = ({
     currentStep,
-    setCurrentStep,
     rideInfo,
+    startPickUpHandler,
 }: BottomSheetTaxiContentProps) => {
 
     return (
@@ -98,9 +98,7 @@ const BottomSheetTaxiContent = ({
                         </View>
 
                         <View className='flex-row mt-4 w-full h-18 gap-3 justify-between'>
-                            <ScaleBtn containerStyle={{ flex: 1 }} className="" onPress={() => {
-                                setCurrentStep(TaxiSteps.PICKUP);
-                            }}>
+                            <ScaleBtn containerStyle={{ flex: 1 }} className="" onPress={startPickUpHandler}>
                                 <View className="flex-row items-center justify-center bg-[#389938] rounded-xl p-3">
                                     <Text className="text-white font-bold text-xl">Accept</Text>
                                 </View>

@@ -1,4 +1,5 @@
 import type { KeyboardTypeOptions } from 'react-native';
+import { LatLng } from 'react-native-maps';
 
 export const drawerItems: {
   icon: string;
@@ -73,6 +74,9 @@ export interface RideInfo {
     points: string;
   };
 }
+export type NavigationInfo = {
+  coords: LatLng[];
+} & google.maps.DirectionsLeg
 
 export interface configs {
   General?: GeneralConfig;

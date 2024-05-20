@@ -19,7 +19,7 @@ export const getAddress = async (latitude: number, longitude: number) => {
 export const getDirections = async (startLoc: string, destinationLoc: string) => {
   try {
     const resp = await fetch(
-      `http://172.20.10.12:6942/route?from=${startLoc}&to=${destinationLoc}`
+      `http://192.168.1.105:6942/route?from=${startLoc}&to=${destinationLoc}`
     );
     const respJson = await resp.json();
     const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map((point, _) => ({
@@ -160,4 +160,42 @@ export function calculateMiddlePointAndDelta(
     latitudeDelta,
     longitudeDelta,
   };
+}
+
+export function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const R = 6371; // Radius of the earth in km
+  const dLat = toRadians(lat2 - lat1);
+  const dLon = toRadians(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2)
+    ;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const distance = R * c; // Distance in km
+  return distance;
+}
+
+export function calculateBearing(startLat: number, startLng: number, destLat: number, destLng: number) {
+  const startRadLat = toRadians(startLat);
+  const startRadLng = toRadians(startLng);
+  const destRadLat = toRadians(destLat);
+  const destRadLng = toRadians(destLng);
+
+  const deltaLng = destRadLng - startRadLng;
+
+  const y = Math.sin(deltaLng) * Math.cos(destRadLat);
+  const x = Math.cos(startRadLat) * Math.sin(destRadLat) - Math.sin(startRadLat) * Math.cos(destRadLat) * Math.cos(deltaLng);
+  let bearing = toDegrees(Math.atan2(y, x));
+  bearing = (bearing + 360) % 360; // Normalize to 0-360
+
+  return bearing;
+}
+
+function toRadians(degree: number) {
+  return degree * (Math.PI / 180);
+}
+
+function toDegrees(radian: number) {
+  return radian * (180 / Math.PI);
 }

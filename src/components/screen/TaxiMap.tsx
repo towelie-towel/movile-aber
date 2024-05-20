@@ -19,7 +19,6 @@ import {
     View,
     Platform,
     Keyboard,
-    // useWindowDimensions,
     LayoutAnimation,
     Switch
 } from 'react-native';
@@ -42,20 +41,20 @@ import UserMarker from '~/components/markers/UserMarker';
 import { ColorInstagram, ColorFacebook, ColorTwitter } from '~/components/svgs';
 import Colors from '~/constants/Colors';
 import { NightMap } from '~/constants/NightMap';
-import { drawerItems, RideInfo, TaxiSteps } from '~/constants/Configs';
+import { drawerItems, NavigationInfo, RideInfo, TaxiSteps } from '~/constants/Configs';
 import { useUser } from '~/context/UserContext';
-import { calculateMiddlePointAndDelta, polylineDecode } from '~/utils/directions';
+import { calculateBearing, calculateDistance, calculateMiddlePointAndDelta, polylineDecode } from '~/utils/directions';
 import TestRideData from '~/constants/TestRideData.json'
+import { useWSConnection } from '~/context/WSContext';
 
 export default function ClientMap() {
     useKeepAwake();
 
-    // const { width, height } = useWindowDimensions();
     const colorScheme = useColorScheme();
     const insets = useSafeAreaInsets();
     const router = useRouter();
     const { profile, userMarkers, isSignedIn, signOut, toggleUserRole } = useUser();
-    // const { position } = useWSConnection();
+    const { position, simulateRoutePosition } = useWSConnection();
 
     if (Platform.OS === 'android') {
         NavigationBar.setBackgroundColorAsync('transparent');
@@ -70,6 +69,8 @@ export default function ClientMap() {
     const [rideInfo, setRideInfo] = useState<RideInfo | null>(null);
     const [activeRoute, setActiveRoute] = useState<{ coords: LatLng[] } | null>(null);
     const [findingRide, setFindingRide] = useState(false);
+    const [navigationInfo, setNavigationInfo] = useState<NavigationInfo | null>(null);
+    const [navigationCurrentStep, setNavigationCurrentStep] = useState(0);
 
     // drawer
     const [drawerOpen, setDrawerOpen] = useState(false);
@@ -128,6 +129,29 @@ export default function ClientMap() {
             bottomSheetModalRef.current?.dismiss();
         }
     }, [isSignedIn]);
+
+    useEffect(() => {
+        if (currentStep === TaxiSteps.PICKUP || currentStep === TaxiSteps.RIDE) {
+            if (position && navigationInfo && calculateDistance(position?.coords.latitude, position?.coords.longitude, navigationInfo?.coords[navigationCurrentStep + 1].latitude, navigationInfo?.coords[navigationCurrentStep + 1].longitude) < 0.01) {
+                setNavigationCurrentStep((prev) => prev + 1);
+            }
+        }
+    }, [position]);
+
+    useEffect(() => {
+        if (navigationInfo && navigationCurrentStep !== 0 && navigationCurrentStep < navigationInfo.coords.length - 1) {
+            mapViewRef.current?.animateCamera({
+                pitch: 70,
+                heading: calculateBearing(navigationInfo.coords[navigationCurrentStep].latitude, navigationInfo.coords[navigationCurrentStep].longitude, navigationInfo.coords[navigationCurrentStep + 1].latitude, navigationInfo.coords[navigationCurrentStep + 1].longitude),
+                center: {
+                    latitude: navigationInfo.coords[navigationCurrentStep].latitude,
+                    longitude: navigationInfo.coords[navigationCurrentStep].longitude,
+                },
+                zoom: 16,
+                altitude: 100,
+            })
+        }
+    }, [navigationCurrentStep]);
 
     const animateToUserLocation = useCallback(async () => {
         const position = await ExpoLocation.getCurrentPositionAsync({
@@ -189,6 +213,43 @@ export default function ClientMap() {
             setCurrentStep(TaxiSteps.CONFIRM);
         }, 5000);
     }, [])
+    const startNavigationHandler = useCallback(async (
+        origin: { latitude: number; longitude: number },
+        destination: { latitude: number; longitude: number }
+    ) => {
+        const resp = await fetch(
+            `http://192.168.1.105:6942/route?from=${origin.latitude},${origin.longitude}&to=${destination.latitude},${destination.longitude}`
+        );
+        const respJson = await resp.json();
+        const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map(
+            (point) => ({ latitude: point[0]!, longitude: point[1]! })
+        );
+
+        setNavigationInfo({
+            coords: decodedCoords,
+            ...respJson[0].legs[0],
+        })
+        setActiveRoute({
+            coords: decodedCoords,
+        })
+
+        mapViewRef.current?.animateCamera({
+            pitch: 70,
+            heading: calculateBearing(decodedCoords[navigationCurrentStep].latitude, decodedCoords[navigationCurrentStep].longitude, decodedCoords[navigationCurrentStep + 1].latitude, decodedCoords[navigationCurrentStep + 1].longitude),
+            center: {
+                latitude: decodedCoords[navigationCurrentStep].latitude,
+                longitude: decodedCoords[navigationCurrentStep].longitude,
+            },
+            zoom: 16,
+            altitude: 100,
+        })
+        // dev
+        simulateRoutePosition(respJson[0].overview_polyline!);
+    }, [mapViewRef, navigationCurrentStep])
+    const startPickUpHandler = useCallback(async () => {
+        setCurrentStep(TaxiSteps.PICKUP);
+        startNavigationHandler(position?.coords!, rideInfo?.destination!);
+    }, [startNavigationHandler, position, rideInfo])
 
     // renders
     const renderCustomHandle = useCallback(
@@ -381,7 +442,19 @@ export default function ClientMap() {
                         customMapStyle={colorScheme === 'dark' ? NightMap : undefined}
                     >
 
-                        {activeRoute && <Polyline coordinates={activeRoute.coords} strokeWidth={5} strokeColor="#000" />}
+                        {activeRoute && <Polyline
+                            coordinates={activeRoute.coords}
+                            strokeWidth={5}
+                            strokeColor="#000" // fallback for when `strokeColors` is not supported by the map-provider
+                            strokeColors={[
+                                '#7F0000',
+                                '#00000000', // no color, creates a "long" gradient between the previous and next coordinate
+                                '#B24112',
+                                '#E5845C',
+                                '#238C23',
+                                '#7F0000'
+                            ]}
+                        />}
                         <UserMarker activeWaves={findingRide} />
                         <AnimatedRouteMarker key={2} />
 
@@ -451,6 +524,7 @@ export default function ClientMap() {
                             className="mt-4"
                             onPress={() => {
                                 // animateToUserLocation();
+
                                 /* mapViewRef.current?.fitToElements({
                                     edgePadding: {
                                         top: 100,
@@ -461,9 +535,17 @@ export default function ClientMap() {
                                     animated: true,
                                 }) */
 
-                                mapViewRef.current?.animateCamera({
-                                    pitch: 60,
-                                })
+                                if (activeRoute)
+                                    mapViewRef.current?.animateCamera({
+                                        pitch: 70,
+                                        heading: calculateBearing(activeRoute?.coords[navigationCurrentStep].latitude, activeRoute?.coords[navigationCurrentStep].longitude, activeRoute?.coords[navigationCurrentStep + 1].latitude, activeRoute?.coords[navigationCurrentStep + 1].longitude),
+                                        center: {
+                                            latitude: activeRoute?.coords[navigationCurrentStep].latitude,
+                                            longitude: activeRoute?.coords[navigationCurrentStep].longitude,
+                                        },
+                                        zoom: 16,
+                                        altitude: 100,
+                                    })
                             }}>
                             <View className="bg-[#fff] rounded-lg p-3 shadow mr-5">
                                 <FontAwesome6 name="location-arrow" size={24} color="black" />
@@ -547,7 +629,7 @@ export default function ClientMap() {
                         <BottomSheetTaxiContent
                             currentStep={currentStep}
                             rideInfo={rideInfo}
-                            setCurrentStep={setCurrentStep}
+                            startPickUpHandler={startPickUpHandler}
                         />
                     </BottomSheetModal>
 
