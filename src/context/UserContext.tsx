@@ -325,12 +325,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [])
 
-  useEffect(() => {
-    if (AUTH_LOGS)
-      console.log('UserContext.tsx -> useEffect [state.session]');
-    if (state.session) getProfile();
-  }, [state.session])
-
   return (
     <UserContext.Provider
       value={{

@@ -136,6 +136,7 @@ export default function ClientMap() {
     useEffect(() => {
         if (currentStep === TaxiSteps.PICKUP || currentStep === TaxiSteps.RIDE) {
             if (position && navigationInfo && calculateDistance(position.coords.latitude, position.coords.longitude, navigationInfo.steps[navigationCurrentStep].end_location.lat as unknown as number, navigationInfo.steps[navigationCurrentStep].end_location.lng as unknown as number) < 0.005) {
+                LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
                 setNavigationCurrentStep((prev) => {
                     stepView.current?.setPage(prev + 1)
                     return prev + 1
@@ -224,7 +225,7 @@ export default function ClientMap() {
         destination: { latitude: number; longitude: number }
     ) => {
         const resp = await fetch(
-            `http://192.168.1.105:6942/route?from=${origin.latitude},${origin.longitude}&to=${destination.latitude},${destination.longitude}`
+            `http://172.20.10.12:6942/route?from=${origin.latitude},${origin.longitude}&to=${destination.latitude},${destination.longitude}`
         );
         const respJson = await resp.json();
         const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map(
@@ -509,23 +510,22 @@ export default function ClientMap() {
                         </View>
                     </ScaleBtn>
 
-                    {(currentStep === TaxiSteps.PICKUP || currentStep === TaxiSteps.RIDE) || true &&
+                    {(currentStep === TaxiSteps.PICKUP || currentStep === TaxiSteps.RIDE) &&
                         <View className='bg-[#FCCB6F] absolute self-center w-[90%] h-24 rounded-xl shadow' style={{ top: insets.top + 72 }}>
                             <PagerView ref={stepView} style={{ flex: 1 }} initialPage={0} scrollEnabled={false}>
                                 {
-                                    [1, 2, 3].map((step, i) => (
+                                    navigationInfo?.steps.map((step, i) => (
                                         <View className='flex-1 flex-row items-center' key={i}>
-                                            <View className='flex-row items-center gap-2 px-1'>
-                                                <MaterialIcons name="u-turn-right" size={38} color="black" />
+                                            <View className='flex-row items-center justify-around w-20 gap-2 px-1'>
+                                                <MaterialIcons name={step.maneuver} size={38} color="black" />
                                                 <Text className='text-center text-lg font-bold text-[#000] dark:text-[#fff]'>
-                                                    {/* {formatDistance(calculateDistance(position?.coords.latitude, position?.coords.longitude, navigationInfo?.steps[navigationCurrentStep].end_location?.lat as unknown as number, navigationInfo?.steps[navigationCurrentStep].end_location?.lng as unknown as number))} */}
-                                                    {formatDistance(0.6551910952110147)}
+                                                    {formatDistance(calculateDistance(position?.coords.latitude, position?.coords.longitude, navigationInfo?.steps[navigationCurrentStep].end_location?.lat as unknown as number, navigationInfo?.steps[navigationCurrentStep].end_location?.lng as unknown as number))}
                                                 </Text>
                                             </View>
                                             <WebView
                                                 originWhitelist={['*']}
                                                 style={{ flex: 1, backgroundColor: 'transparent', alignItems: "center" }}
-                                                source={{ html: `<div style=\"display:flex;width:100%;height:100%;align-items:center;justify-content:center\"><div style=\"font-size:70px;width:100%;text-align:center;\">Gira a la <b>izquierda</b> en la 1.ª bocacalle hacia <b>San Martin</b><div style=\"font-size:0.9em\">El destino está a la derecha.</div></div></div>` }}
+                                                source={{ html: `<div style=\"display:flex;width:100%;height:100%;align-items:center;justify-content:center\"><div style=\"font-size:70px;width:100%;text-align:center;\">${step.html_instructions}</div></div></div>` }}
                                             />
                                         </View>
                                     ))
