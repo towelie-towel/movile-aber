@@ -20,7 +20,7 @@ import {
     Platform,
     Keyboard,
     LayoutAnimation,
-    Switch
+    Switch,
 } from 'react-native';
 import { Drawer } from 'react-native-drawer-layout';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -31,6 +31,8 @@ import Animated, {
     useAnimatedStyle,
     useSharedValue,
 } from 'react-native-reanimated';
+import { WebView } from 'react-native-webview';
+import PagerView from 'react-native-pager-view';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import BottomSheetTaxiContent from '~/components/bottomsheet/BottomSheetTaxiContent';
@@ -42,10 +44,10 @@ import { ColorInstagram, ColorFacebook, ColorTwitter } from '~/components/svgs';
 import Colors from '~/constants/Colors';
 import { NightMap } from '~/constants/NightMap';
 import { drawerItems, NavigationInfo, RideInfo, TaxiSteps } from '~/constants/Configs';
-import { useUser } from '~/context/UserContext';
-import { calculateBearing, calculateDistance, calculateMiddlePointAndDelta, polylineDecode } from '~/utils/directions';
 import TestRideData from '~/constants/TestRideData.json'
+import { useUser } from '~/context/UserContext';
 import { useWSConnection } from '~/context/WSContext';
+import { calculateBearing, calculateDistance, calculateMiddlePointAndDelta, formatDistance, polylineDecode } from '~/utils/directions';
 
 export default function ClientMap() {
     useKeepAwake();
@@ -71,6 +73,7 @@ export default function ClientMap() {
     const [findingRide, setFindingRide] = useState(false);
     const [navigationInfo, setNavigationInfo] = useState<NavigationInfo | null>(null);
     const [navigationCurrentStep, setNavigationCurrentStep] = useState(0);
+    const stepView = useRef<PagerView>(null);
 
     // drawer
     const [drawerOpen, setDrawerOpen] = useState(false);
@@ -132,26 +135,29 @@ export default function ClientMap() {
 
     useEffect(() => {
         if (currentStep === TaxiSteps.PICKUP || currentStep === TaxiSteps.RIDE) {
-            if (position && navigationInfo && calculateDistance(position?.coords.latitude, position?.coords.longitude, navigationInfo?.coords[navigationCurrentStep + 1].latitude, navigationInfo?.coords[navigationCurrentStep + 1].longitude) < 0.01) {
-                setNavigationCurrentStep((prev) => prev + 1);
+            if (position && navigationInfo && calculateDistance(position.coords.latitude, position.coords.longitude, navigationInfo.steps[navigationCurrentStep].end_location.lat as unknown as number, navigationInfo.steps[navigationCurrentStep].end_location.lng as unknown as number) < 0.005) {
+                setNavigationCurrentStep((prev) => {
+                    stepView.current?.setPage(prev + 1)
+                    return prev + 1
+                });
+
+            }
+            if (position && navigationInfo && navigationCurrentStep < navigationInfo.steps.length) {
+                const end_lat = navigationInfo.steps[navigationCurrentStep].end_location.lat as unknown as number;
+                const end_lng = navigationInfo.steps[navigationCurrentStep].end_location.lng as unknown as number;
+                mapViewRef.current?.animateCamera({
+                    pitch: 70,
+                    heading: calculateBearing(position.coords.latitude, position.coords.longitude, end_lat, end_lng),
+                    center: {
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude,
+                    },
+                    zoom: 16,
+                    altitude: 100,
+                })
             }
         }
     }, [position]);
-
-    useEffect(() => {
-        if (navigationInfo && navigationCurrentStep !== 0 && navigationCurrentStep < navigationInfo.coords.length - 1) {
-            mapViewRef.current?.animateCamera({
-                pitch: 70,
-                heading: calculateBearing(navigationInfo.coords[navigationCurrentStep].latitude, navigationInfo.coords[navigationCurrentStep].longitude, navigationInfo.coords[navigationCurrentStep + 1].latitude, navigationInfo.coords[navigationCurrentStep + 1].longitude),
-                center: {
-                    latitude: navigationInfo.coords[navigationCurrentStep].latitude,
-                    longitude: navigationInfo.coords[navigationCurrentStep].longitude,
-                },
-                zoom: 16,
-                altitude: 100,
-            })
-        }
-    }, [navigationCurrentStep]);
 
     const animateToUserLocation = useCallback(async () => {
         const position = await ExpoLocation.getCurrentPositionAsync({
@@ -233,18 +239,20 @@ export default function ClientMap() {
             coords: decodedCoords,
         })
 
-        mapViewRef.current?.animateCamera({
-            pitch: 70,
-            heading: calculateBearing(decodedCoords[navigationCurrentStep].latitude, decodedCoords[navigationCurrentStep].longitude, decodedCoords[navigationCurrentStep + 1].latitude, decodedCoords[navigationCurrentStep + 1].longitude),
-            center: {
-                latitude: decodedCoords[navigationCurrentStep].latitude,
-                longitude: decodedCoords[navigationCurrentStep].longitude,
-            },
-            zoom: 16,
-            altitude: 100,
+        setTimeout(() => {
+            mapViewRef.current?.animateCamera({
+                pitch: 70,
+                heading: calculateBearing(decodedCoords[navigationCurrentStep].latitude, decodedCoords[navigationCurrentStep].longitude, decodedCoords[navigationCurrentStep + 1].latitude, decodedCoords[navigationCurrentStep + 1].longitude),
+                center: {
+                    latitude: decodedCoords[navigationCurrentStep].latitude,
+                    longitude: decodedCoords[navigationCurrentStep].longitude,
+                },
+                zoom: 16,
+                altitude: 100,
+            })
+            simulateRoutePosition(respJson[0].overview_polyline!);
         })
         // dev
-        simulateRoutePosition(respJson[0].overview_polyline!);
     }, [mapViewRef, navigationCurrentStep])
     const startPickUpHandler = useCallback(async () => {
         setCurrentStep(TaxiSteps.PICKUP);
@@ -422,6 +430,7 @@ export default function ClientMap() {
                 }}>
                 <BottomSheetModalProvider>
                     <MapView
+                        showsCompass={false}
                         // showsUserLocation
                         style={{ width: '100%', height: '100%' }}
                         onTouchMove={() => { }}
@@ -489,7 +498,7 @@ export default function ClientMap() {
                     </MapView>
 
                     <ScaleBtn
-                        containerStyle={{ position: 'absolute', left: 28, top: insets.top + 12 }}
+                        containerStyle={{ position: 'absolute', left: "5%", top: insets.top + 12 }}
                         onPress={() => setDrawerOpen(true)}>
                         <View className="bg-[#f8f8f8] dark:bg-[#000] p-1 rounded-xl border border-[#d8d8d8] dark:[#a3a3a3]">
                             <MaterialIcons
@@ -499,6 +508,31 @@ export default function ClientMap() {
                             />
                         </View>
                     </ScaleBtn>
+
+                    {(currentStep === TaxiSteps.PICKUP || currentStep === TaxiSteps.RIDE) || true &&
+                        <View className='bg-[#FCCB6F] absolute self-center w-[90%] h-24 rounded-xl shadow' style={{ top: insets.top + 72 }}>
+                            <PagerView ref={stepView} style={{ flex: 1 }} initialPage={0} scrollEnabled={false}>
+                                {
+                                    [1, 2, 3].map((step, i) => (
+                                        <View className='flex-1 flex-row items-center' key={i}>
+                                            <View className='flex-row items-center gap-2 px-1'>
+                                                <MaterialIcons name="u-turn-right" size={38} color="black" />
+                                                <Text className='text-center text-lg font-bold text-[#000] dark:text-[#fff]'>
+                                                    {/* {formatDistance(calculateDistance(position?.coords.latitude, position?.coords.longitude, navigationInfo?.steps[navigationCurrentStep].end_location?.lat as unknown as number, navigationInfo?.steps[navigationCurrentStep].end_location?.lng as unknown as number))} */}
+                                                    {formatDistance(0.6551910952110147)}
+                                                </Text>
+                                            </View>
+                                            <WebView
+                                                originWhitelist={['*']}
+                                                style={{ flex: 1, backgroundColor: 'transparent', alignItems: "center" }}
+                                                source={{ html: `<div style=\"display:flex;width:100%;height:100%;align-items:center;justify-content:center\"><div style=\"font-size:70px;width:100%;text-align:center;\">Gira a la <b>izquierda</b> en la 1.ª bocacalle hacia <b>San Martin</b><div style=\"font-size:0.9em\">El destino está a la derecha.</div></div></div>` }}
+                                            />
+                                        </View>
+                                    ))
+                                }
+                            </PagerView>
+                        </View>
+                    }
 
                     {currentStep === TaxiSteps.WAITING && (
                         <Animated.View
@@ -519,9 +553,8 @@ export default function ClientMap() {
 
                     <Animated.View
                         style={topSheetBtnsAnimStyle}
-                        className="self-end justify-center items-center absolute top-0">
+                        className="self-end justify-center items-center absolute top-4 right-[5%]">
                         <ScaleBtn
-                            className="mt-4"
                             onPress={() => {
                                 // animateToUserLocation();
 
@@ -534,20 +567,8 @@ export default function ClientMap() {
                                     },
                                     animated: true,
                                 }) */
-
-                                if (activeRoute)
-                                    mapViewRef.current?.animateCamera({
-                                        pitch: 70,
-                                        heading: calculateBearing(activeRoute?.coords[navigationCurrentStep].latitude, activeRoute?.coords[navigationCurrentStep].longitude, activeRoute?.coords[navigationCurrentStep + 1].latitude, activeRoute?.coords[navigationCurrentStep + 1].longitude),
-                                        center: {
-                                            latitude: activeRoute?.coords[navigationCurrentStep].latitude,
-                                            longitude: activeRoute?.coords[navigationCurrentStep].longitude,
-                                        },
-                                        zoom: 16,
-                                        altitude: 100,
-                                    })
                             }}>
-                            <View className="bg-[#fff] rounded-lg p-3 shadow mr-5">
+                            <View className="bg-[#fff] rounded-lg p-3 shadow">
                                 <FontAwesome6 name="location-arrow" size={24} color="black" />
                             </View>
                         </ScaleBtn>
@@ -556,13 +577,12 @@ export default function ClientMap() {
                     {activeRoute && activeRoute.coords.length > 0 && (
                         <Animated.View
                             style={topSheetBtnsAnimStyle}
-                            className="self-start justify-center items-center absolute top-0">
+                            className="self-start justify-center items-center absolute top-4 left-[5%]">
                             <ScaleBtn
-                                className="mt-4"
                                 onPress={() => {
                                     animateToActiveRoute();
                                 }}>
-                                <View className="bg-[#fff] rounded-lg p-3 shadow ml-5">
+                                <View className="bg-[#fff] rounded-lg p-3 shadow">
                                     <FontAwesome6 name="route" size={24} color="black" />
                                 </View>
                             </ScaleBtn>
@@ -630,6 +650,8 @@ export default function ClientMap() {
                             currentStep={currentStep}
                             rideInfo={rideInfo}
                             startPickUpHandler={startPickUpHandler}
+                            navigationInfo={navigationInfo}
+                            navigationCurrentStep={navigationCurrentStep}
                         />
                     </BottomSheetModal>
 

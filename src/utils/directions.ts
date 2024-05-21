@@ -199,3 +199,16 @@ function toRadians(degree: number) {
 function toDegrees(radian: number) {
   return radian * (180 / Math.PI);
 }
+
+export function formatDistance(distanceInKm: number) {
+  let formattedDistance: string;
+
+  if (distanceInKm < 1) {
+    const distanceInMeters = Math.round(distanceInKm * 1000);
+    formattedDistance = `${distanceInMeters} m`;
+  } else {
+    formattedDistance = `${distanceInKm.toFixed(2)} km`;
+  }
+
+  return formattedDistance;
+}

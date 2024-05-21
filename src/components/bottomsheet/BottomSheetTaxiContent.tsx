@@ -6,19 +6,23 @@ import { View, Text } from 'react-native';
 
 import { ConfortSVG } from '../svgs';
 import ScaleBtn from '~/components/common/ScaleBtn';
-import { RideInfo, TaxiSteps } from '~/constants/Configs';
+import { NavigationInfo, RideInfo, TaxiSteps } from '~/constants/Configs';
 import DashedLine from './DashedLine';
 
 interface BottomSheetTaxiContentProps {
     currentStep: TaxiSteps;
     rideInfo: RideInfo | null;
-    startPickUpHandler: () => Promise<void>
+    startPickUpHandler: () => Promise<void>;
+    navigationInfo: NavigationInfo | null;
+    navigationCurrentStep: number;
 }
 
 const BottomSheetTaxiContent = ({
     currentStep,
     rideInfo,
     startPickUpHandler,
+    navigationInfo,
+    navigationCurrentStep,
 }: BottomSheetTaxiContentProps) => {
 
     return (
