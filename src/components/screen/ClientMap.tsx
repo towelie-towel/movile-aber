@@ -48,8 +48,11 @@ import Colors from '~/constants/Colors';
 import { NightMap } from '~/constants/NightMap';
 import { drawerItems, ClientSteps } from '~/constants/Configs';
 import { useUser } from '~/context/UserContext';
+import { useWSConnection } from '~/context/WSContext';
 import { calculateMiddlePointAndDelta } from '~/utils/directions';
 import type { TaxiProfile, TaxiType } from '~/constants/TaxiTypes';
+import AnimatedMarker from '../markers/AnimatedMarker';
+import UserWavesMarker from '../markers/UserWavesMarker';
 
 export default function ClientMap() {
     useKeepAwake();
@@ -59,7 +62,6 @@ export default function ClientMap() {
     const insets = useSafeAreaInsets();
     const router = useRouter();
     const { profile, userMarkers, isSignedIn, signOut, toggleUserRole } = useUser();
-    // const { position } = useWSConnection();
 
     if (Platform.OS === 'android') {
         NavigationBar.setBackgroundColorAsync('transparent');
@@ -109,7 +111,7 @@ export default function ClientMap() {
                 setSnapPoints([250, 400])
                 break;
             case ClientSteps.RIDE:
-                setSnapPoints([360])
+                setSnapPoints([360, 500])
                 break;
 
             default:
@@ -214,7 +216,7 @@ export default function ClientMap() {
         }) => {
             mapViewRef.current?.animateToRegion(region);
         },
-        []
+        [mapViewRef]
     );
     const confirmTaxiHandler = useCallback(() => {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -230,7 +232,7 @@ export default function ClientMap() {
                 stars: 4.9,
             });
             setCurrentStep(ClientSteps.RIDE)
-            setFindingRide(true);
+            setFindingRide(false);
         }, 4000);
     }, []);
 
@@ -245,7 +247,7 @@ export default function ClientMap() {
         }
 
         return { latitude: pointCoords.latitude, longitude: pointCoords.longitude };
-    }, []);
+    }, [mapViewRef]);
 
     return (
         <GestureHandlerRootView
@@ -414,7 +416,8 @@ export default function ClientMap() {
                         customMapStyle={colorScheme === 'dark' ? NightMap : undefined}>
                         {activeRoute && <Polyline coordinates={activeRoute.coords} strokeWidth={5} strokeColor="#000" />}
                         {/* <TaxisMarkers onPressTaxi={() => { }} /> */}
-                        {/* <UserMarker title="User Marker" description="User Marker Description" userId="123" /> */}
+                        <UserWavesMarker activeWaves={findingRide} />
+
                         <AnimatedRouteMarker key={2} />
 
                         {userMarkers.map((marker) => (
@@ -485,35 +488,6 @@ export default function ClientMap() {
                                     confirmTaxiHandler();
                                 }}>
                                 <View className="bg-[#FCCB6F] w-40 h-14 rounded-lg p-3">
-                                    {findingRide &&
-                                        [...Array(3).keys()].map((index) => {
-                                            return (
-                                                <MotiView
-                                                    from={{ opacity: 0.7, scale: 0.2, borderRadius: 8 }}
-                                                    animate={{ opacity: 0, scale: 2, borderRadius: 1000 }}
-                                                    transition={{
-                                                        // type: 'timing',
-                                                        duration: 2000,
-                                                        easing: Easing.out(Easing.ease),
-                                                        delay: 1000,
-                                                        repeatReverse: false,
-                                                        repeat: Infinity,
-                                                    }}
-                                                    key={index}
-                                                    style={[
-                                                        {
-                                                            backgroundColor: '#FCCB6F',
-                                                            borderRadius: 100,
-                                                            width: 160,
-                                                            height: 56,
-                                                            position: 'absolute',
-                                                            left: -10,
-                                                            top: -2,
-                                                        },
-                                                    ]}
-                                                />
-                                            );
-                                        })}
                                     <Text className="text-center text-lg font-bold w-auto text-[#fff]">
                                         {findingRide ? 'Finding Ride' : 'Request Ride'}
                                     </Text>

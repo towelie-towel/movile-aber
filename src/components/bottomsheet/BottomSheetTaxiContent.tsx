@@ -13,16 +13,16 @@ interface BottomSheetTaxiContentProps {
     currentStep: TaxiSteps;
     rideInfo: RideInfo | null;
     startPickUpHandler: () => Promise<void>;
-    navigationInfo: NavigationInfo | null;
-    navigationCurrentStep: number;
+    // navigationInfo: NavigationInfo | null;
+    // navigationCurrentStep: number;
 }
 
 const BottomSheetTaxiContent = ({
     currentStep,
     rideInfo,
     startPickUpHandler,
-    navigationInfo,
-    navigationCurrentStep,
+    // navigationInfo,
+    // navigationCurrentStep,
 }: BottomSheetTaxiContentProps) => {
 
     return (

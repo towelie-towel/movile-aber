@@ -24,22 +24,20 @@ import {
 } from 'react-native';
 import { Drawer } from 'react-native-drawer-layout';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import MapView, { type LatLng, PROVIDER_GOOGLE, PROVIDER_DEFAULT, Polyline, Marker } from 'react-native-maps';
+import MapView, { type LatLng, PROVIDER_GOOGLE, PROVIDER_DEFAULT, Polyline, Marker, Camera } from 'react-native-maps';
 import Animated, {
     Extrapolation,
     interpolate,
     useAnimatedStyle,
     useSharedValue,
 } from 'react-native-reanimated';
-import { WebView } from 'react-native-webview';
-import PagerView from 'react-native-pager-view';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import BottomSheetTaxiContent from '~/components/bottomsheet/BottomSheetTaxiContent';
 import { CustomHandle } from '~/components/bottomsheet/hooks/CustomHandle';
 import { Ripple, ScaleBtn } from '~/components/common';
 import AnimatedRouteMarker from '~/components/markers/AnimatedRouteMarker';
-import UserMarker from '~/components/markers/UserMarker';
+import DriverMarker from '~/components/markers/DriverMarker';
 import { ColorInstagram, ColorFacebook, ColorTwitter } from '~/components/svgs';
 import Colors from '~/constants/Colors';
 import { NightMap } from '~/constants/NightMap';
@@ -47,16 +45,18 @@ import { drawerItems, NavigationInfo, RideInfo, TaxiSteps } from '~/constants/Co
 import TestRideData from '~/constants/TestRideData.json'
 import { useUser } from '~/context/UserContext';
 import { useWSConnection } from '~/context/WSContext';
-import { calculateBearing, calculateDistance, calculateMiddlePointAndDelta, formatDistance, polylineDecode } from '~/utils/directions';
+import { calculateBearing, calculateMiddlePointAndDelta, polylineDecode } from '~/utils/directions';
+import TaxiStepsCarousel from './TaxiSteps';
 
 export default function ClientMap() {
     useKeepAwake();
+    console.log("Map Rendered")
 
     const colorScheme = useColorScheme();
     const insets = useSafeAreaInsets();
     const router = useRouter();
     const { profile, userMarkers, isSignedIn, signOut, toggleUserRole } = useUser();
-    const { position, simulateRoutePosition } = useWSConnection();
+    const { simulateRoutePosition } = useWSConnection();
 
     if (Platform.OS === 'android') {
         NavigationBar.setBackgroundColorAsync('transparent');
@@ -72,8 +72,7 @@ export default function ClientMap() {
     const [activeRoute, setActiveRoute] = useState<{ coords: LatLng[] } | null>(null);
     const [findingRide, setFindingRide] = useState(false);
     const [navigationInfo, setNavigationInfo] = useState<NavigationInfo | null>(null);
-    const [navigationCurrentStep, setNavigationCurrentStep] = useState(0);
-    const stepView = useRef<PagerView>(null);
+    const [navigationCurrentStep, setNavigationCurrentStep] = useState(-1);
 
     // drawer
     const [drawerOpen, setDrawerOpen] = useState(false);
@@ -133,33 +132,6 @@ export default function ClientMap() {
         }
     }, [isSignedIn]);
 
-    useEffect(() => {
-        if (currentStep === TaxiSteps.PICKUP || currentStep === TaxiSteps.RIDE) {
-            if (position && navigationInfo && calculateDistance(position.coords.latitude, position.coords.longitude, navigationInfo.steps[navigationCurrentStep].end_location.lat as unknown as number, navigationInfo.steps[navigationCurrentStep].end_location.lng as unknown as number) < 0.005) {
-                LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-                setNavigationCurrentStep((prev) => {
-                    stepView.current?.setPage(prev + 1)
-                    return prev + 1
-                });
-
-            }
-            if (position && navigationInfo && navigationCurrentStep < navigationInfo.steps.length) {
-                const end_lat = navigationInfo.steps[navigationCurrentStep].end_location.lat as unknown as number;
-                const end_lng = navigationInfo.steps[navigationCurrentStep].end_location.lng as unknown as number;
-                mapViewRef.current?.animateCamera({
-                    pitch: 70,
-                    heading: calculateBearing(position.coords.latitude, position.coords.longitude, end_lat, end_lng),
-                    center: {
-                        latitude: position.coords.latitude,
-                        longitude: position.coords.longitude,
-                    },
-                    zoom: 16,
-                    altitude: 100,
-                })
-            }
-        }
-    }, [position]);
-
     const animateToUserLocation = useCallback(async () => {
         const position = await ExpoLocation.getCurrentPositionAsync({
             accuracy: ExpoLocation.Accuracy.Highest,
@@ -179,6 +151,14 @@ export default function ClientMap() {
             longitude: number;
         }, duration?: number) => {
             mapViewRef.current?.animateToRegion(region, duration);
+        },
+        [mapViewRef]
+    );
+    const animateCamera = useCallback(
+        (camera: Partial<Camera>, opts?: {
+            duration?: number;
+        }) => {
+            mapViewRef.current?.animateCamera(camera, opts);
         },
         [mapViewRef]
     );
@@ -221,11 +201,14 @@ export default function ClientMap() {
         }, 5000);
     }, [])
     const startNavigationHandler = useCallback(async (
-        origin: { latitude: number; longitude: number },
-        destination: { latitude: number; longitude: number }
+        destination: { latitude: number; longitude: number },
+        callback: () => void,
     ) => {
+        const currentLocation = await ExpoLocation.getCurrentPositionAsync({
+            accuracy: ExpoLocation.Accuracy.Highest
+        })
         const resp = await fetch(
-            `http://172.20.10.12:6942/route?from=${origin.latitude},${origin.longitude}&to=${destination.latitude},${destination.longitude}`
+            `http://192.168.1.100:6942/route?from=${currentLocation.coords.latitude},${currentLocation.coords.longitude}&to=${destination.latitude},${destination.longitude}`
         );
         const respJson = await resp.json();
         const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map(
@@ -243,22 +226,21 @@ export default function ClientMap() {
         setTimeout(() => {
             mapViewRef.current?.animateCamera({
                 pitch: 70,
-                heading: calculateBearing(decodedCoords[navigationCurrentStep].latitude, decodedCoords[navigationCurrentStep].longitude, decodedCoords[navigationCurrentStep + 1].latitude, decodedCoords[navigationCurrentStep + 1].longitude),
+                heading: calculateBearing(decodedCoords[0].latitude, decodedCoords[0].longitude, decodedCoords[1].latitude, decodedCoords[1].longitude),
                 center: {
-                    latitude: decodedCoords[navigationCurrentStep].latitude,
-                    longitude: decodedCoords[navigationCurrentStep].longitude,
+                    latitude: decodedCoords[0].latitude,
+                    longitude: decodedCoords[0].longitude,
                 },
                 zoom: 16,
                 altitude: 100,
             })
             simulateRoutePosition(respJson[0].overview_polyline!);
+            callback()
         })
-        // dev
-    }, [mapViewRef, navigationCurrentStep])
+    }, [mapViewRef])
     const startPickUpHandler = useCallback(async () => {
-        setCurrentStep(TaxiSteps.PICKUP);
-        startNavigationHandler(position?.coords!, rideInfo?.destination!);
-    }, [startNavigationHandler, position, rideInfo])
+        await startNavigationHandler(rideInfo?.destination!, () => setCurrentStep(TaxiSteps.PICKUP));
+    }, [startNavigationHandler, rideInfo])
 
     // renders
     const renderCustomHandle = useCallback(
@@ -431,7 +413,7 @@ export default function ClientMap() {
                 }}>
                 <BottomSheetModalProvider>
                     <MapView
-                        showsCompass={false}
+                        // showsCompass={false}
                         // showsUserLocation
                         style={{ width: '100%', height: '100%' }}
                         onTouchMove={() => { }}
@@ -465,7 +447,7 @@ export default function ClientMap() {
                                 '#7F0000'
                             ]}
                         />}
-                        <UserMarker activeWaves={findingRide} />
+                        <DriverMarker activeWaves={findingRide} />
                         <AnimatedRouteMarker key={2} />
 
                         {userMarkers.map((marker) => (
@@ -511,27 +493,7 @@ export default function ClientMap() {
                     </ScaleBtn>
 
                     {(currentStep === TaxiSteps.PICKUP || currentStep === TaxiSteps.RIDE) &&
-                        <View className='bg-[#FCCB6F] absolute self-center w-[90%] h-24 rounded-xl shadow' style={{ top: insets.top + 72 }}>
-                            <PagerView ref={stepView} style={{ flex: 1 }} initialPage={0} scrollEnabled={false}>
-                                {
-                                    navigationInfo?.steps.map((step, i) => (
-                                        <View className='flex-1 flex-row items-center' key={i}>
-                                            <View className='flex-row items-center justify-around w-20 gap-2 px-1'>
-                                                <MaterialIcons name={step.maneuver} size={38} color="black" />
-                                                <Text className='text-center text-lg font-bold text-[#000] dark:text-[#fff]'>
-                                                    {formatDistance(calculateDistance(position?.coords.latitude, position?.coords.longitude, navigationInfo?.steps[navigationCurrentStep].end_location?.lat as unknown as number, navigationInfo?.steps[navigationCurrentStep].end_location?.lng as unknown as number))}
-                                                </Text>
-                                            </View>
-                                            <WebView
-                                                originWhitelist={['*']}
-                                                style={{ flex: 1, backgroundColor: 'transparent', alignItems: "center" }}
-                                                source={{ html: `<div style=\"display:flex;width:100%;height:100%;align-items:center;justify-content:center\"><div style=\"font-size:70px;width:100%;text-align:center;\">${step.html_instructions}</div></div></div>` }}
-                                            />
-                                        </View>
-                                    ))
-                                }
-                            </PagerView>
-                        </View>
+                        navigationInfo && <TaxiStepsCarousel navigationInfo={navigationInfo} navigationCurrentStep={navigationCurrentStep} setNavigationCurrentStep={setNavigationCurrentStep} animateCamera={animateCamera} />
                     }
 
                     {currentStep === TaxiSteps.WAITING && (
@@ -650,8 +612,8 @@ export default function ClientMap() {
                             currentStep={currentStep}
                             rideInfo={rideInfo}
                             startPickUpHandler={startPickUpHandler}
-                            navigationInfo={navigationInfo}
-                            navigationCurrentStep={navigationCurrentStep}
+                        // navigationInfo={navigationInfo}
+                        // navigationCurrentStep={navigationCurrentStep}
                         />
                     </BottomSheetModal>
 

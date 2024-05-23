@@ -19,7 +19,7 @@ export const getAddress = async (latitude: number, longitude: number) => {
 export const getDirections = async (startLoc: string, destinationLoc: string) => {
   try {
     const resp = await fetch(
-      `http://172.20.10.12:6942/route?from=${startLoc}&to=${destinationLoc}`
+      `http://192.168.1.100:6942/route?from=${startLoc}&to=${destinationLoc}`
     );
     const respJson = await resp.json();
     const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map((point, _) => ({
@@ -192,11 +192,11 @@ export function calculateBearing(startLat: number, startLng: number, destLat: nu
   return bearing;
 }
 
-function toRadians(degree: number) {
+export function toRadians(degree: number) {
   return degree * (Math.PI / 180);
 }
 
-function toDegrees(radian: number) {
+export function toDegrees(radian: number) {
   return radian * (180 / Math.PI);
 }
 
@@ -211,4 +211,38 @@ export function formatDistance(distanceInKm: number) {
   }
 
   return formattedDistance;
+}
+
+export enum CardinalDirections {
+  NORTH = 1,
+  NORTH_EAST = 2,
+  EAST = 3,
+  SOUTH_EAST = 4,
+  SOUTH = 5,
+  SOUTH_WEST = 6,
+  WEST = 7,
+  NORTH_WEST = 8
+}
+
+export function cardinalToDegrees(direction: CardinalDirections) {
+  switch (direction) {
+    case CardinalDirections.NORTH:
+      return 0;
+    case CardinalDirections.NORTH_EAST:
+      return 45;
+    case CardinalDirections.EAST:
+      return 90;
+    case CardinalDirections.SOUTH_EAST:
+      return 135;
+    case CardinalDirections.SOUTH:
+      return 180;
+    case CardinalDirections.SOUTH_WEST:
+      return 225;
+    case CardinalDirections.WEST:
+      return 270;
+    case CardinalDirections.NORTH_WEST:
+      return 315;
+    default:
+      throw new Error(`Invalid direction: ${direction}`);
+  }
 }

@@ -18,7 +18,7 @@ const TaxisMarkers = ({ onPressTaxi }: props) => {
   useEffect(() => {
     const fetchTaxi = async () => {
       const resp = await fetch(
-        `http://172.20.10.12:6942/taxis?ids=${wsTaxis?.map((taxi) => taxi.userId).join(',')}`,
+        `http://192.168.1.100:6942/taxis?ids=${wsTaxis?.map((taxi) => taxi.userId).join(',')}`,
         {
           method: 'GET',
           headers: {
