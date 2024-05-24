@@ -30,39 +30,42 @@ export default function TaxiSteps({
     animateCamera
 }: NavigationStepsProps) {
     const insets = useSafeAreaInsets();
-    const { position } = useWSConnection();
+    const { position, simulateRoutePosition } = useWSConnection();
     const stepView = useRef<PagerView>(null);
-
+    //  const { simulateRoutePosition } = useWSConnection();
 
     useEffect(() => {
-        console.log(position, navigationCurrentStep)
+        simulateRoutePosition(navigationInfo.coords)
+    }, [])
+
+    useEffect(() => {
         if (position && navigationInfo) {
             if (navigationCurrentStep === -1) {
-                console.log("navigationCurrentStep === -1")
-                if (calculateDistance(position.coords.latitude, position.coords.longitude, navigationInfo.start_location.lat as unknown as number, navigationInfo.start_location.lng as unknown as number) > 0.005) {
+                if (calculateDistance(position.coords.latitude, position.coords.longitude, navigationInfo.start_location.lat as unknown as number, navigationInfo.start_location.lng as unknown as number) > 0.025) {
                     setNavigationCurrentStep(0);
                     stepView.current?.setPage(1)
                 }
+            } else if (navigationCurrentStep === navigationInfo.steps.length - 1) {
+                console.log('Arrived at destination');
             } else {
-                if (calculateDistance(position.coords.latitude, position.coords.longitude, navigationInfo.steps[navigationCurrentStep].end_location.lat as unknown as number, navigationInfo.steps[navigationCurrentStep].end_location.lng as unknown as number) < 0.005)
+                const end_lat = navigationInfo.steps[navigationCurrentStep].end_location.lat as unknown as number;
+                const end_lng = navigationInfo.steps[navigationCurrentStep].end_location.lng as unknown as number;
+                if (calculateDistance(position.coords.latitude, position.coords.longitude, end_lat, end_lng) < 0.015)
                     setNavigationCurrentStep((prev) => {
-                        stepView.current?.setPage(prev + 1)
+                        stepView.current?.setPage(prev + 2)
                         return prev + 1
                     });
-                if (navigationCurrentStep < navigationInfo.steps.length) {
-                    const end_lat = navigationInfo.steps[navigationCurrentStep].end_location.lat as unknown as number;
-                    const end_lng = navigationInfo.steps[navigationCurrentStep].end_location.lng as unknown as number;
-                    animateCamera({
-                        pitch: 70,
-                        heading: calculateBearing(position.coords.latitude, position.coords.longitude, end_lat, end_lng),
-                        center: {
-                            latitude: position.coords.latitude,
-                            longitude: position.coords.longitude,
-                        },
-                        zoom: 16,
-                        altitude: 100,
-                    })
-                }
+                animateCamera({
+                    pitch: 70,
+                    heading: calculateBearing(position.coords.latitude, position.coords.longitude, end_lat, end_lng),
+                    center: {
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude,
+                    },
+                    zoom: 16,
+                    altitude: 100,
+                })
+
             }
         }
     }, [position]);
@@ -92,7 +95,7 @@ export default function TaxiSteps({
                                     // @ts-ignore
                                     name={step.maneuver} size={38} color="black" />
                                 <Text className='text-center text-lg font-bold text-[#000] dark:text-[#fff]'>
-                                    {formatDistance(calculateDistance(position?.coords.latitude!, position?.coords.longitude!, step.end_location?.lat as unknown as number, step.end_location?.lng as unknown as number))}
+                                    {formatDistance(calculateDistance(position?.coords.latitude!, position?.coords.longitude!, step.start_location?.lat as unknown as number, step.start_location?.lng as unknown as number))}
                                 </Text>
                             </View>
                             <WebView

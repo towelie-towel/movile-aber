@@ -82,7 +82,7 @@ export const BottomSheetContent = ({
     const tokio = async () => {
       if (piningInfo?.destination && piningInfo?.origin) {
         const resp = await fetch(
-          `http://192.168.1.100:6942/route?from=${piningInfo.origin.latitude},${piningInfo.origin.longitude}&to=${piningInfo.destination.latitude},${piningInfo.destination.longitude}`
+          `http://172.20.10.12:6942/route?from=${piningInfo.origin.latitude},${piningInfo.origin.longitude}&to=${piningInfo.destination.latitude},${piningInfo.destination.longitude}`
         );
         const respJson = await resp.json();
         const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map(
@@ -451,7 +451,7 @@ export const BottomSheetContent = ({
         </View>
 
         {currentStep === ClientSteps.RIDE &&
-          <View className="w-[90%] h-full self-center">
+          <View className="px-[5%] h-full self-center">
             <View className="h-20 flex-row justify-between items-center">
               <View className="flex-row gap-3 items-center">
                 <Image

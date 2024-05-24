@@ -44,7 +44,6 @@ import { NightMap } from '~/constants/NightMap';
 import { drawerItems, NavigationInfo, RideInfo, TaxiSteps } from '~/constants/Configs';
 import TestRideData from '~/constants/TestRideData.json'
 import { useUser } from '~/context/UserContext';
-import { useWSConnection } from '~/context/WSContext';
 import { calculateBearing, calculateMiddlePointAndDelta, polylineDecode } from '~/utils/directions';
 import TaxiStepsCarousel from './TaxiSteps';
 
@@ -56,7 +55,6 @@ export default function ClientMap() {
     const insets = useSafeAreaInsets();
     const router = useRouter();
     const { profile, userMarkers, isSignedIn, signOut, toggleUserRole } = useUser();
-    const { simulateRoutePosition } = useWSConnection();
 
     if (Platform.OS === 'android') {
         NavigationBar.setBackgroundColorAsync('transparent');
@@ -202,13 +200,13 @@ export default function ClientMap() {
     }, [])
     const startNavigationHandler = useCallback(async (
         destination: { latitude: number; longitude: number },
-        callback: () => void,
+        timeoutCallback: () => void,
     ) => {
         const currentLocation = await ExpoLocation.getCurrentPositionAsync({
             accuracy: ExpoLocation.Accuracy.Highest
         })
         const resp = await fetch(
-            `http://192.168.1.100:6942/route?from=${currentLocation.coords.latitude},${currentLocation.coords.longitude}&to=${destination.latitude},${destination.longitude}`
+            `http://172.20.10.12:6942/route?from=${currentLocation.coords.latitude},${currentLocation.coords.longitude}&to=${destination.latitude},${destination.longitude}`
         );
         const respJson = await resp.json();
         const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map(
@@ -234,8 +232,7 @@ export default function ClientMap() {
                 zoom: 16,
                 altitude: 100,
             })
-            simulateRoutePosition(respJson[0].overview_polyline!);
-            callback()
+            timeoutCallback()
         })
     }, [mapViewRef])
     const startPickUpHandler = useCallback(async () => {

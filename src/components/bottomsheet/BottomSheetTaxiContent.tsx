@@ -1,13 +1,14 @@
 import { MaterialCommunityIcons, FontAwesome6, AntDesign } from '@expo/vector-icons';
 import { BottomSheetView } from '@gorhom/bottom-sheet';
 import { Image } from 'expo-image';
-import React from 'react';
+import React, { useCallback } from 'react';
 import { View, Text } from 'react-native';
 
 import { ConfortSVG } from '../svgs';
 import ScaleBtn from '~/components/common/ScaleBtn';
 import { NavigationInfo, RideInfo, TaxiSteps } from '~/constants/Configs';
 import DashedLine from './DashedLine';
+import { useWSConnection } from '~/context/WSContext';
 
 interface BottomSheetTaxiContentProps {
     currentStep: TaxiSteps;
@@ -24,6 +25,10 @@ const BottomSheetTaxiContent = ({
     // navigationInfo,
     // navigationCurrentStep,
 }: BottomSheetTaxiContentProps) => {
+
+    const startPickUpInnerHandler = useCallback(() => {
+        startPickUpHandler()
+    }, [startPickUpHandler])
 
     return (
         <BottomSheetView className="flex-1 bg-[#F8F8F8] dark:bg-[#222222]">
@@ -102,7 +107,7 @@ const BottomSheetTaxiContent = ({
                         </View>
 
                         <View className='flex-row mt-4 w-full h-18 gap-3 justify-between'>
-                            <ScaleBtn containerStyle={{ flex: 1 }} className="" onPress={startPickUpHandler}>
+                            <ScaleBtn containerStyle={{ flex: 1 }} className="" onPress={startPickUpInnerHandler}>
                                 <View className="flex-row items-center justify-center bg-[#389938] rounded-xl p-3">
                                     <Text className="text-white font-bold text-xl">Accept</Text>
                                 </View>
