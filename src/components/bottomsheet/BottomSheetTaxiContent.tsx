@@ -9,11 +9,13 @@ import ScaleBtn from '~/components/common/ScaleBtn';
 import { NavigationInfo, RideInfo, TaxiSteps } from '~/constants/Configs';
 import DashedLine from './DashedLine';
 import { useWSConnection } from '~/context/WSContext';
+import TaximeterRide from './TaximeterRide';
 
 interface BottomSheetTaxiContentProps {
     currentStep: TaxiSteps;
     rideInfo: RideInfo | null;
     startPickUpHandler: () => Promise<void>;
+    cancelPickUpHandler: () => Promise<void>;
     // navigationInfo: NavigationInfo | null;
     // navigationCurrentStep: number;
 }
@@ -22,6 +24,7 @@ const BottomSheetTaxiContent = ({
     currentStep,
     rideInfo,
     startPickUpHandler,
+    cancelPickUpHandler,
     // navigationInfo,
     // navigationCurrentStep,
 }: BottomSheetTaxiContentProps) => {
@@ -34,6 +37,18 @@ const BottomSheetTaxiContent = ({
         <BottomSheetView className="flex-1 bg-[#F8F8F8] dark:bg-[#222222]">
 
             <View className="w-[90%] h-full self-center overflow-visible">
+
+                {
+                    (currentStep === TaxiSteps.PICKUP || currentStep === TaxiSteps.RIDE) &&
+                    <>
+                        <TaximeterRide />
+                        <ScaleBtn className="mt-4 w-full gap-3" onPress={() => { cancelPickUpHandler() }}>
+                            <View className="h-18 flex-row items-center justify-center bg-[#242E42] rounded-xl p-3">
+                                <Text className="text-white font-bold text-xl">Cancel</Text>
+                            </View>
+                        </ScaleBtn>
+                    </>
+                }
 
                 {currentStep === TaxiSteps.CONFIRM &&
                     <View className="w-full h-full self-center">
@@ -66,24 +81,6 @@ const BottomSheetTaxiContent = ({
                             </View>
                         </View>
 
-                        <View className="flex-row gap-7 items-center py-2">
-                            <ConfortSVG />
-                            <View className="flex-row items-center justify-between flex-1 mx-1">
-                                <View className="gap-2">
-                                    <Text className="text-xl font-medium text-[#C8C7CC] text-center">Distance</Text>
-                                    <Text className="text-xl font-bold">{rideInfo?.distance.text}</Text>
-                                </View>
-                                <View className="gap-2">
-                                    <Text className="text-xl font-medium text-[#C8C7CC] text-center">Time</Text>
-                                    <Text className="text-xl font-bold">{rideInfo?.duration.text}</Text>
-                                </View>
-                                <View className="gap-2">
-                                    <Text className="text-lg font-medium text-[#C8C7CC] text-center">Price</Text>
-                                    <Text className="text-xl font-bold">{rideInfo?.price}</Text>
-                                </View>
-                            </View>
-                        </View>
-
                         <View className="relative z-[1000] w-full h-12 px-0 mt-3 items-center flex-row py-1">
                             <MaterialCommunityIcons name="map-marker-account" size={32} color="#000" />
                             <Text className="font-medium text-[#242E42]">{rideInfo?.origin.address}</Text>
@@ -113,7 +110,7 @@ const BottomSheetTaxiContent = ({
                                 </View>
                             </ScaleBtn>
 
-                            <ScaleBtn containerStyle={{ flex: 1 }} className="" onPress={() => { }}>
+                            <ScaleBtn containerStyle={{ flex: 1 }} className="" onPress={cancelPickUpHandler}>
                                 <View className="flex-row items-center justify-center bg-[#c14236] rounded-xl p-3">
                                     <Text className="text-white font-bold text-xl">Reject</Text>
                                 </View>

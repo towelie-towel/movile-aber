@@ -206,7 +206,7 @@ export default function ClientMap() {
             accuracy: ExpoLocation.Accuracy.Highest
         })
         const resp = await fetch(
-            `http://172.20.10.12:6942/route?from=${currentLocation.coords.latitude},${currentLocation.coords.longitude}&to=${destination.latitude},${destination.longitude}`
+            `http://192.168.1.102:6942/route?from=${currentLocation.coords.latitude},${currentLocation.coords.longitude}&to=${destination.latitude},${destination.longitude}`
         );
         const respJson = await resp.json();
         const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map(
@@ -238,6 +238,11 @@ export default function ClientMap() {
     const startPickUpHandler = useCallback(async () => {
         await startNavigationHandler(rideInfo?.destination!, () => setCurrentStep(TaxiSteps.PICKUP));
     }, [startNavigationHandler, rideInfo])
+    const cancelPickUpHandler = useCallback(async () => {
+        setCurrentStep(TaxiSteps.WAITING)
+        setNavigationInfo(null)
+        setActiveRoute(null)
+    }, [])
 
     // renders
     const renderCustomHandle = useCallback(
@@ -609,6 +614,7 @@ export default function ClientMap() {
                             currentStep={currentStep}
                             rideInfo={rideInfo}
                             startPickUpHandler={startPickUpHandler}
+                            cancelPickUpHandler={cancelPickUpHandler}
                         // navigationInfo={navigationInfo}
                         // navigationCurrentStep={navigationCurrentStep}
                         />

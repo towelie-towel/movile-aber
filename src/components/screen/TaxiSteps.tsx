@@ -57,7 +57,7 @@ export default function TaxiSteps({
                     });
                 animateCamera({
                     pitch: 70,
-                    heading: calculateBearing(position.coords.latitude, position.coords.longitude, end_lat, end_lng),
+                    heading: position.coords.heading ?? 0,
                     center: {
                         latitude: position.coords.latitude,
                         longitude: position.coords.longitude,

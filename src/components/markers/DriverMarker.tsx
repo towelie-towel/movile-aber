@@ -15,7 +15,7 @@ type UserMarkerProps = {
 }
 
 const UserMarker = ({ activeCircle = false, activeWaves = false }: UserMarkerProps) => {
-  const { position, heading } = useWSConnection();
+  const { position } = useWSConnection();
 
   if (!position) {
     return;
@@ -24,7 +24,7 @@ const UserMarker = ({ activeCircle = false, activeWaves = false }: UserMarkerPro
   return (
     <>
       <AnimatedMarker
-        heading={heading?.trueHeading ?? 0}
+        heading={/* heading?.trueHeading ??  */position.coords.heading ?? 0}
         headingAnimated={true}
         latitude={position.coords.latitude}
         longitude={position.coords.longitude}

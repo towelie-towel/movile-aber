@@ -218,7 +218,7 @@ export default function ClientMap() {
         },
         [mapViewRef]
     );
-    const confirmTaxiHandler = useCallback(() => {
+    const confirmRideHandler = useCallback(() => {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         setFindingRide(true);
         setTimeout(() => {
@@ -234,6 +234,10 @@ export default function ClientMap() {
             setCurrentStep(ClientSteps.RIDE)
             setFindingRide(false);
         }, 4000);
+    }, []);
+    const cancelRideHandler = useCallback(() => {
+        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+        setConfirmedTaxi(null);
     }, []);
 
     const getMiddlePoint = useCallback(async () => {
@@ -484,9 +488,7 @@ export default function ClientMap() {
                             <ScaleBtn
                                 disabled={findingRide || !selectedTaxiType}
                                 className=""
-                                onPress={() => {
-                                    confirmTaxiHandler();
-                                }}>
+                                onPress={confirmRideHandler}>
                                 <View className="bg-[#FCCB6F] w-40 h-14 rounded-lg p-3">
                                     <Text className="text-center text-lg font-bold w-auto text-[#fff]">
                                         {findingRide ? 'Finding Ride' : 'Request Ride'}
@@ -595,6 +597,7 @@ export default function ClientMap() {
                             selectedTaxiType={selectedTaxiType}
                             setSelectedTaxiType={setSelectedTaxiType}
                             confirmedTaxi={confirmedTaxi}
+                            cancelRideHandler={cancelRideHandler}
                         />
                     </BottomSheetModal>
 
