@@ -15,7 +15,8 @@ interface BottomSheetTaxiContentProps {
     currentStep: TaxiSteps;
     rideInfo: RideInfo | null;
     startPickUpHandler: () => Promise<void>;
-    cancelPickUpHandler: () => Promise<void>;
+    startRideHandler: () => Promise<void>;
+    cancelRideHandler: () => Promise<void>;
     // navigationInfo: NavigationInfo | null;
     // navigationCurrentStep: number;
 }
@@ -24,7 +25,8 @@ const BottomSheetTaxiContent = ({
     currentStep,
     rideInfo,
     startPickUpHandler,
-    cancelPickUpHandler,
+    startRideHandler,
+    cancelRideHandler,
     // navigationInfo,
     // navigationCurrentStep,
 }: BottomSheetTaxiContentProps) => {
@@ -33,16 +35,24 @@ const BottomSheetTaxiContent = ({
         startPickUpHandler()
     }, [startPickUpHandler])
 
+    const startRideInnerHandler = useCallback(() => {
+        startRideHandler()
+    }, [startRideHandler])
+
+    const cancelRideInnerHandler = useCallback(() => {
+        cancelRideHandler()
+    }, [startRideHandler])
+
     return (
         <BottomSheetView className="flex-1 bg-[#F8F8F8] dark:bg-[#222222]">
 
             <View className="w-[90%] h-full self-center overflow-visible">
 
                 {
-                    (currentStep === TaxiSteps.PICKUP || currentStep === TaxiSteps.RIDE) &&
+                    (currentStep === TaxiSteps.RIDE) &&
                     <>
                         <TaximeterRide />
-                        <ScaleBtn className="mt-4 w-full gap-3" onPress={() => { cancelPickUpHandler() }}>
+                        <ScaleBtn className="mt-4 w-full gap-3" onPress={cancelRideHandler}>
                             <View className="h-18 flex-row items-center justify-center bg-[#242E42] rounded-xl p-3">
                                 <Text className="text-white font-bold text-xl">Cancel</Text>
                             </View>
@@ -50,7 +60,7 @@ const BottomSheetTaxiContent = ({
                     </>
                 }
 
-                {currentStep === TaxiSteps.CONFIRM &&
+                {(currentStep === TaxiSteps.CONFIRM || currentStep === TaxiSteps.PICKUP) &&
                     <View className="w-full h-full self-center">
                         <View className="h-20 flex-row justify-between items-center">
                             <View className="flex-row gap-3 items-center">
@@ -103,19 +113,26 @@ const BottomSheetTaxiContent = ({
                             <Text className="font-medium text-[#242E42]">{rideInfo?.destination.address}</Text>
                         </View>
 
-                        <View className='flex-row mt-4 w-full h-18 gap-3 justify-between'>
+                        {currentStep === TaxiSteps.CONFIRM ? <View className='flex-row mt-4 w-full h-18 gap-3 justify-between'>
                             <ScaleBtn containerStyle={{ flex: 1 }} className="" onPress={startPickUpInnerHandler}>
                                 <View className="flex-row items-center justify-center bg-[#389938] rounded-xl p-3">
                                     <Text className="text-white font-bold text-xl">Accept</Text>
                                 </View>
                             </ScaleBtn>
 
-                            <ScaleBtn containerStyle={{ flex: 1 }} className="" onPress={cancelPickUpHandler}>
+                            <ScaleBtn containerStyle={{ flex: 1 }} className="" onPress={cancelRideHandler}>
                                 <View className="flex-row items-center justify-center bg-[#c14236] rounded-xl p-3">
                                     <Text className="text-white font-bold text-xl">Reject</Text>
                                 </View>
                             </ScaleBtn>
                         </View>
+                            :
+                            <ScaleBtn className="mt-4 w-full gap-3" onPress={() => cancelRideInnerHandler()}>
+                                <View className="h-18 flex-row items-center justify-center bg-[#242E42] rounded-xl p-3">
+                                    <Text className="text-white font-bold text-xl">Cancel</Text>
+                                </View>
+                            </ScaleBtn>
+                        }
 
                     </View>
                 }

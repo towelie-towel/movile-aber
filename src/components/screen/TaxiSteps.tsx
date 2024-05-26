@@ -30,9 +30,8 @@ export default function TaxiSteps({
     animateCamera
 }: NavigationStepsProps) {
     const insets = useSafeAreaInsets();
-    const { position, simulateRoutePosition } = useWSConnection();
+    const { position, simulateRoutePosition, stopRouteSimulation } = useWSConnection();
     const stepView = useRef<PagerView>(null);
-    //  const { simulateRoutePosition } = useWSConnection();
 
     useEffect(() => {
         simulateRoutePosition(navigationInfo.coords)
@@ -45,16 +44,36 @@ export default function TaxiSteps({
                     setNavigationCurrentStep(0);
                     stepView.current?.setPage(1)
                 }
-            } else if (navigationCurrentStep === navigationInfo.steps.length - 1) {
-                console.log('Arrived at destination');
+            } else if (navigationCurrentStep === navigationInfo.steps.length) {
+                const end_lat = navigationInfo.end_location.lat as unknown as number;
+                const end_lng = navigationInfo.end_location.lng as unknown as number;
+                console.log(calculateDistance(position.coords.latitude, position.coords.longitude, end_lat, end_lng))
+                if (calculateDistance(position.coords.latitude, position.coords.longitude, end_lat, end_lng) < 0.015) {
+                    console.log('Arrived at destination')
+                    setNavigationCurrentStep(-1);
+                    stepView.current?.setPage(0)
+                    stopRouteSimulation()
+                } else {
+                    animateCamera({
+                        pitch: 70,
+                        heading: position.coords.heading ?? 0,
+                        center: {
+                            latitude: position.coords.latitude,
+                            longitude: position.coords.longitude,
+                        },
+                        zoom: 16,
+                        altitude: 100,
+                    })
+                }
             } else {
                 const end_lat = navigationInfo.steps[navigationCurrentStep].end_location.lat as unknown as number;
                 const end_lng = navigationInfo.steps[navigationCurrentStep].end_location.lng as unknown as number;
-                if (calculateDistance(position.coords.latitude, position.coords.longitude, end_lat, end_lng) < 0.015)
+                if (calculateDistance(position.coords.latitude, position.coords.longitude, end_lat, end_lng) < 0.015) {
                     setNavigationCurrentStep((prev) => {
                         stepView.current?.setPage(prev + 2)
                         return prev + 1
                     });
+                }
                 animateCamera({
                     pitch: 70,
                     heading: position.coords.heading ?? 0,
@@ -107,6 +126,20 @@ export default function TaxiSteps({
                         </View>
                     ))
                 }
+                <View className='flex-1 flex-row items-center' key={navigationInfo.steps.length}>
+                    <View className='flex-row items-center justify-around w-28 gap-2 px-1'>
+                        <MaterialIcons name={"share-arrival-time"} size={38} color="black" />
+                        <Text className='text-center text-lg font-bold text-[#000] dark:text-[#fff]'>
+                            {formatDistance(calculateDistance(position?.coords.latitude!, position?.coords.longitude!, navigationInfo?.end_location?.lat as unknown as number, navigationInfo?.end_location?.lng as unknown as number))}
+                        </Text>
+                    </View>
+                    <WebView
+                        originWhitelist={['*']}
+                        style={{ flex: 1, backgroundColor: 'transparent', alignItems: "center" }}
+                        // @ts-ignore
+                        source={{ html: `<div style=\"display:flex;width:100%;height:100%;align-items:center;justify-content:center\"><div style=\"font-size:70px;width:100%;text-align:center;\">You arrived at the location</div></div></div>` }}
+                    />
+                </View>
             </PagerView>
         </View>
     );

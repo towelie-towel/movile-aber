@@ -23,6 +23,7 @@ interface WSContext {
     resetConnection: () => Promise<void>;
     trackPosition: () => Promise<void>;
     simulateRoutePosition: (coords: LatLng[]) => Promise<void>;
+    stopRouteSimulation: () => Promise<void>;
 }
 
 const initialValue: WSContext = {
@@ -37,6 +38,9 @@ const initialValue: WSContext = {
         throw new Error('Function not initizaliced yet');
     },
     simulateRoutePosition: async () => {
+        throw new Error('Function not initizaliced yet');
+    },
+    stopRouteSimulation: async () => {
         throw new Error('Function not initizaliced yet');
     },
 };
@@ -72,6 +76,7 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
     const ws = useRef<WebSocket | null>(null);
     const positionSubscription = useRef<ExpoLocation.LocationSubscription | null>();
     const headingSubscription = useRef<ExpoLocation.LocationSubscription | null>();
+    const simulationSubscription = useRef<NodeJS.Timeout | null>();
 
     const { isConnected } = NetInfo.useNetInfo();
 
@@ -161,6 +166,8 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
         if (positionSubscription.current) {
             positionSubscription.current.remove();
             positionSubscription.current = null;
+        }
+        if (headingSubscription.current) {
             headingSubscription.current?.remove();
             headingSubscription.current = null;
         }
@@ -168,7 +175,7 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
         const duplicatedCoords = duplicateCoords(coords);
         let currentCoordIndex = 0;
 
-        setInterval(() => {
+        simulationSubscription.current = setInterval(() => {
             setPosition({
                 coords: {
                     latitude: duplicatedCoords[currentCoordIndex]?.latitude,
@@ -188,7 +195,24 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
         }, 2000)
 
         if (WS_LOGS) console.log('Simulating position route');
-    }, [positionSubscription]);
+    }, [positionSubscription, headingSubscription, simulationSubscription]);
+
+    const stopRouteSimulation = useCallback(async () => {
+        if (!positionSubscription.current) {
+            void trackPosition();
+        }
+        if (!headingSubscription.current) {
+            void trackHeading();
+        }
+
+        console.log(simulationSubscription.current)
+        if (simulationSubscription.current) {
+            clearInterval(simulationSubscription.current!)
+            simulationSubscription.current = null
+        }
+
+        if (WS_LOGS) console.log('Stopping route simulation');
+    }, [positionSubscription, headingSubscription, simulationSubscription]);
 
     const trackHeading = useCallback(async () => {
         if (headingSubscription.current) {
@@ -268,7 +292,8 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
                 heading,
                 resetConnection,
                 trackPosition,
-                simulateRoutePosition
+                simulateRoutePosition,
+                stopRouteSimulation
             }}>
             {children}
         </WSContext.Provider>

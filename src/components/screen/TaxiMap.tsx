@@ -236,9 +236,12 @@ export default function ClientMap() {
         })
     }, [mapViewRef])
     const startPickUpHandler = useCallback(async () => {
-        await startNavigationHandler(rideInfo?.destination!, () => setCurrentStep(TaxiSteps.PICKUP));
+        await startNavigationHandler(rideInfo?.origin!, () => setCurrentStep(TaxiSteps.PICKUP));
     }, [startNavigationHandler, rideInfo])
-    const cancelPickUpHandler = useCallback(async () => {
+    const startRideHandler = useCallback(async () => {
+        await startNavigationHandler(rideInfo?.destination!, () => setCurrentStep(TaxiSteps.RIDE));
+    }, [startNavigationHandler, rideInfo])
+    const cancelRideHandler = useCallback(async () => {
         setCurrentStep(TaxiSteps.WAITING)
         setNavigationInfo(null)
         setActiveRoute(null)
@@ -614,7 +617,8 @@ export default function ClientMap() {
                             currentStep={currentStep}
                             rideInfo={rideInfo}
                             startPickUpHandler={startPickUpHandler}
-                            cancelPickUpHandler={cancelPickUpHandler}
+                            startRideHandler={startRideHandler}
+                            cancelRideHandler={cancelRideHandler}
                         // navigationInfo={navigationInfo}
                         // navigationCurrentStep={navigationCurrentStep}
                         />
