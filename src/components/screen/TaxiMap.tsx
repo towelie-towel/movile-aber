@@ -113,7 +113,7 @@ export default function ClientMap() {
                 setSnapPoints([360, 400])
                 break;
             case TaxiSteps.RIDE:
-                setSnapPoints([360])
+                setSnapPoints([360, 400])
                 break;
 
             default:
@@ -206,6 +206,7 @@ export default function ClientMap() {
         const currentLocation = await ExpoLocation.getCurrentPositionAsync({
             accuracy: ExpoLocation.Accuracy.Highest
         })
+        console.log(`fetching route from ${currentLocation.coords.latitude},${currentLocation.coords.longitude} to ${destination.latitude},${destination.longitude}`)
         const resp = await fetch(
             `http://172.20.10.12:6942/route?from=${currentLocation.coords.latitude},${currentLocation.coords.longitude}&to=${destination.latitude},${destination.longitude}`
         );

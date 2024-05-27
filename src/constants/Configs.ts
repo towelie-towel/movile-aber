@@ -37,7 +37,8 @@ export enum TaxiSteps {
   WAITING = 1,
   CONFIRM = 2,
   PICKUP = 3,
-  RIDE = 4,
+  WAITING_RIDE = 4,
+  RIDE = 5,
 }
 
 export enum UserRoles {

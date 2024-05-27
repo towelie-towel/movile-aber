@@ -31,11 +31,12 @@
     "skipDefaultLibCheck": true,
     "lib": ["ESNext", "DOM", "DOM.Iterable", "ScriptHost"]
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "nativewind-env.d.ts"],
-  "exclude": [
-    "node_modules",
-    "babel.config.js",
-    "metro.config.js"
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "nativewind-env.d.ts",
+    "src/lib/@here/flexpolyline/index.js"
   ],
+  "exclude": ["node_modules", "babel.config.js", "metro.config.js"],
   "extends": "expo/tsconfig.base"
 }
