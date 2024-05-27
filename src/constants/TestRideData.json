@@ -24,5 +24,195 @@
     },
     "overview_polyline": {
         "points": "mfelCtp{uNiAkBeCkD_LeOi@_AyAyBzCcCz@k@fDyCDKxCcCe@y@I[UuADoBJuBFsB?uBCQMQg@g@]g@O_@AI[uCQu@GKOIOqFOgKzCAKyDEgB"
+    },
+    "navigationInfo": {
+        "distance": {
+            "text": "2,2 km",
+            "value": 2168
+        },
+        "duration": {
+            "text": "7 min",
+            "value": 448
+        },
+        "end_address": "4JPF+289, San Martin, La Habana, Cuba",
+        "end_location": {
+            "lat": 23.1349809,
+            "lng": -82.37684589999999
+        },
+        "start_address": "462 Calle 21, La Habana, Cuba",
+        "start_location": {
+            "lat": 23.1333489,
+            "lng": -82.3938699
+        },
+        "steps": [
+            {
+                "distance": {
+                    "text": "0,7 km",
+                    "value": 656
+                },
+                "duration": {
+                    "text": "2 min",
+                    "value": 113
+                },
+                "end_location": {
+                    "lat": 23.1371289,
+                    "lng": -82.38895459999999
+                },
+                "html_instructions": "Dirígete hacia el <b>nordeste</b>",
+                "polyline": {
+                    "points": "mfelCtp{uNiAiB?AcCiDAA{BwC{CcEAAeCgD?Ai@}@yAyB"
+                },
+                "start_location": {
+                    "lat": 23.1333489,
+                    "lng": -82.3938699
+                },
+                "travel_mode": "DRIVING"
+            },
+            {
+                "distance": {
+                    "text": "0,4 km",
+                    "value": 389
+                },
+                "duration": {
+                    "text": "2 min",
+                    "value": 94
+                },
+                "end_location": {
+                    "lat": 23.1344076,
+                    "lng": -82.3865768
+                },
+                "html_instructions": "Gira a la <b>derecha</b>",
+                "maneuver": "turn-right",
+                "polyline": {
+                    "points": "a~elC|qzuNzCcCx@i@@AfDyCDKxCcC"
+                },
+                "start_location": {
+                    "lat": 23.1371289,
+                    "lng": -82.38895459999999
+                },
+                "travel_mode": "DRIVING"
+            },
+            {
+                "distance": {
+                    "text": "0,3 km",
+                    "value": 324
+                },
+                "duration": {
+                    "text": "2 min",
+                    "value": 94
+                },
+                "end_location": {
+                    "lat": 23.1346263,
+                    "lng": -82.38351039999999
+                },
+                "html_instructions": "Gira a la <b>izquierda</b>.",
+                "maneuver": "turn-left",
+                "polyline": {
+                    "points": "amelCbczuNe@y@ACGWIa@ESCSAKDcB?KDg@DmA?C@q@Bs@@I?_B"
+                },
+                "start_location": {
+                    "lat": 23.1344076,
+                    "lng": -82.3865768
+                },
+                "travel_mode": "DRIVING"
+            },
+            {
+                "distance": {
+                    "text": "0,2 km",
+                    "value": 239
+                },
+                "duration": {
+                    "text": "1 min",
+                    "value": 42
+                },
+                "end_location": {
+                    "lat": 23.1355088,
+                    "lng": -82.38147549999999
+                },
+                "html_instructions": "Continúa por <b>Calle Rda.</b>",
+                "polyline": {
+                    "points": "mnelC|oyuN?UAIAGGKEEACe@c@]g@O_@AG?AE[Gm@?AMiAKe@EOGKOI"
+                },
+                "start_location": {
+                    "lat": 23.1346263,
+                    "lng": -82.38351039999999
+                },
+                "travel_mode": "DRIVING"
+            },
+            {
+                "distance": {
+                    "text": "0,3 km",
+                    "value": 324
+                },
+                "duration": {
+                    "text": "1 min",
+                    "value": 68
+                },
+                "end_location": {
+                    "lat": 23.1356742,
+                    "lng": -82.37831369999999
+                },
+                "html_instructions": "Gira a la <b>derecha</b>",
+                "maneuver": "turn-right",
+                "polyline": {
+                    "points": "}selCfcyuN?OOaFIiEE}D"
+                },
+                "start_location": {
+                    "lat": 23.1355088,
+                    "lng": -82.38147549999999
+                },
+                "travel_mode": "DRIVING"
+            },
+            {
+                "distance": {
+                    "text": "87 m",
+                    "value": 87
+                },
+                "duration": {
+                    "text": "1 min",
+                    "value": 16
+                },
+                "end_location": {
+                    "lat": 23.1348937,
+                    "lng": -82.3783016
+                },
+                "html_instructions": "Gira a la <b>derecha</b> en la 3.ª bocacalle hacia <b>10 de Octubre</b>/<wbr/><b>Infanta</b>",
+                "maneuver": "turn-right",
+                "polyline": {
+                    "points": "}telCloxuNfA?rAA"
+                },
+                "start_location": {
+                    "lat": 23.1356742,
+                    "lng": -82.37831369999999
+                },
+                "travel_mode": "DRIVING"
+            },
+            {
+                "distance": {
+                    "text": "0,1 km",
+                    "value": 149
+                },
+                "duration": {
+                    "text": "1 min",
+                    "value": 21
+                },
+                "end_location": {
+                    "lat": 23.1349809,
+                    "lng": -82.37684589999999
+                },
+                "html_instructions": "Gira a la <b>izquierda</b> en la 1.ª bocacalle hacia <b>San Martin</b><div style=\"font-size:0.9em\">El destino está a la derecha.</div>",
+                "maneuver": "turn-left",
+                "polyline": {
+                    "points": "apelCjoxuNEmAEkB?CEcB"
+                },
+                "start_location": {
+                    "lat": 23.1348937,
+                    "lng": -82.3783016
+                },
+                "travel_mode": "DRIVING"
+            }
+        ],
+        "traffic_speed_entry": [],
+        "via_waypoint": []
     }
 }

@@ -186,7 +186,7 @@ export default function ClientMap() {
         setFindingRide(true);
         setTimeout(() => {
             setFindingRide(false);
-            setRideInfo(TestRideData)
+            setRideInfo(TestRideData as unknown as RideInfo)
 
             const decodedCoords = polylineDecode(TestRideData.overview_polyline.points).map(
                 (point) => ({ latitude: point[0]!, longitude: point[1]! })
@@ -200,25 +200,27 @@ export default function ClientMap() {
     }, [])
     const startNavigationHandler = useCallback(async (
         destination: { latitude: number; longitude: number },
-        timeoutCallback: () => void,
+        timeoutCallback?: () => void,
     ) => {
+        setNavigationInfo(null)
         const currentLocation = await ExpoLocation.getCurrentPositionAsync({
             accuracy: ExpoLocation.Accuracy.Highest
         })
         const resp = await fetch(
-            `http://192.168.1.102:6942/route?from=${currentLocation.coords.latitude},${currentLocation.coords.longitude}&to=${destination.latitude},${destination.longitude}`
+            `http://172.20.10.12:6942/route?from=${currentLocation.coords.latitude},${currentLocation.coords.longitude}&to=${destination.latitude},${destination.longitude}`
         );
         const respJson = await resp.json();
         const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map(
             (point) => ({ latitude: point[0]!, longitude: point[1]! })
         );
 
+        setNavigationCurrentStep(-1);
+        setActiveRoute({
+            coords: decodedCoords,
+        })
         setNavigationInfo({
             coords: decodedCoords,
             ...respJson[0].legs[0],
-        })
-        setActiveRoute({
-            coords: decodedCoords,
         })
 
         setTimeout(() => {
@@ -232,7 +234,7 @@ export default function ClientMap() {
                 zoom: 16,
                 altitude: 100,
             })
-            timeoutCallback()
+            timeoutCallback && timeoutCallback()
         })
     }, [mapViewRef])
     const startPickUpHandler = useCallback(async () => {
@@ -497,8 +499,8 @@ export default function ClientMap() {
                         </View>
                     </ScaleBtn>
 
-                    {(currentStep === TaxiSteps.PICKUP || currentStep === TaxiSteps.RIDE) &&
-                        navigationInfo && <TaxiStepsCarousel navigationInfo={navigationInfo} navigationCurrentStep={navigationCurrentStep} setNavigationCurrentStep={setNavigationCurrentStep} animateCamera={animateCamera} />
+                    {(currentStep === TaxiSteps.RIDE || currentStep === TaxiSteps.PICKUP) &&
+                        navigationInfo && <TaxiStepsCarousel navigationInfo={navigationInfo} navigationCurrentStep={navigationCurrentStep} setNavigationCurrentStep={setNavigationCurrentStep} animateCamera={animateCamera} startRideHandler={startRideHandler} />
                     }
 
                     {currentStep === TaxiSteps.WAITING && (
@@ -617,7 +619,6 @@ export default function ClientMap() {
                             currentStep={currentStep}
                             rideInfo={rideInfo}
                             startPickUpHandler={startPickUpHandler}
-                            startRideHandler={startRideHandler}
                             cancelRideHandler={cancelRideHandler}
                         // navigationInfo={navigationInfo}
                         // navigationCurrentStep={navigationCurrentStep}

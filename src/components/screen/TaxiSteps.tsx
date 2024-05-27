@@ -1,5 +1,5 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import {
     Text,
     View,
@@ -18,6 +18,7 @@ interface NavigationStepsProps {
     navigationInfo: NavigationInfo;
     navigationCurrentStep: number;
     setNavigationCurrentStep: React.Dispatch<React.SetStateAction<number>>;
+    startRideHandler: () => Promise<void>;
     animateCamera: (camera: Partial<Camera>, opts?: {
         duration?: number;
     }) => void
@@ -27,11 +28,13 @@ export default function TaxiSteps({
     navigationInfo,
     navigationCurrentStep,
     setNavigationCurrentStep,
+    startRideHandler,
     animateCamera
 }: NavigationStepsProps) {
     const insets = useSafeAreaInsets();
     const { position, simulateRoutePosition, stopRouteSimulation } = useWSConnection();
     const stepView = useRef<PagerView>(null);
+    const stepCompleted = useRef<boolean>(false);
 
     useEffect(() => {
         simulateRoutePosition(navigationInfo.coords)
@@ -42,17 +45,14 @@ export default function TaxiSteps({
             if (navigationCurrentStep === -1) {
                 if (calculateDistance(position.coords.latitude, position.coords.longitude, navigationInfo.start_location.lat as unknown as number, navigationInfo.start_location.lng as unknown as number) > 0.025) {
                     setNavigationCurrentStep(0);
-                    stepView.current?.setPage(1)
+                    stepView.current?.setPage(1);
                 }
-            } else if (navigationCurrentStep === navigationInfo.steps.length) {
+            } else if (navigationCurrentStep === navigationInfo.steps.length - 1) {
                 const end_lat = navigationInfo.end_location.lat as unknown as number;
                 const end_lng = navigationInfo.end_location.lng as unknown as number;
-                console.log(calculateDistance(position.coords.latitude, position.coords.longitude, end_lat, end_lng))
                 if (calculateDistance(position.coords.latitude, position.coords.longitude, end_lat, end_lng) < 0.015) {
-                    console.log('Arrived at destination')
-                    setNavigationCurrentStep(-1);
-                    stepView.current?.setPage(0)
                     stopRouteSimulation()
+                    startRideInnerHandler()
                 } else {
                     animateCamera({
                         pitch: 70,
@@ -66,14 +66,24 @@ export default function TaxiSteps({
                     })
                 }
             } else {
-                const end_lat = navigationInfo.steps[navigationCurrentStep].end_location.lat as unknown as number;
-                const end_lng = navigationInfo.steps[navigationCurrentStep].end_location.lng as unknown as number;
-                if (calculateDistance(position.coords.latitude, position.coords.longitude, end_lat, end_lng) < 0.015) {
-                    setNavigationCurrentStep((prev) => {
-                        stepView.current?.setPage(prev + 2)
-                        return prev + 1
-                    });
+                if (!stepCompleted.current) {
+                    const end_lat = navigationInfo.steps[navigationCurrentStep].end_location.lat as unknown as number;
+                    const end_lng = navigationInfo.steps[navigationCurrentStep].end_location.lng as unknown as number;
+                    if (calculateDistance(position.coords.latitude, position.coords.longitude, end_lat, end_lng) < 0.015) {
+                        stepCompleted.current = true;
+                    }
+                } else {
+                    const end_lat = navigationInfo.steps[navigationCurrentStep].end_location.lat as unknown as number;
+                    const end_lng = navigationInfo.steps[navigationCurrentStep].end_location.lng as unknown as number;
+                    if (calculateDistance(position.coords.latitude, position.coords.longitude, end_lat, end_lng) > 0.015) {
+                        setNavigationCurrentStep((prev) => {
+                            stepView.current?.setPage(prev + 2)
+                            return prev + 1
+                        });
+                        stepCompleted.current = false;
+                    }
                 }
+
                 animateCamera({
                     pitch: 70,
                     heading: position.coords.heading ?? 0,
@@ -88,6 +98,14 @@ export default function TaxiSteps({
             }
         }
     }, [position]);
+
+    const startRideInnerHandler = useCallback(async () => {
+        try {
+            await startRideHandler();
+        } catch (error) {
+            console.error(error);
+        }
+    }, [startRideHandler]);
 
     return (
         <View className='bg-[#FCCB6F] absolute self-center w-[90%] h-24 rounded-xl shadow' style={{ top: insets.top + 72 }}>

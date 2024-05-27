@@ -73,6 +73,7 @@ export interface RideInfo {
   overview_polyline: {
     points: string;
   };
+  navigationInfo: google.maps.DirectionsLeg;
 }
 export type NavigationInfo = {
   coords: LatLng[];

@@ -15,7 +15,6 @@ interface BottomSheetTaxiContentProps {
     currentStep: TaxiSteps;
     rideInfo: RideInfo | null;
     startPickUpHandler: () => Promise<void>;
-    startRideHandler: () => Promise<void>;
     cancelRideHandler: () => Promise<void>;
     // navigationInfo: NavigationInfo | null;
     // navigationCurrentStep: number;
@@ -25,23 +24,18 @@ const BottomSheetTaxiContent = ({
     currentStep,
     rideInfo,
     startPickUpHandler,
-    startRideHandler,
     cancelRideHandler,
     // navigationInfo,
     // navigationCurrentStep,
 }: BottomSheetTaxiContentProps) => {
 
-    const startPickUpInnerHandler = useCallback(() => {
-        startPickUpHandler()
+    const startPickUpInnerHandler = useCallback(async () => {
+        await startPickUpHandler()
     }, [startPickUpHandler])
 
-    const startRideInnerHandler = useCallback(() => {
-        startRideHandler()
-    }, [startRideHandler])
-
-    const cancelRideInnerHandler = useCallback(() => {
-        cancelRideHandler()
-    }, [startRideHandler])
+    const cancelRideInnerHandler = useCallback(async () => {
+        await cancelRideHandler()
+    }, [cancelRideHandler])
 
     return (
         <BottomSheetView className="flex-1 bg-[#F8F8F8] dark:bg-[#222222]">

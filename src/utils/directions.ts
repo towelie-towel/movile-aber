@@ -19,7 +19,7 @@ export const getAddress = async (latitude: number, longitude: number) => {
 export const getDirections = async (startLoc: string, destinationLoc: string) => {
   try {
     const resp = await fetch(
-      `http://192.168.1.102:6942/route?from=${startLoc}&to=${destinationLoc}`
+      `http://172.20.10.12:6942/route?from=${startLoc}&to=${destinationLoc}`
     );
     const respJson = await resp.json();
     const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map((point, _) => ({
@@ -43,7 +43,6 @@ export const duplicateCoords = (
     latitude: number;
     longitude: number;
   }[] = [];
-
   for (let i = 0; i < coords.length - 1; i++) {
     newCoords.push({
       latitude: Number(coords[i]?.latitude),
@@ -52,6 +51,12 @@ export const duplicateCoords = (
     newCoords.push({
       latitude: (Number(coords[i]?.latitude) + Number(coords[i + 1]?.latitude)) / 2,
       longitude: (Number(coords[i]?.longitude) + Number(coords[i + 1]?.longitude)) / 2,
+    });
+  }
+  if (coords.length > 0) {
+    newCoords.push({
+      latitude: Number(coords[coords.length - 1]?.latitude),
+      longitude: Number(coords[coords.length - 1]?.longitude),
     });
   }
   return newCoords;
