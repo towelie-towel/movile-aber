@@ -10,6 +10,7 @@ import { NavigationInfo, RideInfo, TaxiSteps } from '~/constants/Configs';
 import DashedLine from './DashedLine';
 import { useWSConnection } from '~/context/WSContext';
 import TaximeterRide from './TaximeterRide';
+import ProfileScreen from '~/app/(taxi)/profile';
 
 interface BottomSheetTaxiContentProps {
     currentStep: TaxiSteps;
@@ -85,15 +86,15 @@ const BottomSheetTaxiContent = ({
                             </View>
                         </View>
 
-                        <View className="relative z-[1000] w-full h-12 px-0 mt-3 items-center flex-row py-1">
+                        <View className="relative z-[1000] w-full pr-[5%] mt-3 items-center flex-row py-1">
                             <MaterialCommunityIcons name="map-marker-account" size={32} color="#000" />
-                            <Text className="font-medium text-[#242E42]">{rideInfo?.origin.address}</Text>
+                            <Text className="ml-2 font-bold text-lg text-[#242E42]">{rideInfo?.origin.address}</Text>
                         </View>
-                        <View className="relative z-[999] w-full h-12 px-0 mt-3 items-center flex-row">
+                        <View className="relative z-[999] w-full pr-[5%] mt-3 items-center flex-row">
                             <DashedLine
                                 axis="vertical"
                                 style={{
-                                    height: 24,
+                                    height: 44,
                                     left: 15,
                                     top: -25,
                                 }}
@@ -104,10 +105,27 @@ const BottomSheetTaxiContent = ({
                                 size={32}
                                 color="#000"
                             />
-                            <Text className="font-medium text-[#242E42]">{rideInfo?.destination.address}</Text>
+                            <Text className="ml-2 font-bold text-lg text-[#242E42]">{rideInfo?.destination.address}</Text>
                         </View>
 
-                        {currentStep === TaxiSteps.CONFIRM ? <View className='flex-row mt-4 w-full h-18 gap-3 justify-between'>
+                        <View className="flex-row gap-7 items-center py-2 px-[5%]">
+                            <View className="flex-row items-center justify-between flex-1 mx-1">
+                                <View className="gap-2">
+                                    <Text className="text-xl font-medium text-[#C8C7CC] text-center">Distance</Text>
+                                    <Text className="text-xl font-bold">{rideInfo?.distance.text}</Text>
+                                </View>
+                                <View className="gap-2">
+                                    <Text className="text-xl font-medium text-[#C8C7CC] text-center">Time</Text>
+                                    <Text className="text-xl font-bold">{rideInfo?.duration.text}</Text>
+                                </View>
+                                <View className="gap-2">
+                                    <Text className="text-lg font-medium text-[#C8C7CC] text-center">Price</Text>
+                                    <Text className="text-xl font-bold">650 CUP</Text>
+                                </View>
+                            </View>
+                        </View>
+
+                        {currentStep === TaxiSteps.CONFIRM && <View className='flex-row mt-2 w-full h-18 gap-3 justify-between'>
                             <ScaleBtn containerStyle={{ flex: 1 }} className="" onPress={startPickUpInnerHandler}>
                                 <View className="flex-row items-center justify-center bg-[#389938] rounded-xl p-3">
                                     <Text className="text-white font-bold text-xl">Accept</Text>
@@ -120,8 +138,9 @@ const BottomSheetTaxiContent = ({
                                 </View>
                             </ScaleBtn>
                         </View>
-                            :
-                            <ScaleBtn className="mt-4 w-full gap-3" onPress={() => cancelRideInnerHandler()}>
+                        }
+                        {currentStep === TaxiSteps.PICKUP &&
+                            <ScaleBtn className="mt-2 w-full gap-3" onPress={() => cancelRideInnerHandler()}>
                                 <View className="h-18 flex-row items-center justify-center bg-[#242E42] rounded-xl p-3">
                                     <Text className="text-white font-bold text-xl">Cancel</Text>
                                 </View>

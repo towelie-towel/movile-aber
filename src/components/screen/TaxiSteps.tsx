@@ -38,7 +38,10 @@ export default function TaxiSteps({
 
     useEffect(() => {
         simulateRoutePosition(navigationInfo.coords)
-    }, [])
+        return () => {
+            stopRouteSimulation()
+        }
+    }, [navigationInfo])
 
     useEffect(() => {
         if (position && navigationInfo) {
@@ -51,6 +54,7 @@ export default function TaxiSteps({
                 const end_lat = navigationInfo.end_location.lat as unknown as number;
                 const end_lng = navigationInfo.end_location.lng as unknown as number;
                 if (calculateDistance(position.coords.latitude, position.coords.longitude, end_lat, end_lng) < 0.015) {
+                    console.log('Ride completed')
                     stopRouteSimulation()
                     startRideInnerHandler()
                 } else {

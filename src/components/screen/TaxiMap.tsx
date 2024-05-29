@@ -46,6 +46,9 @@ import TestRideData from '~/constants/TestRideData.json'
 import { useUser } from '~/context/UserContext';
 import { calculateBearing, calculateMiddlePointAndDelta, polylineDecode } from '~/utils/directions';
 import TaxiStepsCarousel from './TaxiSteps';
+import bottomSheet from '@gorhom/bottom-sheet/lib/typescript/components/bottomSheet';
+
+const DEV_SIMULATING = true
 
 export default function ClientMap() {
     useKeepAwake();
@@ -107,13 +110,14 @@ export default function ClientMap() {
     useEffect(() => {
         switch (currentStep) {
             case TaxiSteps.WAITING:
-                setSnapPoints([195, 360, 550])
+                setSnapPoints([195, 400])
+                // bottomSheetModalRef.current?.close()
                 break;
             case TaxiSteps.CONFIRM:
-                setSnapPoints([360, 400])
+                setSnapPoints([380, 400])
                 break;
             case TaxiSteps.RIDE:
-                setSnapPoints([360, 400])
+                setSnapPoints([180, 400])
                 break;
 
             default:
@@ -203,51 +207,89 @@ export default function ClientMap() {
         timeoutCallback?: () => void,
     ) => {
         setNavigationInfo(null)
+
         const currentLocation = await ExpoLocation.getCurrentPositionAsync({
             accuracy: ExpoLocation.Accuracy.Highest
         })
-        console.log(`fetching route from ${currentLocation.coords.latitude},${currentLocation.coords.longitude} to ${destination.latitude},${destination.longitude}`)
-        const resp = await fetch(
-            `http://172.20.10.12:6942/route?from=${currentLocation.coords.latitude},${currentLocation.coords.longitude}&to=${destination.latitude},${destination.longitude}`
-        );
-        const respJson = await resp.json();
-        const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map(
-            (point) => ({ latitude: point[0]!, longitude: point[1]! })
-        );
+        let startLatitude = currentLocation.coords.latitude
+        let startLongitude = currentLocation.coords.longitude
+        if (DEV_SIMULATING && navigationInfo) {
+            startLatitude = navigationInfo?.coords[navigationInfo.coords.length - 1].latitude
+            startLongitude = navigationInfo?.coords[navigationInfo.coords.length - 1].longitude
+        }
 
-        setNavigationCurrentStep(-1);
-        setActiveRoute({
-            coords: decodedCoords,
-        })
-        setNavigationInfo({
-            coords: decodedCoords,
-            ...respJson[0].legs[0],
-        })
-
-        setTimeout(() => {
-            mapViewRef.current?.animateCamera({
-                pitch: 70,
-                heading: calculateBearing(decodedCoords[0].latitude, decodedCoords[0].longitude, decodedCoords[1].latitude, decodedCoords[1].longitude),
-                center: {
-                    latitude: decodedCoords[0].latitude,
-                    longitude: decodedCoords[0].longitude,
-                },
-                zoom: 16,
-                altitude: 100,
+        try {
+            console.log(`fetching route from ${startLatitude},${startLongitude} to ${destination.latitude},${destination.longitude}`)
+            const resp = await fetch(
+                `http://192.168.1.101:6942/route?from=${startLatitude},${startLongitude}&to=${destination.latitude},${destination.longitude}`
+            );
+            const respJson = await resp.json();
+            const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map(
+                (point) => ({ latitude: point[0]!, longitude: point[1]! })
+            );
+            setNavigationCurrentStep(-1);
+            setActiveRoute({
+                coords: decodedCoords,
             })
-            timeoutCallback && timeoutCallback()
-        })
-    }, [mapViewRef])
-    const startPickUpHandler = useCallback(async () => {
-        await startNavigationHandler(rideInfo?.origin!, () => setCurrentStep(TaxiSteps.PICKUP));
-    }, [startNavigationHandler, rideInfo])
-    const startRideHandler = useCallback(async () => {
-        await startNavigationHandler(rideInfo?.destination!, () => setCurrentStep(TaxiSteps.RIDE));
-    }, [startNavigationHandler, rideInfo])
+            setNavigationInfo({
+                coords: decodedCoords,
+                ...respJson[0].legs[0],
+            })
+            setTimeout(() => {
+                mapViewRef.current?.animateCamera({
+                    pitch: 70,
+                    heading: calculateBearing(decodedCoords[0].latitude, decodedCoords[0].longitude, decodedCoords[1].latitude, decodedCoords[1].longitude),
+                    center: {
+                        latitude: decodedCoords[0].latitude,
+                        longitude: decodedCoords[0].longitude,
+                    },
+                    zoom: 16,
+                    altitude: 100,
+                })
+                timeoutCallback && timeoutCallback()
+            })
+        } catch (error) {
+            console.error(error);
+            throw error;
+
+        }
+
+
+    }, [mapViewRef, navigationInfo])
+    const commonNavigationHandler = useCallback(async () => {
+        switch (currentStep) {
+            case TaxiSteps.CONFIRM:
+                await startNavigationHandler(rideInfo?.origin!, () => setCurrentStep(TaxiSteps.PICKUP));
+                break;
+
+            case TaxiSteps.PICKUP:
+                await startNavigationHandler(rideInfo?.destination!, () => setCurrentStep(TaxiSteps.RIDE));
+                break;
+
+            case TaxiSteps.RIDE:
+                setCurrentStep(TaxiSteps.FINISHED_RIDE);
+                break;
+
+            case TaxiSteps.FINISHED_RIDE:
+                finishRideHandler()
+                break;
+
+            default:
+                break;
+        }
+    }, [startNavigationHandler, rideInfo, currentStep])
     const cancelRideHandler = useCallback(async () => {
         setCurrentStep(TaxiSteps.WAITING)
         setNavigationInfo(null)
         setActiveRoute(null)
+    }, [])
+    const finishRideHandler = useCallback(async () => {
+        setCurrentStep(TaxiSteps.WAITING)
+        setRideInfo(null)
+        setNavigationInfo(null)
+        setActiveRoute(null)
+        setFindingRide(false)
+        setNavigationCurrentStep(-1)
     }, [])
 
     // renders
@@ -455,6 +497,256 @@ export default function ClientMap() {
                                 '#7F0000'
                             ]}
                         />}
+                        <Polyline
+                            coordinates={[
+                                {
+                                    "latitude": 23.118586,
+                                    "longitude": -82.38061
+                                },
+                                {
+                                    "latitude": 23.118626,
+                                    "longitude": -82.380703
+                                },
+                                {
+                                    "latitude": 23.118874,
+                                    "longitude": -82.381251
+                                },
+                                {
+                                    "latitude": 23.11912,
+                                    "longitude": -82.381752
+                                },
+                                {
+                                    "latitude": 23.119396,
+                                    "longitude": -82.38231
+                                },
+                                {
+                                    "latitude": 23.119723,
+                                    "longitude": -82.383095
+                                },
+                                {
+                                    "latitude": 23.119735,
+                                    "longitude": -82.383125
+                                },
+                                {
+                                    "latitude": 23.120799,
+                                    "longitude": -82.382567
+                                },
+                                {
+                                    "latitude": 23.12089,
+                                    "longitude": -82.382516
+                                },
+                                {
+                                    "latitude": 23.121777,
+                                    "longitude": -82.38204
+                                },
+                                {
+                                    "latitude": 23.121947,
+                                    "longitude": -82.38195
+                                },
+                                {
+                                    "latitude": 23.122828,
+                                    "longitude": -82.38148
+                                },
+                                {
+                                    "latitude": 23.123105,
+                                    "longitude": -82.38182
+                                },
+                                {
+                                    "latitude": 23.123224,
+                                    "longitude": -82.382036
+                                },
+                                {
+                                    "latitude": 23.123267,
+                                    "longitude": -82.382194
+                                },
+                                {
+                                    "latitude": 23.123258,
+                                    "longitude": -82.382421
+                                },
+                                {
+                                    "latitude": 23.123222,
+                                    "longitude": -82.382636
+                                },
+                                {
+                                    "latitude": 23.123187,
+                                    "longitude": -82.382838
+                                },
+                                {
+                                    "latitude": 23.123184,
+                                    "longitude": -82.383071
+                                },
+                                {
+                                    "latitude": 23.12321,
+                                    "longitude": -82.383356
+                                },
+                                {
+                                    "latitude": 23.123307,
+                                    "longitude": -82.384032
+                                },
+                                {
+                                    "latitude": 23.123366,
+                                    "longitude": -82.384304
+                                },
+                                {
+                                    "latitude": 23.1234,
+                                    "longitude": -82.38445
+                                },
+                                {
+                                    "latitude": 23.123498,
+                                    "longitude": -82.3848
+                                },
+                                {
+                                    "latitude": 23.123583,
+                                    "longitude": -82.385059
+                                },
+                                {
+                                    "latitude": 23.124107,
+                                    "longitude": -82.386674
+                                },
+                                {
+                                    "latitude": 23.124266,
+                                    "longitude": -82.387142
+                                },
+                                {
+                                    "latitude": 23.124337,
+                                    "longitude": -82.387364
+                                },
+                                {
+                                    "latitude": 23.124526,
+                                    "longitude": -82.387891
+                                },
+                                {
+                                    "latitude": 23.124659,
+                                    "longitude": -82.388111
+                                },
+                                {
+                                    "latitude": 23.12494,
+                                    "longitude": -82.388416
+                                },
+                                {
+                                    "latitude": 23.125029,
+                                    "longitude": -82.388484
+                                },
+                                {
+                                    "latitude": 23.12516,
+                                    "longitude": -82.388581
+                                },
+                                {
+                                    "latitude": 23.125729,
+                                    "longitude": -82.389108
+                                },
+                                {
+                                    "latitude": 23.12583,
+                                    "longitude": -82.389197
+                                },
+                                {
+                                    "latitude": 23.125974,
+                                    "longitude": -82.38932
+                                },
+                                {
+                                    "latitude": 23.126536,
+                                    "longitude": -82.389816
+                                },
+                                {
+                                    "latitude": 23.126664,
+                                    "longitude": -82.389932
+                                },
+                                {
+                                    "latitude": 23.12678,
+                                    "longitude": -82.390032
+                                },
+                                {
+                                    "latitude": 23.12732,
+                                    "longitude": -82.390498
+                                },
+                                {
+                                    "latitude": 23.127451,
+                                    "longitude": -82.390621
+                                },
+                                {
+                                    "latitude": 23.127583,
+                                    "longitude": -82.390733
+                                },
+                                {
+                                    "latitude": 23.128118,
+                                    "longitude": -82.391217
+                                },
+                                {
+                                    "latitude": 23.128496,
+                                    "longitude": -82.391559
+                                },
+                                {
+                                    "latitude": 23.128803,
+                                    "longitude": -82.391803
+                                },
+                                {
+                                    "latitude": 23.129126,
+                                    "longitude": -82.392078
+                                },
+                                {
+                                    "latitude": 23.129597,
+                                    "longitude": -82.392481
+                                },
+                                {
+                                    "latitude": 23.129734,
+                                    "longitude": -82.392613
+                                },
+                                {
+                                    "latitude": 23.129831,
+                                    "longitude": -82.392702
+                                },
+                                {
+                                    "latitude": 23.130449,
+                                    "longitude": -82.39326
+                                },
+                                {
+                                    "latitude": 23.130564,
+                                    "longitude": -82.393376
+                                },
+                                {
+                                    "latitude": 23.130696,
+                                    "longitude": -82.393495
+                                },
+                                {
+                                    "latitude": 23.131069,
+                                    "longitude": -82.393824
+                                },
+                                {
+                                    "latitude": 23.131373,
+                                    "longitude": -82.394108
+                                },
+                                {
+                                    "latitude": 23.131679,
+                                    "longitude": -82.394376
+                                },
+                                {
+                                    "latitude": 23.132298,
+                                    "longitude": -82.394934
+                                },
+                                {
+                                    "latitude": 23.132464,
+                                    "longitude": -82.395094
+                                },
+                                {
+                                    "latitude": 23.133126,
+                                    "longitude": -82.394209
+                                },
+                                {
+                                    "latitude": 23.13337,
+                                    "longitude": -82.393894
+                                }
+                            ]}
+                            strokeWidth={5}
+                            strokeColor="#000" // fallback for when `strokeColors` is not supported by the map-provider
+                            strokeColors={[
+                                '#7F0000',
+                                '#00000000', // no color, creates a "long" gradient between the previous and next coordinate
+                                '#B24112',
+                                '#E5845C',
+                                '#238C23',
+                                '#7F0000'
+                            ]}
+                        />
                         <DriverMarker activeWaves={findingRide} />
                         <AnimatedRouteMarker key={2} />
 
@@ -501,7 +793,7 @@ export default function ClientMap() {
                     </ScaleBtn>
 
                     {(currentStep === TaxiSteps.RIDE || currentStep === TaxiSteps.PICKUP) &&
-                        navigationInfo && <TaxiStepsCarousel navigationInfo={navigationInfo} navigationCurrentStep={navigationCurrentStep} setNavigationCurrentStep={setNavigationCurrentStep} animateCamera={animateCamera} startRideHandler={startRideHandler} />
+                        navigationInfo && <TaxiStepsCarousel navigationInfo={navigationInfo} navigationCurrentStep={navigationCurrentStep} setNavigationCurrentStep={setNavigationCurrentStep} animateCamera={animateCamera} startRideHandler={commonNavigationHandler} />
                     }
 
                     {currentStep === TaxiSteps.WAITING && (
@@ -560,6 +852,8 @@ export default function ClientMap() {
                     )}
 
                     <BottomSheetModal
+                        enableContentPanningGesture={false}
+                        enableHandlePanningGesture={false}
                         animatedPosition={animatedPosition}
                         animatedIndex={animatedIndex}
                         ref={bottomSheetModalRef}
@@ -577,9 +871,7 @@ export default function ClientMap() {
                         }}
                         // enableDynamicSizing
                         android_keyboardInputMode="adjustResize"
-                        // enableContentPanningGesture={false}
                         enableDismissOnClose={false}
-                        // enableHandlePanningGesture={false}
                         enablePanDownToClose={false}
                         snapPoints={snapPoints}
                         backgroundStyle={{
@@ -619,7 +911,7 @@ export default function ClientMap() {
                         <BottomSheetTaxiContent
                             currentStep={currentStep}
                             rideInfo={rideInfo}
-                            startPickUpHandler={startPickUpHandler}
+                            startPickUpHandler={commonNavigationHandler}
                             cancelRideHandler={cancelRideHandler}
                         // navigationInfo={navigationInfo}
                         // navigationCurrentStep={navigationCurrentStep}

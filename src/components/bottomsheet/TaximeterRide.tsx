@@ -28,7 +28,7 @@ const TaximeterRide: React.FC = () => {
     return (
         <View>
             <View className="flex-row gap-7 items-center py-2">
-                <ConfortSVG />
+                {/* <ConfortSVG /> */}
                 <View className="flex-row items-center justify-between flex-1 mx-1">
                     <View className="gap-2">
                         <Text className="text-xl font-medium text-[#C8C7CC] text-center">Distance</Text>
