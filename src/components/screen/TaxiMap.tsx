@@ -780,18 +780,6 @@ export default function ClientMap() {
                         )}
                     </MapView>
 
-                    <ScaleBtn
-                        containerStyle={{ position: 'absolute', left: "5%", top: insets.top + 12 }}
-                        onPress={() => setDrawerOpen(true)}>
-                        <View className="bg-[#f8f8f8] dark:bg-[#000] p-1 rounded-xl border border-[#d8d8d8] dark:[#a3a3a3]">
-                            <MaterialIcons
-                                name="menu"
-                                size={36}
-                                color={Colors[colorScheme ?? 'light'].text_dark}
-                            />
-                        </View>
-                    </ScaleBtn>
-
                     {(currentStep === TaxiSteps.RIDE || currentStep === TaxiSteps.PICKUP) &&
                         navigationInfo && <TaxiStepsCarousel navigationInfo={navigationInfo} navigationCurrentStep={navigationCurrentStep} setNavigationCurrentStep={setNavigationCurrentStep} animateCamera={animateCamera} startRideHandler={commonNavigationHandler} />
                     }
@@ -804,8 +792,8 @@ export default function ClientMap() {
                                 disabled={findingRide}
                                 className=""
                                 onPress={findRideHandler}>
-                                <View className="bg-[#FCCB6F] w-40 h-14 rounded-lg p-3">
-                                    <Text className="text-center text-lg font-bold w-auto text-[#fff]">
+                                <View className="bg-[#FCCB6F] dark:bg-[#d5900f] w-40 h-14 rounded-lg p-3">
+                                    <Text className="dark:text-[#C8C7CC] text-center text-lg font-bold w-auto text-[#fff]">
                                         {findingRide ? 'Finding Ride' : 'Recieve Ride'}
                                     </Text>
                                 </View>
@@ -815,10 +803,33 @@ export default function ClientMap() {
 
                     <Animated.View
                         style={topSheetBtnsAnimStyle}
-                        className="self-end justify-center items-center absolute top-4 right-[5%]">
+                        className="rounded-xl bg-[#f8f8f8] shadow 1b1a1e dark:bg-[#1b1a1e] self-end justify-center items-center absolute -top-20 right-[5%]">
+                        <ScaleBtn
+                            containerStyle={{}}
+                            onPress={() => setDrawerOpen(true)}>
+                            <View className="p-2 bg-transparent">
+                                <MaterialIcons
+                                    name="menu"
+                                    size={30}
+                                    color={Colors[colorScheme ?? 'light'].text_dark}
+                                />
+                            </View>
+                        </ScaleBtn>
+
+                        {activeRoute && activeRoute.coords.length > 0 && (
+                            <ScaleBtn
+                                onPress={() => {
+                                    animateToActiveRoute();
+                                }}>
+                                <View className="bg-transparent rounded-lg p-3 ">
+                                    <FontAwesome6 name="route" size={24} color={Colors[colorScheme ?? 'light'].text_dark} />
+                                </View>
+                            </ScaleBtn>
+                        )}
+
                         <ScaleBtn
                             onPress={() => {
-                                // animateToUserLocation();
+                                animateToUserLocation();
 
                                 /* mapViewRef.current?.fitToElements({
                                     edgePadding: {
@@ -830,30 +841,15 @@ export default function ClientMap() {
                                     animated: true,
                                 }) */
                             }}>
-                            <View className="bg-[#fff] rounded-lg p-3 shadow">
-                                <FontAwesome6 name="location-arrow" size={24} color="black" />
+                            <View className="bg-transparent rounded-lg p-3 shadow">
+                                <FontAwesome6 name="location-arrow" size={24} color={Colors[colorScheme ?? 'light'].text_dark} />
                             </View>
                         </ScaleBtn>
                     </Animated.View>
 
-                    {activeRoute && activeRoute.coords.length > 0 && (
-                        <Animated.View
-                            style={topSheetBtnsAnimStyle}
-                            className="self-start justify-center items-center absolute top-4 left-[5%]">
-                            <ScaleBtn
-                                onPress={() => {
-                                    animateToActiveRoute();
-                                }}>
-                                <View className="bg-[#fff] rounded-lg p-3 shadow">
-                                    <FontAwesome6 name="route" size={24} color="black" />
-                                </View>
-                            </ScaleBtn>
-                        </Animated.View>
-                    )}
-
                     <BottomSheetModal
-                        enableContentPanningGesture={false}
-                        enableHandlePanningGesture={false}
+                        // enableContentPanningGesture={false}
+                        // enableHandlePanningGesture={false}
                         animatedPosition={animatedPosition}
                         animatedIndex={animatedIndex}
                         ref={bottomSheetModalRef}
@@ -883,7 +879,7 @@ export default function ClientMap() {
                             backgroundColor: Colors[colorScheme ?? 'light'].border,
                         }}
                         handleStyle={{
-                            backgroundColor: 'transparent',
+                            backgroundColor: Colors[colorScheme ?? 'light'].background_bsheet,
                             // backgroundColor: 'black',
                             borderTopRightRadius: 30,
                             borderTopLeftRadius: 30,

@@ -13,24 +13,21 @@ type WavesMarkerProps = {
         heading: number;
     };
     activeWaves?: boolean;
-} | {
-    location: undefined;
-    activeWaves?: boolean;
 }
 
 const UserWavesMarker = ({ activeWaves = false, location }: WavesMarkerProps) => {
     const { position, heading } = useWSConnection();
 
-    if (!position) {
+    if (!position || !location) {
         return null
     }
 
     return (
         <AnimatedMarker
-            heading={location ? location?.heading : heading?.magHeading!}
+            heading={location?.heading ?? heading?.magHeading!}
             headingAnimated={true}
-            latitude={location ? location?.position.latitude : position?.coords.latitude}
-            longitude={location ? location?.position.longitude : position?.coords.longitude}
+            latitude={location?.position.latitude ?? position?.coords.latitude}
+            longitude={location?.position.longitude ?? position?.coords.longitude}
             anchor={{ x: 0.5, y: 0.6 }}
             flat
         >

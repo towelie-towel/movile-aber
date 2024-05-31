@@ -252,15 +252,15 @@ export const BottomSheetContent = ({
               <View className="flex-row items-center justify-between flex-1 mx-1">
                 <View className="gap-2">
                   <Text className="text-xl font-medium text-[#C8C7CC] text-center">Distance</Text>
-                  <Text className="text-xl font-bold">aaa Km</Text>
+                  <Text className="text-xl font-bold">{routeInfo?.distance.text}</Text>
                 </View>
                 <View className="gap-2">
                   <Text className="text-xl font-medium text-[#C8C7CC] text-center">Time</Text>
-                  <Text className="text-xl font-bold">aaa Km</Text>
+                  <Text className="text-xl font-bold">{routeInfo?.duration.text}</Text>
                 </View>
                 <View className="gap-2">
                   <Text className="text-lg font-medium text-[#C8C7CC] text-center">Price</Text>
-                  <Text className="text-xl font-bold">aa min</Text>
+                  <Text className="text-xl font-bold">3000 CUP</Text>
                 </View>
               </View>
             </View>

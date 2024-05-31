@@ -166,6 +166,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       if (error instanceof Error) {
         dispatch({ type: 'GET_SESSION_ERROR', payload: error });
       }
+    } finally {
+      dispatch({ type: 'SET_IS_INITIALIZED' });
     }
   }, [dispatch]);
 
@@ -312,7 +314,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     const authSub = supabase.auth.onAuthStateChange((_event, currentSession) => {
       if (AUTH_LOGS) console.log('AuthState Changed: ' + _event);
 
-      if (currentSession && currentSession.user) {
+      if (currentSession?.user) {
         getProfile(currentSession.user.id);
         dispatch({ type: 'GET_SESSION_SUCCESS', payload: currentSession });
       } else {
