@@ -19,7 +19,7 @@ export const getAddress = async (latitude: number, longitude: number) => {
 export const getDirections = async (startLoc: string, destinationLoc: string) => {
   try {
     const resp = await fetch(
-      `http://172.20.10.4:6942/route?from=${startLoc}&to=${destinationLoc}`
+      `http://172.20.10.12:6942/route?from=${startLoc}&to=${destinationLoc}`
     );
     const respJson = await resp.json();
     const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map((point, _) => ({
@@ -250,4 +250,61 @@ export function cardinalToDegrees(direction: CardinalDirections) {
     default:
       throw new Error(`Invalid direction: ${direction}`);
   }
+}
+
+function getRandomCoordinate(min: number, max: number) {
+  return Math.random() * (max - min) + min;
+}
+
+export function getRandomPointsAtDistance(minDistance: number, maxDistance: number) {
+  const north = 23.277778;
+  const south = 23.008667;
+  const east = -82.301833;
+  const west = -82.383028;
+
+  let point1, point2, distance;
+
+  do {
+    point1 = {
+      latitude: getRandomCoordinate(south, north),
+      longitude: getRandomCoordinate(west, east),
+    };
+
+    point2 = {
+      latitude: getRandomCoordinate(south, north),
+      longitude: getRandomCoordinate(west, east),
+    };
+    distance = calculateDistance(point1.latitude, point1.longitude, point2.latitude, point2.longitude);
+  } while (distance < maxDistance && distance > minDistance);
+
+  return [point1, point2, distance];
+}
+
+export function getRandomPointAtDistance(latitude: number, longitude: number, distance: number) {
+  const R = 6371; // Radius of the earth in km
+  const bearing = Math.random() * 360; // Random bearing in degrees
+  const radianDistance = distance / R; // Convert distance to radians
+
+  const radianLatitude = toRadians(latitude);
+  const radianLongitude = toRadians(longitude);
+  const radianBearing = toRadians(bearing);
+
+  const newLatitude = Math.asin(
+    Math.sin(radianLatitude) * Math.cos(radianDistance) +
+    Math.cos(radianLatitude) * Math.sin(radianDistance) * Math.cos(radianBearing)
+  );
+
+  const newLongitude =
+    radianLongitude +
+    Math.atan2(
+      Math.sin(radianBearing) * Math.sin(radianDistance) * Math.cos(radianLatitude),
+      Math.cos(radianDistance) - Math.sin(radianLatitude) * Math.sin(newLatitude)
+    );
+
+  const newPoint = {
+    latitude: toDegrees(newLatitude),
+    longitude: toDegrees(newLongitude),
+  };
+
+  return newPoint;
 }
