@@ -41,7 +41,7 @@ import { CustomHandle } from '~/components/bottomsheet/hooks/CustomHandle';
 import Ripple from '~/components/common/RippleBtn';
 import ScaleBtn from '~/components/common/ScaleBtn';
 import AnimatedRouteMarker from '~/components/markers/AnimatedRouteMarker';
-// import TaxisMarkers from '~/components/markers/TaxiMarkers';
+import TaxisMarkers from '~/components/markers/TaxiMarkers';
 // import UserMarker from '~/components/markers/UserMarker';
 import { ColorInstagram, ColorFacebook, ColorTwitter } from '~/components/svgs';
 import Colors from '~/constants/Colors';
@@ -53,6 +53,8 @@ import { calculateMiddlePointAndDelta } from '~/utils/directions';
 import type { TaxiProfile, TaxiType } from '~/constants/TaxiTypes';
 import AnimatedMarker from '../markers/AnimatedMarker';
 import UserWavesMarker from '../markers/UserWavesMarker';
+import MagnometerArrow from '../common/MagnometerArrow';
+import { CardinalDirections } from '~/utils/directions';
 
 export default function ClientMap() {
     useKeepAwake();
@@ -419,7 +421,7 @@ export default function ClientMap() {
                         provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : PROVIDER_DEFAULT}
                         customMapStyle={colorScheme === 'dark' ? NightMap : undefined}>
                         {activeRoute && <Polyline coordinates={activeRoute.coords} strokeWidth={5} strokeColor="#000" />}
-                        {/* <TaxisMarkers onPressTaxi={() => { }} /> */}
+                        <TaxisMarkers onPressTaxi={() => { }} />
                         <UserWavesMarker activeWaves={findingRide} />
 
                         <AnimatedRouteMarker key={2} />
@@ -454,7 +456,7 @@ export default function ClientMap() {
                         )}
                     </MapView>
 
-                    <ScaleBtn
+                    {/* <ScaleBtn
                         containerStyle={{ position: 'absolute', left: 28, top: insets.top + 12 }}
                         onPress={() => setDrawerOpen(true)}>
                         <View className="bg-[#f8f8f8] dark:bg-[#000] p-1 rounded-xl border border-[#d8d8d8] dark:[#a3a3a3]">
@@ -464,7 +466,7 @@ export default function ClientMap() {
                                 color={Colors[colorScheme ?? 'light'].text_dark}
                             />
                         </View>
-                    </ScaleBtn>
+                    </ScaleBtn> */}
 
                     {piningLocation && (
                         <View
@@ -498,7 +500,7 @@ export default function ClientMap() {
                         </Animated.View>
                     )}
 
-                    <Animated.View
+                    {/*  <Animated.View
                         style={topSheetBtnsAnimStyle}
                         className="self-end justify-center items-center absolute top-0">
                         <ScaleBtn
@@ -526,7 +528,59 @@ export default function ClientMap() {
                                 </View>
                             </ScaleBtn>
                         </Animated.View>
-                    )}
+                    )} */}
+
+                    <Animated.View
+                        style={topSheetBtnsAnimStyle}
+                        className="rounded-xl bg-[#f8f8f8] shadow 1b1a1e dark:bg-[#1b1a1e] self-end justify-center items-center absolute -top-20 right-[5%]">
+                        <ScaleBtn
+                            containerStyle={{}}
+                            onPress={() => setDrawerOpen(true)}>
+                            <View className="p-2 bg-transparent">
+                                <MaterialIcons
+                                    name="menu"
+                                    size={30}
+                                    color={Colors[colorScheme ?? 'light'].text_dark}
+                                />
+                            </View>
+                        </ScaleBtn>
+
+                        {activeRoute && activeRoute.coords.length > 0 && (
+                            <ScaleBtn
+                                onPress={() => {
+                                    animateToActiveRoute();
+                                }}>
+                                <View className="bg-transparent rounded-lg p-3 ">
+                                    <FontAwesome6 name="route" size={24} color={Colors[colorScheme ?? 'light'].text_dark} />
+                                </View>
+                            </ScaleBtn>
+                        )}
+
+                        <ScaleBtn
+                            onPress={() => {
+                                animateToUserLocation();
+
+                                /* mapViewRef.current?.fitToElements({
+                                    edgePadding: {
+                                        top: 100,
+                                        right: 100,
+                                        bottom: 100,
+                                        left: 100,
+                                    },
+                                    animated: true,
+                                }) */
+                            }}>
+                            <View className="bg-transparent rounded-lg p-3 shadow">
+                                <MagnometerArrow cardinalDirection={CardinalDirections.NORTH} />
+                            </View>
+                        </ScaleBtn>
+
+                        {/* <ScaleBtn>
+                            <View className="bg-transparent rounded-lg p-3 shadow">
+                                <FontAwesome6 name="location-arrow" size={24} color={Colors[colorScheme ?? 'light'].text_dark} />
+                            </View>
+                        </ScaleBtn> */}
+                    </Animated.View>
 
                     <BottomSheetModal
                         animatedPosition={animatedPosition}
@@ -557,12 +611,10 @@ export default function ClientMap() {
                             backgroundColor: 'transparent',
                         }}
                         handleIndicatorStyle={{
-                            backgroundColor:
-                /* sheetCurrentSnap === 2 ? 'transparent' :  */ Colors[colorScheme ?? 'light']
-                                    .border,
+                            backgroundColor: Colors[colorScheme ?? 'light'].border,
                         }}
                         handleStyle={{
-                            backgroundColor: 'transparent',
+                            backgroundColor: Colors[colorScheme ?? 'light'].background_bsheet,
                             // backgroundColor: 'black',
                             borderTopRightRadius: 30,
                             borderTopLeftRadius: 30,
@@ -571,7 +623,7 @@ export default function ClientMap() {
                             backgroundColor: 'transparent',
                         }}
                         style={{
-                            backgroundColor: Colors[colorScheme ?? 'light'].background_light,
+                            // backgroundColor: Colors[colorScheme ?? 'light'].background_light,
                             // backgroundColor: 'rgba(50, 50, 50, 0.5)',
                             borderTopRightRadius: 12,
                             borderTopLeftRadius: 12,

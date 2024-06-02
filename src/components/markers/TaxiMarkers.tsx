@@ -1,10 +1,32 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 // import { useColorScheme } from 'react-native';
 
 import TaxiMarker from './TaxiMarker';
+import { View } from 'react-native';
+import { MotiView } from '@motify/components';
+import { LatLng } from 'react-native-maps';
 
 import { IMarker } from '~/constants/Markers';
 import { useWSConnection } from '~/context/WSContext';
+import { TaxiSVG } from '../svgs';
+import AnimatedMarker from './AnimatedMarker';
+import { WSTaxi } from '~/context/WSContext';
+import { calculateBearing } from '~/utils/directions';
+
+/* 
+<TaxiMarker
+  id={wsTaxi.userId}
+  key={wsTaxi.userId}
+  taxi={taxis.find((taxi) => taxi.id === wsTaxi.userId)!}
+  onPress={() => {
+    onPressTaxi(wsTaxi.userId);
+  }}
+  heading={wsTaxi.header}
+  headingAnimated
+  latitude={wsTaxi.latitude}
+  longitude={wsTaxi.longitude}
+/>
+*/
 
 interface props {
   onPressTaxi: (taxiId: string) => void;
@@ -12,47 +34,28 @@ interface props {
 
 const TaxisMarkers = ({ onPressTaxi }: props) => {
   // const colorScheme = useColorScheme();
+  const [taxis, setTaxis] = useState<WSTaxi[]>([]);
   const { wsTaxis } = useWSConnection();
-  const [taxis, setTaxis] = useState<IMarker[]>([]);
 
   useEffect(() => {
-    const fetchTaxi = async () => {
-      const resp = await fetch(
-        `http://192.168.1.101:6942/taxis?ids=${wsTaxis?.map((taxi) => taxi.userId).join(',')}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-        }
-      );
-      if (!resp.ok) {
-        throw new Error('Failed to fetch taxis');
-      }
-      const respJson = await resp.json();
-      setTaxis(respJson);
-      console.log('🚀 ~ file: TaxiMarkers.tsx:34 ~ fetchTaxi ~ respJson:', respJson);
-    };
-    fetchTaxi();
+    setTaxis(wsTaxis ?? []);
   }, [wsTaxis]);
 
   return (
     <>
-      {wsTaxis?.map((wsTaxi) => {
+      {taxis?.map((taxi) => {
         return (
-          <TaxiMarker
-            id={wsTaxi.userId}
-            key={wsTaxi.userId}
-            taxi={taxis.find((taxi) => taxi.id === wsTaxi.userId)!}
-            onPress={() => {
-              onPressTaxi(wsTaxi.userId);
-            }}
-            heading={wsTaxi.header}
-            headingAnimated
-            latitude={wsTaxi.latitude}
-            longitude={wsTaxi.longitude}
-          />
+          <AnimatedMarker
+            key={`${taxi.userId}`}
+            heading={0}
+            headingAnimated={true}
+            latitude={taxi.latitude}
+            longitude={taxi.longitude}
+            anchor={{ x: 0.5, y: 0.6 }}
+            flat
+          >
+            <TaxiSVG />
+          </AnimatedMarker>
         );
       })}
     </>

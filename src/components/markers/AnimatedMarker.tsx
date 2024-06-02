@@ -1,6 +1,7 @@
 import React, { useRef, useCallback, useEffect, memo } from 'react';
 import { Animated, Dimensions, Easing, Platform } from 'react-native';
-import { MapMarkerProps, AnimatedRegion, MarkerAnimated, type MapMarker } from 'react-native-maps';
+import { MapMarkerProps, AnimatedRegion, MarkerAnimated, type MapMarker, LatLng } from 'react-native-maps';
+import { calculateBearing } from '~/utils/directions';
 
 type AnimatedMarkerParams = {
   longitude: number;
@@ -12,7 +13,6 @@ type AnimatedMarkerParams = {
 const AnimatedMarker: React.FC<AnimatedMarkerParams> = ({
   latitude,
   longitude,
-  heading,
   headingAnimated,
   children,
   ...restProps
@@ -22,7 +22,8 @@ const AnimatedMarker: React.FC<AnimatedMarkerParams> = ({
   const LATITUDE_DELTA = 0.003;
   const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO;
 
-  const animatedHeading = useRef(new Animated.Value(heading)).current;
+  const previousPosition = useRef<LatLng>({ latitude: 0, longitude: 0 })
+  const animatedHeading = useRef(new Animated.Value(0)).current;
 
   const anim_marker_ref = useRef<MapMarker | null>(null);
   const anim_marker_coords_ref = useRef<AnimatedRegion>(
@@ -55,22 +56,21 @@ const AnimatedMarker: React.FC<AnimatedMarkerParams> = ({
         })
         .start();
     }
-  }, [latitude, longitude]);
-
-  useEffect(() => {
     Animated.timing(animatedHeading, {
-      toValue: heading,
+      toValue: calculateBearing(previousPosition.current.latitude, previousPosition.current.longitude, latitude, longitude),
       useNativeDriver: true,
     }).start();
-  }, [heading]);
+    previousPosition.current = { latitude, longitude }
+  }, [latitude, longitude]);
 
   return (
     <MarkerAnimated
+      p
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       coordinate={anim_marker_coords_ref.current} ref={(_ref) => (anim_marker_ref.current = _ref)}
       tracksViewChanges={false}
-      rotation={!headingAnimated ? heading : undefined}
+      // rotation={!headingAnimated ? heading : undefined}
       {...restProps}
     >
       <Animated.View

@@ -44,9 +44,10 @@ import { NightMap } from '~/constants/NightMap';
 import { drawerItems, NavigationInfo, RideInfo, TaxiSteps } from '~/constants/Configs';
 import TestRideData from '~/constants/TestRideData.json'
 import { useUser } from '~/context/UserContext';
-import { calculateBearing, calculateMiddlePointAndDelta, polylineDecode } from '~/utils/directions';
+import { calculateBearing, calculateMiddlePointAndDelta, polylineDecode, CardinalDirections } from '~/utils/directions';
 import TaxiStepsCarousel from './TaxiSteps';
 import bottomSheet from '@gorhom/bottom-sheet/lib/typescript/components/bottomSheet';
+import MagnometerArrow from '../common/MagnometerArrow';
 
 const DEV_SIMULATING = true
 
@@ -221,7 +222,7 @@ export default function ClientMap() {
         try {
             console.log(`fetching route from ${startLatitude},${startLongitude} to ${destination.latitude},${destination.longitude}`)
             const resp = await fetch(
-                `http://192.168.1.101:6942/route?from=${startLatitude},${startLongitude}&to=${destination.latitude},${destination.longitude}`
+                `http://172.20.10.4:6942/route?from=${startLatitude},${startLongitude}&to=${destination.latitude},${destination.longitude}`
             );
             const respJson = await resp.json();
             const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map(
@@ -463,7 +464,7 @@ export default function ClientMap() {
                 }}>
                 <BottomSheetModalProvider>
                     <MapView
-                        // showsCompass={false}
+                        showsCompass={false}
                         // showsUserLocation
                         style={{ width: '100%', height: '100%' }}
                         onTouchMove={() => { }}
@@ -842,9 +843,15 @@ export default function ClientMap() {
                                 }) */
                             }}>
                             <View className="bg-transparent rounded-lg p-3 shadow">
-                                <FontAwesome6 name="location-arrow" size={24} color={Colors[colorScheme ?? 'light'].text_dark} />
+                                <MagnometerArrow cardinalDirection={CardinalDirections.NORTH} />
                             </View>
                         </ScaleBtn>
+
+                        {/* <ScaleBtn>
+                            <View className="bg-transparent rounded-lg p-3 shadow">
+                                <FontAwesome6 name="location-arrow" size={24} color={Colors[colorScheme ?? 'light'].text_dark} />
+                            </View>
+                        </ScaleBtn> */}
                     </Animated.View>
 
                     <BottomSheetModal

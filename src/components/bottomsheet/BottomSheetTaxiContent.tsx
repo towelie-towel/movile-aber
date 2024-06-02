@@ -77,7 +77,7 @@ const BottomSheetTaxiContent = ({
                                 </View>
                             </View>
 
-                            <View className="flex-row gap-4">
+                            {/* <View className="flex-row gap-4">
                                 <ScaleBtn>
                                     <View className="bg-[#25D366] p-2 rounded-full">
                                         <FontAwesome6 name="phone" size={25} color="#fff" />
@@ -88,6 +88,23 @@ const BottomSheetTaxiContent = ({
                                         <AntDesign name="message1" size={25} color="#fff" />
                                     </View>
                                 </ScaleBtn>
+                            </View> */}
+                        </View>
+
+                        <View className="flex-row gap-7 items-center py-2 px-[5%]">
+                            <View className="flex-row items-center justify-between flex-1 mx-1">
+                                <View className="gap-2">
+                                    <Text className="text-xl font-medium text-[#242E42] dark:text-[#C8C7CC] text-center">Distance</Text>
+                                    <Text className="text-xl font-bold text-[#242E42] dark:text-[#C8C7CC]">{rideInfo?.distance.text}</Text>
+                                </View>
+                                <View className="gap-2">
+                                    <Text className="text-xl font-medium text-[#242E42] dark:text-[#C8C7CC] text-center">Time</Text>
+                                    <Text className="text-xl font-bold text-[#242E42] dark:text-[#C8C7CC]">{rideInfo?.duration.text}</Text>
+                                </View>
+                                <View className="gap-2">
+                                    <Text className="text-lg font-medium text-[#242E42] dark:text-[#C8C7CC] text-center">Price</Text>
+                                    <Text className="text-xl font-bold text-[#242E42] dark:text-[#C8C7CC]">650 CUP</Text>
+                                </View>
                             </View>
                         </View>
 

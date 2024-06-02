@@ -84,7 +84,7 @@ export const BottomSheetContent = ({
     const tokio = async () => {
       if (piningInfo?.destination && piningInfo?.origin) {
         const resp = await fetch(
-          `http://192.168.1.101:6942/route?from=${piningInfo.origin.latitude},${piningInfo.origin.longitude}&to=${piningInfo.destination.latitude},${piningInfo.destination.longitude}`
+          `http://172.20.10.4:6942/route?from=${piningInfo.origin.latitude},${piningInfo.origin.longitude}&to=${piningInfo.destination.latitude},${piningInfo.destination.longitude}`
         );
         const respJson = await resp.json();
         const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map(
@@ -211,7 +211,7 @@ export const BottomSheetContent = ({
   };
 
   return (
-    <BottomSheetView className="flex-1 bg-[#F8F8F8] dark:bg-[#222222]">
+    <BottomSheetView className="flex-1 bg-white dark:bg-[#1b1b1b]">
 
       <View className="w-[90%] h-full self-center overflow-visible">
 
@@ -227,8 +227,8 @@ export const BottomSheetContent = ({
                 <View className="justify-center">
                   <Text className="font-bold text-xl">{confirmedTaxi?.name}</Text>
                   <View className="flex-row items-center">
-                    <Text className="text-[#FFCC00] text-lg">★ </Text>
-                    <Text className="text-[#C8C7CC]">4.9</Text>
+                    <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] text-lg">★ </Text>
+                    <Text className="text-[#1b1b1b] dark:text-[#C1C0C9]">4.9</Text>
                   </View>
                 </View>
               </View>
@@ -251,40 +251,41 @@ export const BottomSheetContent = ({
               <ConfortSVG />
               <View className="flex-row items-center justify-between flex-1 mx-1">
                 <View className="gap-2">
-                  <Text className="text-xl font-medium text-[#C8C7CC] text-center">Distance</Text>
+                  <Text className="text-xl font-medium text-[#1b1b1b] dark:text-[#C1C0C9] text-center">Distance</Text>
                   <Text className="text-xl font-bold">{routeInfo?.distance.text}</Text>
                 </View>
                 <View className="gap-2">
-                  <Text className="text-xl font-medium text-[#C8C7CC] text-center">Time</Text>
+                  <Text className="text-xl font-medium text-[#1b1b1b] dark:text-[#C1C0C9] text-center">Time</Text>
                   <Text className="text-xl font-bold">{routeInfo?.duration.text}</Text>
                 </View>
                 <View className="gap-2">
-                  <Text className="text-lg font-medium text-[#C8C7CC] text-center">Price</Text>
+                  <Text className="text-lg font-medium text-[#1b1b1b] dark:text-[#C1C0C9] text-center">Price</Text>
                   <Text className="text-xl font-bold">3000 CUP</Text>
                 </View>
               </View>
             </View>
 
-            <View className="relative z-[1000] w-full h-12 px-0 mt-3 items-center flex-row py-1">
-              <MaterialCommunityIcons name="map-marker-account" size={32} color="#000" />
-              <Text className="font-medium text-[#242E42]">{piningInfo?.origin?.address}</Text>
+            <View className="relative z-[1000] w-full pr-[5%] items-center- flex-row py-1">
+              <MaterialCommunityIcons className='mt-1' name="map-marker-account" size={32} color={Colors[colorScheme ?? "light"].border} />
+              <Text className="ml-2 font-bold text-lg text-[#1b1b1b] dark:text-[#C1C0C9] dark:text-[#1b1b1b] dark:text-[#C1C0C9]">{piningInfo?.origin?.address}</Text>
             </View>
-            <View className="relative z-[999] w-full h-12 px-0 mt-3 items-center flex-row">
+            <View className="relative z-[999] w-full pr-[5%] mb-3 items-end flex-row">
               <DashedLine
                 axis="vertical"
                 style={{
-                  height: 24,
+                  height: 35,
                   left: 15,
-                  top: -25,
+                  top: -32,
                 }}
+                dashColor={Colors[colorScheme ?? "light"].border}
               />
               <MaterialCommunityIcons
-                className="ml-[-1.5px]"
+                className="ml-[-1.5px] mb-1"
                 name="map-marker-radius"
                 size={32}
-                color="#000"
+                color={Colors[colorScheme ?? "light"].border}
               />
-              <Text className="font-medium text-[#242E42]">{piningInfo?.destination?.address}</Text>
+              <Text className="ml-2 font-bold text-lg text-[#1b1b1b] dark:text-[#C1C0C9] dark:text-[#1b1b1b] dark:text-[#C1C0C9]">{piningInfo?.destination?.address}</Text>
             </View>
 
             <ScaleBtn className="mt-4 w-full gap-3" onPress={() => cancelRideInnerHandler()}>
@@ -296,7 +297,7 @@ export const BottomSheetContent = ({
           :
           <>
             <View className="h-10 flex-row justify-between items-center mx-1.5">
-              <Text className="font-bold text-xl">A donde quieres ir?</Text>
+              <Text className="font-bold text-xl text-[#C1C0C9] dark:text-[#]">A donde quieres ir?</Text>
 
               {viewPinOnMap && !piningLocation && (
                 <ScaleBtn onPress={startPiningLocationHandler}>
@@ -346,8 +347,9 @@ export const BottomSheetContent = ({
 
             </View>
 
-            <View className="relative z-[1000] w-full h-12 px-0 mt-3 items-center flex-row">
-              <MaterialCommunityIcons name="map-marker-account" size={32} color="#000" />
+            <View className="relative z-[1000] w-full h-12 px-0 mt-3 items-start flex-row">
+              <MaterialCommunityIcons className='mt-1' name="map-marker-account" size={32}
+                color={Colors[colorScheme ?? "light"].border} />
               <GooglePlacesAutocomplete
                 ref={originInputViewRef}
                 predefinedPlaces={userMarkers.map((marker) => ({
@@ -361,7 +363,7 @@ export const BottomSheetContent = ({
                 }))}
                 placeholder="Lugar de Origen"
                 textInputProps={{
-                  placeholderTextColor: colorScheme === 'light' ? '#6C6C6C' : 'black',
+                  placeholderTextColor: colorScheme === 'light' ? 'black' : '#6C6C6C',
                   onFocus: () => {
                     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
                     if (piningLocation) cancelPiningLocationHandler();
@@ -434,20 +436,21 @@ export const BottomSheetContent = ({
               />
             </View>
 
-            <View className="relative z-[999] w-full h-12 px-0 mt-5 items-center flex-row">
+            <View className="relative z-[999] w-full h-12 px-0 mt-5 items-end flex-row">
               <DashedLine
                 axis="vertical"
                 style={{
                   height: 30,
                   left: 15,
-                  top: -29,
+                  top: -38,
+                  backgroundColor: Colors[colorScheme ?? "light"].border,
                 }}
               />
               <MaterialCommunityIcons
-                className="ml-[-1.5px]"
+                className="mb-1 ml-[-1.5px]"
                 name="map-marker-radius"
                 size={32}
-                color="#000"
+                color={Colors[colorScheme ?? "light"].border}
               />
               <GooglePlacesAutocomplete
                 ref={destinationInputViewRef}
@@ -462,7 +465,7 @@ export const BottomSheetContent = ({
                 }))}
                 placeholder="Lugar Destino"
                 textInputProps={{
-                  placeholderTextColor: colorScheme === 'light' ? '#6C6C6C' : 'black',
+                  placeholderTextColor: colorScheme === 'light' ? 'black' : '#6C6C6C',
                   onFocus: () => {
                     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
                     if (piningLocation) cancelPiningLocationHandler();
@@ -540,7 +543,7 @@ export const BottomSheetContent = ({
         {currentStep === ClientSteps.SEARCH &&
           <>
             <View className="mx-1.5 mt-7 overflow-visible">
-              <Text className="font-bold text-xl">Favoritos</Text>
+              <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-bold text-xl">Favoritos</Text>
 
               <ScrollView keyboardShouldPersistTaps="always" horizontal className="w-100 overflow-visible">
                 <View>
@@ -553,8 +556,8 @@ export const BottomSheetContent = ({
                       color={Colors[colorScheme ?? 'light'].icons}
                     />
                   </ScaleBtn>
-                  <Text className="text-lg font-semibold text-center text-[#333]">Trabajo</Text>
-                  <Text className="text-sm text-center text-[#555]">Add</Text>
+                  <Text className="text-lg font-semibold text-center text-[#1b1b1b] dark:text-[#C1C0C9]">Trabajo</Text>
+                  <Text className="text-sm text-center text-[#1b1b1b] dark:text-[#C1C0C9]">Add</Text>
                 </View>
 
                 <View className="ml-5">
@@ -567,8 +570,8 @@ export const BottomSheetContent = ({
                       color={Colors[colorScheme ?? 'light'].icons}
                     />
                   </ScaleBtn>
-                  <Text className="text-lg font-semibold text-center text-[#333]">Casa</Text>
-                  <Text className="text-sm text-center text-[#555]">Add</Text>
+                  <Text className="text-lg font-semibold text-center text-[#1b1b1b] dark:text-[#C1C0C9]">Casa</Text>
+                  <Text className="text-sm text-center text-[#1b1b1b] dark:text-[#C1C0C9]">Add</Text>
                 </View>
 
                 <View className="ml-5">
@@ -581,20 +584,20 @@ export const BottomSheetContent = ({
                       color={Colors[colorScheme ?? 'light'].icons}
                     />
                   </ScaleBtn>
-                  <Text className="text-lg font-semibold text-center text-[#333]">Add</Text>
+                  <Text className="text-lg font-semibold text-center text-[#1b1b1b] dark:text-[#C1C0C9]">Add</Text>
                 </View>
               </ScrollView>
             </View>
 
             <View className="mx-1.5 mt-5 overflow-visible">
-              <Text className="font-bold text-xl">Recent</Text>
+              <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-bold text-xl">Recent</Text>
 
               <View className="flex-row items-center gap-2 mt-3">
                 <View className="bg-[#C1C0C9] rounded-full items-center justify-center p-1 text-center">
                   <MaterialCommunityIcons name="history" size={32} color="white" />
                 </View>
                 <View>
-                  <Text numberOfLines={1} className="font-lg font-medium">
+                  <Text numberOfLines={1} className="text-[#1b1b1b] dark:text-[#C1C0C9] font-lg font-medium">
                     23 y 12, Plaza de la Revolucion, La Habana
                   </Text>
                 </View>
@@ -605,7 +608,7 @@ export const BottomSheetContent = ({
                   <MaterialCommunityIcons name="history" size={32} color="white" />
                 </View>
                 <View>
-                  <Text numberOfLines={1} className="font-lg font-medium">
+                  <Text numberOfLines={1} className="text-[#1b1b1b] dark:text-[#C1C0C9] font-lg font-medium">
                     Pedro Perez e/ Clavel y Mariano, Cerro, La...
                   </Text>
                 </View>
