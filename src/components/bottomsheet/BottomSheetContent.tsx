@@ -27,7 +27,7 @@ import {
 import type { TaxiProfile, TaxiType } from '~/constants/TaxiTypes';
 import { polylineDecode } from '~/utils/directions';
 import { taxiTypesInfo } from '~/constants/TaxiTypes';
-import { ClientSteps } from '~/constants/Configs';
+import { ClientSteps, RideInfo } from '~/constants/Configs';
 import { useUser } from '~/context/UserContext';
 import { useWSConnection } from '~/context/WSContext';
 import DashedLine from './DashedLine';
@@ -35,6 +35,7 @@ import DashedLine from './DashedLine';
 interface BottomSheetContentProps {
   currentStep: ClientSteps;
   setCurrentStep: React.Dispatch<ClientSteps>;
+  setRideInfo: React.Dispatch<RideInfo | null>;
   setActiveRoute: React.Dispatch<{ coords: LatLng[] } | null>;
   startPiningLocation: () => void;
   cancelPiningLocation: () => void;
@@ -49,6 +50,7 @@ interface BottomSheetContentProps {
 export const BottomSheetContent = ({
   currentStep,
   setCurrentStep,
+  setRideInfo,
   setActiveRoute,
   startPiningLocation,
   cancelPiningLocation,
@@ -61,7 +63,7 @@ export const BottomSheetContent = ({
 }: BottomSheetContentProps) => {
   const colorScheme = useColorScheme();
   const { width } = useWindowDimensions();
-  const { userMarkers } = useUser()
+  const { profile, userMarkers } = useUser()
   // const { sendStringToServer } = useWSConnection();
   const { collapse, snapToIndex, snapToPosition } = useBottomSheet();
 
@@ -103,6 +105,27 @@ export const BottomSheetContent = ({
           distance: respJson[0].legs[0].distance,
           duration: respJson[0].legs[0].duration,
         });
+
+        setRideInfo({
+          client: profile!,
+          origin: piningInfo.origin,
+          destination: piningInfo.destination,
+          distance: respJson[0].legs[0].distance,
+          duration: respJson[0].legs[0].duration,
+          price: 3000,
+          overview_polyline: respJson[0].overview_polyline,
+          // navigationInfo: respJson[0].legs[0],
+        })
+        console.log('Ride Info:', {
+          client: profile!,
+          origin: piningInfo.origin,
+          destination: piningInfo.destination,
+          distance: respJson[0].legs[0].distance,
+          duration: respJson[0].legs[0].duration,
+          price: 3000,
+          overview_polyline: respJson[0].overview_polyline,
+          // navigationInfo: respJson[0].legs[0],
+        })
         setCurrentStep(ClientSteps.TAXI)
       }
     }

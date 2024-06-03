@@ -97,7 +97,7 @@ type UserContext = {
   toggleUserRole: () => Promise<void>;
 } & State
 
-type Profile = {
+export type Profile = {
   id?: string | null;
   username?: string | null;
   role?: UserRoles;

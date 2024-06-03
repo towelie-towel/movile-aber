@@ -3,7 +3,10 @@ import * as ExpoLocation from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { LatLng } from 'react-native-maps';
-import { calculateBearing, duplicateCoords, polylineDecode } from '~/utils/directions';
+
+import { RideInfo } from '~/constants/Configs';
+import { TaxiProfile } from '~/constants/TaxiTypes';
+import { calculateDistance, calculateBearing, duplicateCoords, polylineDecode } from '~/utils/directions';
 
 const WS_LOGS = true;
 const LOCATION_TASK_NAME = 'background-location-task';
@@ -17,19 +20,23 @@ export interface WSTaxi {
 
 interface WSContext {
     ws: WebSocket | null | undefined;
-    wsTaxis: WSTaxi[] | undefined;
+    wsTaxis: WSTaxi[] | null | undefined;
+    confirmedTaxi: TaxiProfile | null;
     position: ExpoLocation.LocationObject | undefined;
     heading: ExpoLocation.LocationHeadingObject | undefined;
     resetConnection: () => Promise<void>;
     trackPosition: () => Promise<void>;
+    sendStringToServer: (message: string) => void;
+    findTaxi: (ride: RideInfo, taxiid?: string) => Promise<void>;
+    cancelTaxi: () => Promise<void>;
     simulateRoutePosition: (coords: LatLng[]) => Promise<void>;
     stopRouteSimulation: () => Promise<void>;
-    sendStringToServer: (message: string) => void;
 }
 
 const initialValue: WSContext = {
     ws: undefined,
     wsTaxis: undefined,
+    confirmedTaxi: null,
     position: undefined,
     heading: undefined,
     resetConnection: async () => {
@@ -45,6 +52,12 @@ const initialValue: WSContext = {
         throw new Error('Function not initizaliced yet');
     },
     sendStringToServer: async () => {
+        throw new Error('Function not initizaliced yet');
+    },
+    findTaxi: async () => {
+        throw new Error('Function not initizaliced yet');
+    },
+    cancelTaxi: async () => {
         throw new Error('Function not initizaliced yet');
     },
 };
@@ -75,7 +88,7 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
     const [heading, setHeading] = useState<ExpoLocation.LocationHeadingObject>();
     const [position, setPosition] = useState<ExpoLocation.LocationObject>();
 
-    const [streamingTo, setStreamingTo] = useState<string | null>(null);
+    const [confirmedTaxi, setConfirmedTaxi] = useState<TaxiProfile | null>(null);
 
     const ws = useRef<WebSocket | null>(null);
     const positionSubscription = useRef<ExpoLocation.LocationSubscription | null>();
@@ -92,12 +105,48 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
         }
     }, [ws]);
 
+    const findTaxi = useCallback(async (ride: RideInfo, taxiid: string | undefined) => {
+        const nearestTaxi = wsTaxis[0];
+        if (ws.current?.readyState === WebSocket.OPEN) {
+            ws.current?.send(`findtaxi-${taxiid ?? nearestTaxi.userId}-` + JSON.stringify(ride));
+        } else {
+            console.error('');
+        }
+        // TODO: Fetch the taxi profile from the server
+    }, [ws, wsTaxis]);
+    const cancelTaxi = useCallback(async () => {
+        if (ws.current?.readyState === WebSocket.OPEN) {
+            ws.current?.send("cancel-");
+            setConfirmedTaxi(null)
+        } else {
+            console.error('');
+        }
+    }, [ws]);
+
     const handleWebSocketMessage = useCallback((event: MessageEvent<string>) => {
         const message = event.data;
         if (typeof message !== 'string') {
             return;
         }
         if (WS_LOGS) console.log('handleWebSocketMessage: ', message);
+        if (message.startsWith("confirm-")) {
+            const taxistring = message.replace('confirm-', '');
+            let taxi: TaxiProfile | undefined;
+            if (taxistring === 'test') {
+                taxi = {
+                    type: 'confort',
+                    userId: '123',
+                    name: 'Gregory Smith',
+                    phone: '+535 123 4567',
+                    car: 'Toyota Corolla',
+                    plate: 'HAB 123',
+                    stars: 4.9,
+                };
+            } else {
+                taxi = JSON.parse(taxistring) as TaxiProfile;
+            }
+            setConfirmedTaxi(taxi)
+        }
         const taxis = message
             .replace('taxis-', '')
             .split('$')
@@ -112,7 +161,24 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
                     userId: id ?? '',
                 };
             });
-        setWsTaxis(taxis);
+        const sortedTaxis = [...taxis].sort((taxiA, taxiB) => {
+            const distanceA = calculateDistance(
+                position?.coords.latitude ?? 0,
+                position?.coords.longitude ?? 0,
+                taxiA.latitude,
+                taxiA.longitude
+            );
+            const distanceB = calculateDistance(
+                position?.coords.latitude ?? 0,
+                position?.coords.longitude ?? 0,
+                taxiB.latitude,
+                taxiB.longitude
+            );
+            return distanceA - distanceB;
+        });
+        setWsTaxis(sortedTaxis);
+
+
     }, []);
 
     const asyncNewWebSocket = useCallback(() => {
@@ -293,11 +359,14 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
         <WSContext.Provider
             value={{
                 ws: ws.current,
-                sendStringToServer,
+                confirmedTaxi,
                 wsTaxis,
                 position,
                 heading,
                 resetConnection,
+                sendStringToServer,
+                findTaxi,
+                cancelTaxi,
                 trackPosition,
                 simulateRoutePosition,
                 stopRouteSimulation

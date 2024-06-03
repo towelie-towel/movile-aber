@@ -1,5 +1,6 @@
 import type { KeyboardTypeOptions } from 'react-native';
 import { LatLng } from 'react-native-maps';
+import { Profile } from '~/context/UserContext';
 
 export const drawerItems: {
   icon: string;
@@ -51,10 +52,7 @@ export enum UserRoles {
 }
 
 export interface RideInfo {
-  client: {
-    name: string;
-    phone: string;
-  };
+  client: Profile;
   origin: {
     address: string;
     latitude: number;
@@ -77,7 +75,7 @@ export interface RideInfo {
   overview_polyline: {
     points: string;
   };
-  navigationInfo: google.maps.DirectionsLeg;
+  // navigationInfo: google.maps.DirectionsLeg;
 }
 export type NavigationInfo = {
   coords: LatLng[];

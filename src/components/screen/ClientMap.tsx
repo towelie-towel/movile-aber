@@ -46,7 +46,7 @@ import TaxisMarkers from '~/components/markers/TaxiMarkers';
 import { ColorInstagram, ColorFacebook, ColorTwitter } from '~/components/svgs';
 import Colors from '~/constants/Colors';
 import { NightMap } from '~/constants/NightMap';
-import { drawerItems, ClientSteps } from '~/constants/Configs';
+import { drawerItems, ClientSteps, RideInfo } from '~/constants/Configs';
 import { useUser } from '~/context/UserContext';
 import { useWSConnection } from '~/context/WSContext';
 import { calculateMiddlePointAndDelta } from '~/utils/directions';
@@ -64,6 +64,7 @@ export default function ClientMap() {
     const insets = useSafeAreaInsets();
     const router = useRouter();
     const { profile, userMarkers, isSignedIn, signOut, toggleUserRole } = useUser();
+    const { confirmedTaxi, findTaxi, cancelTaxi } = useWSConnection();
 
     if (Platform.OS === 'android') {
         NavigationBar.setBackgroundColorAsync('transparent');
@@ -79,7 +80,8 @@ export default function ClientMap() {
     const [piningLocation, setPiningLocation] = useState(false);
     const [selectedTaxiType, setSelectedTaxiType] = useState<TaxiType | null>(null);
     const [findingRide, setFindingRide] = useState(false);
-    const [confirmedTaxi, setConfirmedTaxi] = useState<TaxiProfile | null>(null);
+    const [rideInfo, setRideInfo] = useState<RideInfo | null>(null);
+    // const [confirmedTaxi, setConfirmedTaxi] = useState<TaxiProfile | null>(null);
 
     // drawer
     const [drawerOpen, setDrawerOpen] = useState(false);
@@ -120,6 +122,14 @@ export default function ClientMap() {
                 break;
         }
     }, [currentStep])
+
+    useEffect(() => {
+        if (confirmedTaxi) {
+            LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+            setCurrentStep(ClientSteps.PICKUP)
+            setFindingRide(false);
+        }
+    }, [confirmedTaxi]);
 
     useEffect(() => {
         if (activeRoute) (
@@ -220,28 +230,20 @@ export default function ClientMap() {
         },
         [mapViewRef]
     );
-    const confirmRideHandler = useCallback(() => {
+    const findRideHandler = useCallback(() => {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         setFindingRide(true);
         setCurrentStep(ClientSteps.FINDING)
-
-        setTimeout(() => {
-            setConfirmedTaxi({
-                type: 'confort',
-                userId: '123',
-                name: 'Gregory Smith',
-                phone: '+535 123 4567',
-                car: 'Toyota Corolla',
-                plate: 'HAB 123',
-                stars: 4.9,
-            });
-            setCurrentStep(ClientSteps.PICKUP)
-            setFindingRide(false);
-        }, 4000);
-    }, []);
+        console.log(rideInfo)
+        if (rideInfo)
+            findTaxi(rideInfo)
+        else {
+            throw new Error('Ride Info is not set')
+        }
+    }, [rideInfo]);
     const cancelRideHandler = useCallback(() => {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-        setConfirmedTaxi(null);
+        cancelTaxi();
     }, []);
 
     const getMiddlePoint = useCallback(async () => {
@@ -492,7 +494,7 @@ export default function ClientMap() {
                             <ScaleBtn
                                 disabled={findingRide || !selectedTaxiType}
                                 className=""
-                                onPress={confirmRideHandler}>
+                                onPress={findRideHandler}>
                                 <View className="bg-[#FCCB6F] w-40 h-14 rounded-lg p-3">
                                     <Text className="text-center text-lg font-bold w-auto text-[#fff]">
                                         {findingRide ? 'Finding Ride' : 'Request Ride'}
@@ -647,6 +649,7 @@ export default function ClientMap() {
                             cancelPiningLocation={cancelPiningLocation}
                             confirmPiningLocation={confirmPiningLocation}
                             piningLocation={piningLocation}
+                            setRideInfo={setRideInfo}
                             setActiveRoute={setActiveRoute}
                             selectedTaxiType={selectedTaxiType}
                             setSelectedTaxiType={setSelectedTaxiType}
