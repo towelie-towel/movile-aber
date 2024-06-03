@@ -24,6 +24,7 @@ interface WSContext {
     trackPosition: () => Promise<void>;
     simulateRoutePosition: (coords: LatLng[]) => Promise<void>;
     stopRouteSimulation: () => Promise<void>;
+    sendStringToServer: (message: string) => void;
 }
 
 const initialValue: WSContext = {
@@ -41,6 +42,9 @@ const initialValue: WSContext = {
         throw new Error('Function not initizaliced yet');
     },
     stopRouteSimulation: async () => {
+        throw new Error('Function not initizaliced yet');
+    },
+    sendStringToServer: async () => {
         throw new Error('Function not initizaliced yet');
     },
 };
@@ -71,7 +75,7 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
     const [heading, setHeading] = useState<ExpoLocation.LocationHeadingObject>();
     const [position, setPosition] = useState<ExpoLocation.LocationObject>();
 
-    const [streamingTo, _setStreamingTo] = useState<string | null>(null);
+    const [streamingTo, setStreamingTo] = useState<string | null>(null);
 
     const ws = useRef<WebSocket | null>(null);
     const positionSubscription = useRef<ExpoLocation.LocationSubscription | null>();
@@ -116,7 +120,7 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
 
         if (WS_LOGS) console.log('new Web Socket initializing', protocol);
         const suckItToMeBBy = new WebSocket(
-            `ws://172.20.10.12:6942/subscribe?id=03563972-fab9-4744-b9a7-15f8d35d38c9&lat=51.5073509&lon=-0.1277581999999997&head=51`,
+            `ws://192.168.1.102:6942/subscribe?id=03563972-fab9-4744-b9a7-15f8d35d38c9&lat=51.5073509&lon=-0.1277581999999997&head=51`,
             protocol
         );
 
@@ -132,6 +136,8 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
         suckItToMeBBy.addEventListener('error', (_error) => {
             if (WS_LOGS)
                 console.error('WS Connection error', JSON.stringify(_error, null, 2));
+        }, {
+            once: true
         });
 
         suckItToMeBBy.addEventListener('message', handleWebSocketMessage);
@@ -151,7 +157,7 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
         const posSubscrition = await ExpoLocation.watchPositionAsync(
             {
                 accuracy: ExpoLocation.Accuracy.BestForNavigation,
-                timeInterval: 2000,
+                // timeInterval: 2000,
             },
             (newPosition) => {
                 setPosition(newPosition);
@@ -287,6 +293,7 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
         <WSContext.Provider
             value={{
                 ws: ws.current,
+                sendStringToServer,
                 wsTaxis,
                 position,
                 heading,

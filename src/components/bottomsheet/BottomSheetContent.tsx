@@ -29,6 +29,7 @@ import { polylineDecode } from '~/utils/directions';
 import { taxiTypesInfo } from '~/constants/TaxiTypes';
 import { ClientSteps } from '~/constants/Configs';
 import { useUser } from '~/context/UserContext';
+import { useWSConnection } from '~/context/WSContext';
 import DashedLine from './DashedLine';
 
 interface BottomSheetContentProps {
@@ -60,8 +61,10 @@ export const BottomSheetContent = ({
 }: BottomSheetContentProps) => {
   const colorScheme = useColorScheme();
   const { width } = useWindowDimensions();
-  const { collapse, snapToIndex, snapToPosition } = useBottomSheet();
   const { userMarkers } = useUser()
+  // const { sendStringToServer } = useWSConnection();
+  const { collapse, snapToIndex, snapToPosition } = useBottomSheet();
+
   const [viewPinOnMap, setViewPinOnMap] = useState(false);
   const [piningInput, setPiningInput] = useState<'origin' | 'destination'>('destination');
   const [piningInfo, setPiningInfo] = useState<{
@@ -84,7 +87,7 @@ export const BottomSheetContent = ({
     const tokio = async () => {
       if (piningInfo?.destination && piningInfo?.origin) {
         const resp = await fetch(
-          `http://172.20.10.12:6942/route?from=${piningInfo.origin.latitude},${piningInfo.origin.longitude}&to=${piningInfo.destination.latitude},${piningInfo.destination.longitude}`
+          `http://192.168.1.102:6942/route?from=${piningInfo.origin.latitude},${piningInfo.origin.longitude}&to=${piningInfo.destination.latitude},${piningInfo.destination.longitude}`
         );
         const respJson = await resp.json();
         const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map(
@@ -267,7 +270,7 @@ export const BottomSheetContent = ({
 
             <View className="relative z-[1000] w-full pr-[5%] items-center- flex-row py-1">
               <MaterialCommunityIcons className='mt-1' name="map-marker-account" size={32} color={Colors[colorScheme ?? "light"].border} />
-              <Text className="ml-2 font-bold text-lg text-[#1b1b1b] dark:text-[#C1C0C9] dark:text-[#1b1b1b] dark:text-[#C1C0C9]">{piningInfo?.origin?.address}</Text>
+              <Text className="ml-2 font-bold text-lg text-[#1b1b1b] dark:text-[#C1C0C9] ">{piningInfo?.origin?.address}</Text>
             </View>
             <View className="relative z-[999] w-full pr-[5%] mb-3 items-end flex-row">
               <DashedLine
@@ -285,7 +288,7 @@ export const BottomSheetContent = ({
                 size={32}
                 color={Colors[colorScheme ?? "light"].border}
               />
-              <Text className="ml-2 font-bold text-lg text-[#1b1b1b] dark:text-[#C1C0C9] dark:text-[#1b1b1b] dark:text-[#C1C0C9]">{piningInfo?.destination?.address}</Text>
+              <Text className="ml-2 font-bold text-lg text-[#1b1b1b] dark:text-[#C1C0C9]">{piningInfo?.destination?.address}</Text>
             </View>
 
             <ScaleBtn className="mt-4 w-full gap-3" onPress={() => cancelRideInnerHandler()}>
@@ -301,9 +304,9 @@ export const BottomSheetContent = ({
 
               {viewPinOnMap && !piningLocation && (
                 <ScaleBtn onPress={startPiningLocationHandler}>
-                  <View className="flex-row items-center gap-2 p-1 px-2 border rounded-lg">
-                    <Text className="h-full text-lg font-medium text-center">Fijar en el Mapa</Text>
-                    <MaterialCommunityIcons name="map-search-outline" size={22} color="#000" />
+                  <View className="flex-row items-center gap-2 p-1 px-2 border rounded-lg border-[#C1C0C9]">
+                    <Text className="h-full text-lg font-medium text-center text-[#C1C0C9]">Fijar en el Mapa</Text>
+                    <MaterialCommunityIcons name="map-search-outline" size={22} color={Colors[colorScheme ?? "light"].border} />
                   </View>
                 </ScaleBtn>
               )}
@@ -311,13 +314,13 @@ export const BottomSheetContent = ({
               {piningLocation && (
                 <View className="flex-row gap-4">
                   <ScaleBtn onPress={confirmPiningLocationHandler}>
-                    <View className="p-1 border rounded-lg">
-                      <MaterialCommunityIcons name="check" size={28} color="#000" />
+                    <View className="p-1 border border-[#C1C0C9] rounded-lg">
+                      <MaterialCommunityIcons name="check" size={28} color={Colors[colorScheme ?? "light"].border} />
                     </View>
                   </ScaleBtn>
                   <ScaleBtn onPress={cancelPiningLocationHandler}>
-                    <View className="p-1 border rounded-lg">
-                      <MaterialCommunityIcons name="cancel" size={28} color="#000" />
+                    <View className="p-1 border border-[#C1C0C9] rounded-lg">
+                      <MaterialCommunityIcons name="cancel" size={28} color={Colors[colorScheme ?? "light"].border} />
                     </View>
                   </ScaleBtn>
                 </View>
@@ -327,9 +330,9 @@ export const BottomSheetContent = ({
                 {
                   currentStep === ClientSteps.TAXI &&
                   <ScaleBtn onPress={goBackToSearch}>
-                    <View className="flex-row items-center justify-center p-1 border rounded-lg bg-[#FCCB6F]">
-                      <MaterialCommunityIcons name={"chevron-left"} size={24} color="black" />
-                      <MaterialCommunityIcons name="star" size={24} color="black" />
+                    <View className="flex-row items-center justify-center p-1 border border-[#C1C0C9] rounded-lg bg-[#FCCB6F]">
+                      <MaterialCommunityIcons name={"chevron-left"} size={24} color={Colors[colorScheme ?? "light"].border} />
+                      <MaterialCommunityIcons name="star" size={24} color={Colors[colorScheme ?? "light"].border} />
                     </View>
                   </ScaleBtn>
                 }
@@ -337,9 +340,9 @@ export const BottomSheetContent = ({
                 {
                   currentStep === ClientSteps.SEARCH && piningInfo?.origin && piningInfo.destination &&
                   <ScaleBtn onPress={goToPinnedRouteTaxi}>
-                    <View className="flex-row items-center justify-center p-1 border rounded-lg bg-[#FCCB6F]">
-                      <MaterialCommunityIcons name="car-multiple" size={24} color="black" />
-                      <MaterialCommunityIcons name="chevron-right" size={24} color="black" />
+                    <View className="flex-row items-center justify-center p-1 border border-[#C1C0C9] rounded-lg bg-[#FCCB6F]">
+                      <MaterialCommunityIcons name="car-multiple" size={24} color={Colors[colorScheme ?? "light"].border} />
+                      <MaterialCommunityIcons name="chevron-right" size={24} color={Colors[colorScheme ?? "light"].border} />
                     </View>
                   </ScaleBtn>
                 }
@@ -594,7 +597,7 @@ export const BottomSheetContent = ({
 
               <View className="flex-row items-center gap-2 mt-3">
                 <View className="bg-[#C1C0C9] rounded-full items-center justify-center p-1 text-center">
-                  <MaterialCommunityIcons name="history" size={32} color="white" />
+                  <MaterialCommunityIcons name="history" size={32} color={Colors[colorScheme ?? "light"].border} />
                 </View>
                 <View>
                   <Text numberOfLines={1} className="text-[#1b1b1b] dark:text-[#C1C0C9] font-lg font-medium">
@@ -605,7 +608,7 @@ export const BottomSheetContent = ({
 
               <View className="flex-row items-center gap-2 mt-3">
                 <View className="bg-[#C1C0C9] rounded-full items-center justify-center p-1 text-center">
-                  <MaterialCommunityIcons name="history" size={32} color="white" />
+                  <MaterialCommunityIcons name="history" size={32} color={Colors[colorScheme ?? "light"].border} />
                 </View>
                 <View>
                   <Text numberOfLines={1} className="text-[#1b1b1b] dark:text-[#C1C0C9] font-lg font-medium">

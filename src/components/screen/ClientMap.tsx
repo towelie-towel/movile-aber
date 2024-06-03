@@ -58,7 +58,7 @@ import { CardinalDirections } from '~/utils/directions';
 
 export default function ClientMap() {
     useKeepAwake();
-
+    console.log('ClientMap Rendered')
     const { width, height } = useWindowDimensions();
     const colorScheme = useColorScheme();
     const insets = useSafeAreaInsets();
@@ -223,6 +223,8 @@ export default function ClientMap() {
     const confirmRideHandler = useCallback(() => {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         setFindingRide(true);
+        setCurrentStep(ClientSteps.FINDING)
+
         setTimeout(() => {
             setConfirmedTaxi({
                 type: 'confort',
@@ -233,7 +235,7 @@ export default function ClientMap() {
                 plate: 'HAB 123',
                 stars: 4.9,
             });
-            setCurrentStep(ClientSteps.RIDE)
+            setCurrentStep(ClientSteps.PICKUP)
             setFindingRide(false);
         }, 4000);
     }, []);
@@ -422,7 +424,7 @@ export default function ClientMap() {
                         customMapStyle={colorScheme === 'dark' ? NightMap : undefined}>
                         {activeRoute && <Polyline coordinates={activeRoute.coords} strokeWidth={5} strokeColor="#000" />}
                         <TaxisMarkers onPressTaxi={() => { }} />
-                        <UserWavesMarker activeWaves={findingRide} />
+                        <UserWavesMarker findingRide={findingRide} />
 
                         <AnimatedRouteMarker key={2} />
 

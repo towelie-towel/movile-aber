@@ -3,6 +3,7 @@ import { Easing } from "react-native-reanimated";
 
 import { useWSConnection } from "~/context/WSContext";
 import AnimatedMarker from "./AnimatedMarker";
+import { useEffect } from "react";
 
 type WavesMarkerProps = {
     location?: {
@@ -12,15 +13,29 @@ type WavesMarkerProps = {
         },
         heading: number;
     };
-    activeWaves?: boolean;
+    findingRide?: boolean;
 }
 
-const UserWavesMarker = ({ activeWaves = false, location }: WavesMarkerProps) => {
-    const { position, heading } = useWSConnection();
+const UserWavesMarker = ({ findingRide = false, location }: WavesMarkerProps) => {
+    const { position, heading, sendStringToServer } = useWSConnection();
 
     if (!position || !location) {
         return null
     }
+
+    useEffect(() => {
+        const interval = null
+        if (findingRide) {
+            setInterval(() => {
+                sendStringToServer(`finding-${position.coords.latitude},${position.coords.longitude}`)
+            }, 1500)
+        } else {
+            if (interval) clearInterval(interval)
+        }
+        return () => {
+            if (interval) clearInterval(interval)
+        }
+    }, [findingRide])
 
     return (
         <AnimatedMarker
@@ -33,7 +48,7 @@ const UserWavesMarker = ({ activeWaves = false, location }: WavesMarkerProps) =>
         >
             <View className='h-10 w-5'></View>
             {
-                activeWaves && [...Array(3).keys()].map((index) => (
+                findingRide && [...Array(3).keys()].map((index) => (
                     <View key={index} className='flex-1 absolute top-[-13px] left-[-13px]'>
                         <MotiView
                             from={{ opacity: 0.7, scale: 0.2 }}
