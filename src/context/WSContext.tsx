@@ -107,13 +107,14 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
 
     const findTaxi = useCallback(async (ride: RideInfo, taxiid: string | undefined) => {
         const nearestTaxi = wsTaxis[0];
+        console.log(wsTaxis)
         if (ws.current?.readyState === WebSocket.OPEN) {
-            ws.current?.send(`findtaxi-${taxiid ?? nearestTaxi.userId}-` + JSON.stringify(ride));
+            ws.current?.send(`findtaxi-${taxiid ?? nearestTaxi.userId}-endid` + JSON.stringify(ride));
         } else {
             console.error('');
         }
         // TODO: Fetch the taxi profile from the server
-    }, [ws, wsTaxis]);
+    }, [wsTaxis, ws]);
     const cancelTaxi = useCallback(async () => {
         if (ws.current?.readyState === WebSocket.OPEN) {
             ws.current?.send("cancel-");
@@ -176,6 +177,7 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
             );
             return distanceA - distanceB;
         });
+        console.log(sortedTaxis)
         setWsTaxis(sortedTaxis);
 
 
@@ -186,7 +188,7 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
 
         if (WS_LOGS) console.log('new Web Socket initializing', protocol);
         const suckItToMeBBy = new WebSocket(
-            `ws://192.168.1.102:6942/subscribe?id=03563972-fab9-4744-b9a7-15f8d35d38c9&lat=51.5073509&lon=-0.1277581999999997&head=51`,
+            `ws://192.168.1.103:6942/subscribe?id=03563972-fab9-4744-b9a7-15f8d35d38c9&lat=51.5073509&lon=-0.1277581999999997&head=51`,
             protocol
         );
 

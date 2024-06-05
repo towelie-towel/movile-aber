@@ -230,17 +230,24 @@ export default function ClientMap() {
         },
         [mapViewRef]
     );
-    const findRideHandler = useCallback(() => {
+    const findRideHandler = useCallback(async () => {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         setFindingRide(true);
         setCurrentStep(ClientSteps.FINDING)
         console.log(rideInfo)
-        if (rideInfo)
-            findTaxi(rideInfo)
-        else {
-            throw new Error('Ride Info is not set')
+        try {
+            if (rideInfo)
+                await findTaxi(rideInfo, "eff41f96-178e-4e97-9f43-35d4de7b7a18")
+            else {
+                throw new Error('Ride Info is not set')
+            }
+        } catch (error) {
+
+        } finally {
+            setFindingRide(false);
+            setCurrentStep(ClientSteps.FINDING - 1)
         }
-    }, [rideInfo]);
+    }, [rideInfo, findTaxi]);
     const cancelRideHandler = useCallback(() => {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         cancelTaxi();
@@ -458,6 +465,41 @@ export default function ClientMap() {
                                 </Marker>
                             </>
                         )}
+                        {/* 
+                            const north = 23.127778;
+                        const south = 23.127778;
+                        const east = -82.361833;
+                        const west = -82.423028;
+
+                        */}
+                        <Marker coordinate={{ latitude: 23.127778, longitude: -82.361833 }}>
+                            <MaterialIcons
+                                name="location-on"
+                                size={24}
+                                color={Colors[colorScheme ?? 'light'].text}
+                            />
+                        </Marker>
+                        <Marker coordinate={{ latitude: 23.127778, longitude: -82.423028 }}>
+                            <MaterialIcons
+                                name="location-on"
+                                size={24}
+                                color={Colors[colorScheme ?? 'light'].text}
+                            />
+                        </Marker>
+                        <Marker coordinate={{ latitude: 23.088667, longitude: -82.361833 }}>
+                            <MaterialIcons
+                                name="location-on"
+                                size={24}
+                                color={Colors[colorScheme ?? 'light'].text}
+                            />
+                        </Marker>
+                        <Marker coordinate={{ latitude: 23.088667, longitude: -82.423028 }}>
+                            <MaterialIcons
+                                name="location-on"
+                                size={24}
+                                color={Colors[colorScheme ?? 'light'].text}
+                            />
+                        </Marker>
                     </MapView>
 
                     {/* <ScaleBtn
