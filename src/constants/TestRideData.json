@@ -10,7 +10,8 @@
         "address": "San Martín e/ Espada y San Francisco, Centro Habana, Habana, Cuba"
     },
     "client": {
-        "name": "Jorge",
+        "id": "1",
+        "username": "Jorge",
         "phone": "55555555"
     },
     "price": 3000,

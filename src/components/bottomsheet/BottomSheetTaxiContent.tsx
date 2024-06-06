@@ -8,7 +8,6 @@ import { ConfortSVG } from '../svgs';
 import ScaleBtn from '~/components/common/ScaleBtn';
 import { NavigationInfo, RideInfo, TaxiSteps } from '~/constants/Configs';
 import DashedLine from './DashedLine';
-import { useWSConnection } from '~/context/WSContext';
 import TaximeterRide from './TaximeterRide';
 import ProfileScreen from '~/app/(taxi)/profile';
 import Colors from '~/constants/Colors';
@@ -147,7 +146,7 @@ const BottomSheetTaxiContent = ({
                                     source={require('../../../assets/images/taxi_test.png')}
                                 />
                                 <View className="justify-center">
-                                    <Text className="text-[#242E42] dark:text-[#C8C7CC] items-center font-bold text-xl">{rideInfo?.client.name}</Text>
+                                    <Text className="text-[#242E42] dark:text-[#C8C7CC] items-center font-bold text-xl">{rideInfo?.client.username}</Text>
                                     <View className="flex-row items-center">
                                         <Text className="text-[#FFCC00] text-lg">★ </Text>
                                         <Text className="text-[#C8C7CC]">4.9</Text>

@@ -29,8 +29,8 @@ import { polylineDecode } from '~/utils/directions';
 import { taxiTypesInfo } from '~/constants/TaxiTypes';
 import { ClientSteps, RideInfo } from '~/constants/Configs';
 import { useUser } from '~/context/UserContext';
-import { useWSConnection } from '~/context/WSContext';
 import DashedLine from './DashedLine';
+import { useWSActions, useWSState } from '~/context/WSContext';
 
 interface BottomSheetContentProps {
   currentStep: ClientSteps;
@@ -41,10 +41,9 @@ interface BottomSheetContentProps {
   cancelPiningLocation: () => void;
   confirmPiningLocation: () => Promise<{ latitude: number; longitude: number; address?: Address }>;
   piningLocation: boolean;
+  setFindingRide: React.Dispatch<boolean>;
   selectedTaxiType: string | null;
   setSelectedTaxiType: React.Dispatch<TaxiType | null>;
-  confirmedTaxi: TaxiProfile | null;
-  cancelRideHandler: () => void;
 }
 
 export const BottomSheetContent = ({
@@ -58,14 +57,14 @@ export const BottomSheetContent = ({
   piningLocation,
   selectedTaxiType,
   setSelectedTaxiType,
-  confirmedTaxi,
-  cancelRideHandler,
+  setFindingRide,
 }: BottomSheetContentProps) => {
   const colorScheme = useColorScheme();
   const { width } = useWindowDimensions();
   const { profile, userMarkers } = useUser()
-  // const { sendStringToServer } = useWSConnection();
   const { collapse, snapToIndex, snapToPosition } = useBottomSheet();
+  const { confirmedTaxi } = useWSState()
+  const { cancelTaxi } = useWSActions()
 
   const [viewPinOnMap, setViewPinOnMap] = useState(false);
   const [piningInput, setPiningInput] = useState<'origin' | 'destination'>('destination');
@@ -82,6 +81,14 @@ export const BottomSheetContent = ({
   const destinationInputViewRef = useRef<GooglePlacesAutocompleteRef>(null);
 
   useEffect(() => {
+    if (confirmedTaxi) {
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+      setCurrentStep(ClientSteps.PICKUP)
+      setFindingRide(false);
+    }
+  }, [confirmedTaxi]);
+
+  useEffect(() => {
     fetchOrigin();
   }, []);
 
@@ -89,7 +96,7 @@ export const BottomSheetContent = ({
     const tokio = async () => {
       if (piningInfo?.destination && piningInfo?.origin) {
         const resp = await fetch(
-          `http://192.168.1.103:6942/route?from=${piningInfo.origin.latitude},${piningInfo.origin.longitude}&to=${piningInfo.destination.latitude},${piningInfo.destination.longitude}`
+          `http://172.20.10.12:6942/route?from=${piningInfo.origin.latitude},${piningInfo.origin.longitude}&to=${piningInfo.destination.latitude},${piningInfo.destination.longitude}`
         );
         const respJson = await resp.json();
         const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map(
@@ -221,7 +228,7 @@ export const BottomSheetContent = ({
     // })
     // setActiveRoute(null);
     setCurrentStep(ClientSteps.SEARCH);
-    cancelRideHandler()
+    cancelTaxi()
     // setRouteInfo(null);
     // setSelectedTaxiType(null)
     // collapse();

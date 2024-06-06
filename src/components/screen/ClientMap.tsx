@@ -48,10 +48,9 @@ import Colors from '~/constants/Colors';
 import { NightMap } from '~/constants/NightMap';
 import { drawerItems, ClientSteps, RideInfo } from '~/constants/Configs';
 import { useUser } from '~/context/UserContext';
-import { useWSConnection } from '~/context/WSContext';
+import { useWSActions } from '~/context/WSContext';
 import { calculateMiddlePointAndDelta } from '~/utils/directions';
-import type { TaxiProfile, TaxiType } from '~/constants/TaxiTypes';
-import AnimatedMarker from '../markers/AnimatedMarker';
+import type { TaxiType } from '~/constants/TaxiTypes';
 import UserWavesMarker from '../markers/UserWavesMarker';
 import MagnometerArrow from '../common/MagnometerArrow';
 import { CardinalDirections } from '~/utils/directions';
@@ -64,7 +63,7 @@ export default function ClientMap() {
     const insets = useSafeAreaInsets();
     const router = useRouter();
     const { profile, userMarkers, isSignedIn, signOut, toggleUserRole } = useUser();
-    const { confirmedTaxi, findTaxi, cancelTaxi } = useWSConnection();
+    const { findTaxi } = useWSActions();
 
     if (Platform.OS === 'android') {
         NavigationBar.setBackgroundColorAsync('transparent');
@@ -122,15 +121,6 @@ export default function ClientMap() {
                 break;
         }
     }, [currentStep])
-
-    useEffect(() => {
-        if (confirmedTaxi) {
-            LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-            setCurrentStep(ClientSteps.PICKUP)
-            setFindingRide(false);
-        }
-    }, [confirmedTaxi]);
-
     useEffect(() => {
         if (activeRoute) (
             animateToRoute(
@@ -139,7 +129,6 @@ export default function ClientMap() {
             )
         )
     }, [activeRoute])
-
     useEffect(() => {
         if (isSignedIn) {
             bottomSheetModalRef.current?.present();
@@ -160,7 +149,6 @@ export default function ClientMap() {
             longitudeDelta: 0.009121,
         });
     }, []);
-
     const animateToActiveRoute = useCallback(() => {
         activeRoute &&
             animateToRegion(
@@ -179,15 +167,10 @@ export default function ClientMap() {
             destination: { latitude: number; longitude: number }
         ) => {
             animateToRegion(calculateMiddlePointAndDelta(origin, destination));
-        },
-        []
-    );
+        }, []);
 
     // renders
-    const renderCustomHandle = useCallback(
-        (props: BottomSheetHandleProps) => <CustomHandle title="Custom Handle Example" {...props} />,
-        []
-    );
+    const renderCustomHandle = useCallback((props: BottomSheetHandleProps) => <CustomHandle title="Custom Handle Example" {...props} />, []);
     const renderBackdrop = useCallback(
         (props: BottomSheetBackdropProps) => (
             <BottomSheetBackdrop
@@ -203,9 +186,7 @@ export default function ClientMap() {
                     props.style,
                 ]}
             />
-        ),
-        []
-    );
+        ), []);
 
     // TODO: see if LayoutAnimation works here
     const startPiningLocation = useCallback(() => {
@@ -242,16 +223,12 @@ export default function ClientMap() {
                 throw new Error('Ride Info is not set')
             }
         } catch (error) {
-
+            console.error(error)
         } finally {
             setFindingRide(false);
             setCurrentStep(ClientSteps.FINDING - 1)
         }
     }, [rideInfo, findTaxi]);
-    const cancelRideHandler = useCallback(() => {
-        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-        cancelTaxi();
-    }, []);
 
     const getMiddlePoint = useCallback(async () => {
         const pointCoords = await mapViewRef.current?.coordinateForPoint({
@@ -271,6 +248,7 @@ export default function ClientMap() {
             onLayout={() => { }}
             className="flex-1">
             <Drawer
+                drawerType='slide'
                 open={drawerOpen}
                 onOpen={() => setDrawerOpen(true)}
                 onClose={() => setDrawerOpen(false)}
@@ -695,9 +673,7 @@ export default function ClientMap() {
                             setActiveRoute={setActiveRoute}
                             selectedTaxiType={selectedTaxiType}
                             setSelectedTaxiType={setSelectedTaxiType}
-                            confirmedTaxi={confirmedTaxi}
-                            cancelRideHandler={cancelRideHandler}
-                        />
+                            setFindingRide={setFindingRide} />
                     </BottomSheetModal>
 
                     <StatusBar

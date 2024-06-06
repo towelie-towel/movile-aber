@@ -9,7 +9,7 @@ import PagerView from 'react-native-pager-view';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { NavigationInfo } from '~/constants/Configs';
-import { useWSConnection } from '~/context/WSContext';
+import { useWSState, useWSActions } from '~/context/WSContext';
 import { calculateBearing, calculateDistance, CardinalDirections, formatDistance } from '~/utils/directions';
 import MagnometerArrow from '../common/MagnometerArrow';
 import { Camera } from 'react-native-maps';
@@ -32,7 +32,8 @@ export default function TaxiSteps({
     animateCamera
 }: NavigationStepsProps) {
     const insets = useSafeAreaInsets();
-    const { position, simulateRoutePosition, stopRouteSimulation } = useWSConnection();
+    const { position } = useWSState();
+    const { simulateRoutePosition, stopRouteSimulation } = useWSActions();
     const stepView = useRef<PagerView>(null);
     const stepCompleted = useRef<boolean>(false);
 

@@ -7,7 +7,7 @@ import { MotiView } from '@motify/components';
 import { LatLng } from 'react-native-maps';
 
 import { IMarker } from '~/constants/Markers';
-import { useWSConnection } from '~/context/WSContext';
+import { useWSState } from '~/context/WSContext';
 import { TaxiSVG } from '../svgs';
 import AnimatedMarker from './AnimatedMarker';
 import { WSTaxi } from '~/context/WSContext';
@@ -35,7 +35,7 @@ interface props {
 const TaxisMarkers = ({ onPressTaxi }: props) => {
   // const colorScheme = useColorScheme();
   const [taxis, setTaxis] = useState<WSTaxi[]>([]);
-  const { wsTaxis } = useWSConnection();
+  const { wsTaxis } = useWSState();
 
   useEffect(() => {
     setTaxis(wsTaxis ?? []);

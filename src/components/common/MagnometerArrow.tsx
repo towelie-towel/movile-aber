@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { memo, useEffect, useState } from 'react';
 import { FontAwesome6 } from '@expo/vector-icons';
 import * as ExpoLocation from 'expo-location';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
@@ -61,4 +61,4 @@ const MagnometerArrow = ({ cardinalDirection }: { cardinalDirection: CardinalDir
     );
 };
 
-export default MagnometerArrow;
+export default memo(MagnometerArrow);

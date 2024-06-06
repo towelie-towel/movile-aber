@@ -4,12 +4,12 @@ import { View, Text } from 'react-native';
 import React, { useState, useEffect, useRef } from 'react';
 import { LatLng } from 'react-native-maps';
 
-import { useWSConnection } from '~/context/WSContext';
+import { useWSState } from '~/context/WSContext';
 import { calculateDistance } from '~/utils/directions';
 import { ConfortSVG } from '../svgs';
 
 const TaximeterRide: React.FC = () => {
-    const { position } = useWSConnection()
+    const { position } = useWSState()
     const lastPosition = useRef<LatLng | null>(null)
     const [distance, setDistance] = useState(0);
     const [time, setTime] = useState(0);

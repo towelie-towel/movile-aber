@@ -1,7 +1,7 @@
 import { MotiView, View } from "@motify/components";
 import { Easing } from "react-native-reanimated";
 
-import { useWSConnection } from "~/context/WSContext";
+import { useWSState } from "~/context/WSContext";
 import AnimatedMarker from "./AnimatedMarker";
 import { useEffect } from "react";
 
@@ -17,29 +17,15 @@ type WavesMarkerProps = {
 }
 
 const UserWavesMarker = ({ findingRide = false, location }: WavesMarkerProps) => {
-    const { position, heading, sendStringToServer } = useWSConnection();
+    const { position, heading } = useWSState();
 
     if (!position || !location) {
         return null
     }
 
-    useEffect(() => {
-        const interval = null
-        if (findingRide) {
-            setInterval(() => {
-                sendStringToServer(`finding-${position.coords.latitude},${position.coords.longitude}`)
-            }, 1500)
-        } else {
-            if (interval) clearInterval(interval)
-        }
-        return () => {
-            if (interval) clearInterval(interval)
-        }
-    }, [findingRide])
-
     return (
         <AnimatedMarker
-            heading={location?.heading ?? heading?.magHeading!}
+            heading={location?.heading ?? heading?.magHeading ?? position?.coords.heading ?? 0}
             headingAnimated={true}
             latitude={location?.position.latitude ?? position?.coords.latitude}
             longitude={location?.position.longitude ?? position?.coords.longitude}

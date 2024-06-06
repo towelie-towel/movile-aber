@@ -1,7 +1,7 @@
 import NetInfo from '@react-native-community/netinfo';
 import * as ExpoLocation from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
-import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { LatLng } from 'react-native-maps';
 
 import { RideInfo } from '~/constants/Configs';
@@ -18,14 +18,16 @@ export interface WSTaxi {
     userId: string;
 }
 
-interface WSContext {
+interface WSStateContext {
     ws: WebSocket | null | undefined;
     wsTaxis: WSTaxi[] | null | undefined;
     confirmedTaxi: TaxiProfile | null;
     position: ExpoLocation.LocationObject | undefined;
     heading: ExpoLocation.LocationHeadingObject | undefined;
-    resetConnection: () => Promise<void>;
-    trackPosition: () => Promise<void>;
+}
+interface WSActionsContext {
+    // resetConnection: () => Promise<void>;
+    // trackPosition: () => Promise<void>;
     sendStringToServer: (message: string) => void;
     findTaxi: (ride: RideInfo, taxiid?: string) => Promise<void>;
     cancelTaxi: () => Promise<void>;
@@ -33,18 +35,20 @@ interface WSContext {
     stopRouteSimulation: () => Promise<void>;
 }
 
-const initialValue: WSContext = {
+const stateInitialValue: WSStateContext = {
     ws: undefined,
     wsTaxis: undefined,
     confirmedTaxi: null,
     position: undefined,
     heading: undefined,
-    resetConnection: async () => {
+};
+const stateActionslValue: WSActionsContext = {
+    /* resetConnection: async () => {
         throw new Error('Function not initizaliced yet');
     },
     trackPosition: async () => {
         throw new Error('Function not initizaliced yet');
-    },
+    }, */
     simulateRoutePosition: async () => {
         throw new Error('Function not initizaliced yet');
     },
@@ -62,10 +66,14 @@ const initialValue: WSContext = {
     },
 };
 
-const WSContext = createContext(initialValue);
+const WSStateContext = createContext(stateInitialValue);
+const WSActionsContext = createContext(stateActionslValue);
 
-export const useWSConnection = () => {
-    return useContext(WSContext);
+export const useWSState = () => {
+    return useContext(WSStateContext);
+};
+export const useWSActions = () => {
+    return useContext(WSActionsContext);
 };
 
 const requestPermissions = async () => {
@@ -87,7 +95,6 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
     const [wsTaxis, setWsTaxis] = useState<WSTaxi[]>([]);
     const [heading, setHeading] = useState<ExpoLocation.LocationHeadingObject>();
     const [position, setPosition] = useState<ExpoLocation.LocationObject>();
-
     const [confirmedTaxi, setConfirmedTaxi] = useState<TaxiProfile | null>(null);
 
     const ws = useRef<WebSocket | null>(null);
@@ -188,7 +195,7 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
 
         if (WS_LOGS) console.log('new Web Socket initializing', protocol);
         const suckItToMeBBy = new WebSocket(
-            `ws://192.168.1.103:6942/subscribe?id=03563972-fab9-4744-b9a7-15f8d35d38c9&lat=51.5073509&lon=-0.1277581999999997&head=51`,
+            `ws://172.20.10.12:6942/subscribe?id=03563972-fab9-4744-b9a7-15f8d35d38c9&lat=51.5073509&lon=-0.1277581999999997&head=51`,
             protocol
         );
 
@@ -357,24 +364,22 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
         }
     }, [isConnected]);
 
+    const actions = useMemo(() => ({
+        sendStringToServer,
+        findTaxi,
+        cancelTaxi,
+        simulateRoutePosition,
+        stopRouteSimulation,
+        // resetConnection,
+        // trackPosition,
+    }), [sendStringToServer, findTaxi, cancelTaxi]);
+
     return (
-        <WSContext.Provider
-            value={{
-                ws: ws.current,
-                confirmedTaxi,
-                wsTaxis,
-                position,
-                heading,
-                resetConnection,
-                sendStringToServer,
-                findTaxi,
-                cancelTaxi,
-                trackPosition,
-                simulateRoutePosition,
-                stopRouteSimulation
-            }}>
-            {children}
-        </WSContext.Provider>
+        <WSStateContext.Provider value={{ ws: ws.current, wsTaxis, heading, position, confirmedTaxi }}>
+            <WSActionsContext.Provider value={actions}>
+                {children}
+            </WSActionsContext.Provider>
+        </WSStateContext.Provider>
     );
 };
 
