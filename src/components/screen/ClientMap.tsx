@@ -508,7 +508,7 @@ export default function ClientMap() {
                         </View>
                     )}
 
-                    {activeRoute && activeRoute.coords.length > 0 && currentStep !== ClientSteps.RIDE && (
+                    {activeRoute && activeRoute.coords.length > 0 && currentStep < ClientSteps.RIDE && (
                         <Animated.View
                             style={topSheetBtnsAnimStyle}
                             className="self-center justify-center items-center absolute top-0">

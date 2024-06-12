@@ -660,19 +660,19 @@ export const BottomSheetContent = ({
                       onPress={() => setSelectedTaxiType(slug as TaxiType)}
                       key={name}
                       className="mx-[-10%] px-[10%] bg-[#FCCB6F] flex-row gap-7 items-center py-3">
-                      <Icon />
+                      <Icon color={"black"} />
                       <View className="flex-row items-center justify-between flex-1 px-2">
                         <View>
-                          <Text className="text-white text-xl font-medium">{name}</Text>
-                          <Text className="text-white ">
+                          <Text className="text-[#1b1b1b] text-xl font-medium">{name}</Text>
+                          <Text className="text-[#1b1b1b] ">
                             {Math.round(Math.random() * 100) / 100} Km
                           </Text>
                         </View>
                         <View>
-                          <Text className="text-white text-lg font-medium text-right">
+                          <Text className="text-[#1b1b1b] text-lg font-medium text-right">
                             ${(pricePerKm * (routeInfo?.distance.value ?? 0 / 1000)).toFixed(2)}
                           </Text>
-                          <Text className="text-white">
+                          <Text className="text-[#1b1b1b]">
                             {(timePerKm * (routeInfo?.duration.value ?? 0 / 60)).toFixed(2)} min
                           </Text>
                         </View>
@@ -685,17 +685,17 @@ export const BottomSheetContent = ({
                     onPress={() => setSelectedTaxiType(slug as TaxiType)}
                     key={name}
                     className="mx-[-10%] px-[10%] flex-row gap-7 items-center py-3">
-                    <Icon />
+                    <Icon color={Colors[colorScheme ?? "light"].border} />
                     <View className="flex-row items-center justify-between flex-1 px-2">
                       <View>
-                        <Text className="text-xl font-medium">{name}</Text>
-                        <Text className="">{Math.round(Math.random() * 100) / 100} Km</Text>
+                        <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] text-xl font-medium">{name}</Text>
+                        <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] ">{Math.round(Math.random() * 100) / 100} Km</Text>
                       </View>
                       <View>
-                        <Text className="text-lg font-medium text-right">
+                        <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] text-lg font-medium text-right">
                           ${(pricePerKm * (routeInfo?.distance.value ?? 0 / 1000)).toFixed(2)}
                         </Text>
-                        <Text className="">
+                        <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] ">
                           {(timePerKm * (routeInfo?.duration.value ?? 0 / 60)).toFixed(2)} min
                         </Text>
                       </View>
