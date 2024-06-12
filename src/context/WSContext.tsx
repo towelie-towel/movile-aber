@@ -111,7 +111,6 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
             console.error('');
         }
     }, [ws]);
-
     const findTaxi = useCallback(async (ride: RideInfo, taxiid: string | undefined) => {
         const nearestTaxi = wsTaxis[0];
         console.log(wsTaxis)
@@ -205,7 +204,7 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
         });
 
         suckItToMeBBy.addEventListener('close', (_event) => {
-            if (WS_LOGS) console.log('WS Connection closed');
+            if (WS_LOGS) console.log('WS Connection closed', _event.reason);
         });
 
         suckItToMeBBy.addEventListener('error', (_error) => {
@@ -222,13 +221,10 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
 
     const trackPosition = useCallback(async () => {
         await requestPermissions();
-
         if (positionSubscription.current) {
             return;
         }
-
         await ExpoLocation.enableNetworkProviderAsync();
-
         const posSubscrition = await ExpoLocation.watchPositionAsync(
             {
                 accuracy: ExpoLocation.Accuracy.BestForNavigation,
@@ -238,10 +234,42 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
                 setPosition(newPosition);
             }
         );
-
         if (WS_LOGS) console.log('Setted position subscriptions');
         positionSubscription.current = posSubscrition;
     }, [positionSubscription]);
+    const trackHeading = useCallback(async () => {
+        if (headingSubscription.current) {
+            return;
+        }
+        const headSubscrition = await ExpoLocation.watchHeadingAsync((newHeading) => {
+            setHeading(newHeading);
+        });
+
+        if (WS_LOGS) console.log('Setted heading subscriptions');
+        headingSubscription.current = headSubscrition;
+    }, [headingSubscription]);
+    const resetConnection = useCallback(async () => {
+        if (!isConnected) {
+            console.warn('💣 ==> No internet connection ==> ');
+            return;
+        }
+        try {
+            if (!ws.current) {
+                if (WS_LOGS) console.log('initializasing web socket');
+                ws.current = await asyncNewWebSocket();
+            } else if (ws.current.readyState === WebSocket.OPEN) {
+                console.warn('a ws connection is already open');
+            } else if (ws.current.readyState === WebSocket.CLOSED) {
+                if (WS_LOGS) console.log('🚿 resetConnection ==> reseting connection');
+                ws.current = await asyncNewWebSocket();
+            } else {
+                console.error("ws connection is not OPEN or CLOSED");
+                // TODO: handle CONNECTING and CLOSING cases
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    }, [isConnected, ws, asyncNewWebSocket]);
 
     const simulateRoutePosition = useCallback(async (coords: LatLng[]) => {
         if (positionSubscription.current) {
@@ -278,7 +306,6 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
 
         if (WS_LOGS) console.log('Simulating position route');
     }, [positionSubscription, headingSubscription, simulationSubscription]);
-
     const stopRouteSimulation = useCallback(async () => {
         /* if (!positionSubscription.current) {
             void trackPosition();
@@ -294,42 +321,6 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
 
         if (WS_LOGS) console.log('Stopping route simulation');
     }, [positionSubscription, headingSubscription, simulationSubscription]);
-
-    const trackHeading = useCallback(async () => {
-        if (headingSubscription.current) {
-            return;
-        }
-        const headSubscrition = await ExpoLocation.watchHeadingAsync((newHeading) => {
-            setHeading(newHeading);
-        });
-
-        if (WS_LOGS) console.log('Setted heading subscriptions');
-        headingSubscription.current = headSubscrition;
-    }, [headingSubscription]);
-
-    const resetConnection = useCallback(async () => {
-        if (!isConnected) {
-            // console.warn('💣 ==> No internet connection ==> ');
-            return;
-        }
-
-        try {
-            if (!ws.current) {
-                if (WS_LOGS) console.log('initializasing web socket');
-                ws.current = await asyncNewWebSocket();
-            } else if (ws.current.readyState === WebSocket.OPEN) {
-                console.warn('a ws connection is already open');
-            } else if (ws.current.readyState === WebSocket.CLOSED) {
-                if (WS_LOGS) console.log('🚿 resetConnection ==> reseting connection');
-                ws.current = await asyncNewWebSocket();
-            } else {
-                console.error("ws connection is not OPEN or CLOSED");
-                // TODO: handle CONNECTING and CLOSING cases
-            }
-        } catch (error) {
-            console.error(error);
-        }
-    }, [isConnected, ws, asyncNewWebSocket]);
 
     useEffect(() => {
         if (!positionSubscription.current) {
@@ -353,7 +344,6 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
             }
         };
     }, []);
-
     useEffect(() => {
         if (WS_LOGS) console.log('WSContext.tsx -> useEffect [isConnected]', isConnected);
         void resetConnection();
