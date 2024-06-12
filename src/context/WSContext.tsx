@@ -8,7 +8,7 @@ import { RideInfo } from '~/constants/Configs';
 import { TaxiProfile } from '~/constants/TaxiTypes';
 import { calculateDistance, calculateBearing, duplicateCoords, polylineDecode } from '~/utils/directions';
 
-const WS_LOGS = true;
+const WS_LOGS = false;
 const LOCATION_TASK_NAME = 'background-location-task';
 
 export interface WSTaxi {
@@ -113,7 +113,7 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
     }, [ws]);
     const findTaxi = useCallback(async (ride: RideInfo, taxiid: string | undefined) => {
         const nearestTaxi = wsTaxis[0];
-        console.log(wsTaxis)
+        if (WS_LOGS) console.log(wsTaxis)
         if (ws.current?.readyState === WebSocket.OPEN) {
             ws.current?.send(`findtaxi-${taxiid ?? nearestTaxi.userId}-endid` + JSON.stringify(ride));
         } else {
@@ -183,7 +183,7 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
             );
             return distanceA - distanceB;
         });
-        console.log(sortedTaxis)
+        if (WS_LOGS) console.log(sortedTaxis)
         setWsTaxis(sortedTaxis);
 
 

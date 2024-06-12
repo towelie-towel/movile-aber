@@ -217,16 +217,17 @@ export default function ClientMap() {
         setCurrentStep(ClientSteps.FINDING)
         console.log(rideInfo)
         try {
-            if (rideInfo)
+            if (rideInfo) {
                 await findTaxi(rideInfo, "eff41f96-178e-4e97-9f43-35d4de7b7a18")
-            else {
+                setCurrentStep(ClientSteps.PICKUP)
+            } else {
                 throw new Error('Ride Info is not set')
             }
         } catch (error) {
             console.error(error)
+            setCurrentStep(ClientSteps.FINDING - 1)
         } finally {
             setFindingRide(false);
-            setCurrentStep(ClientSteps.FINDING - 1)
         }
     }, [rideInfo, findTaxi]);
 

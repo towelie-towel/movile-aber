@@ -249,7 +249,7 @@ export const BottomSheetContent = ({
       <View className="w-[90%] h-full self-center overflow-visible">
 
 
-        {currentStep === ClientSteps.RIDE ?
+        {currentStep >= ClientSteps.RIDE ?
           <View className="px-[5%] h-full self-center">
             <View className="h-20 flex-row justify-between items-center">
               <View className="flex-row gap-3 items-center">

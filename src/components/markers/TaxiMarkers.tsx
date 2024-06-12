@@ -46,7 +46,7 @@ const TaxisMarkers = ({ onPressTaxi }: props) => {
       {taxis?.map((taxi) => {
         return (
           <AnimatedMarker
-            key={`${taxi.userId}`}
+            key={taxi.userId}
             heading={0}
             headingAnimated={true}
             latitude={taxi.latitude}
