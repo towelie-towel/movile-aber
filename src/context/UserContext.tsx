@@ -7,7 +7,7 @@ import { UserMarkerIconType } from '~/components/markers/AddUserMarker';
 import { getData } from '~/lib/storage';
 import { UserRoles } from '~/constants/Configs';
 
-const AUTH_LOGS = true;
+const AUTH_LOGS = false;
 
 type State = {
   session: Session | null;
@@ -158,7 +158,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       } else if (currentSession === null) {
         dispatch({ type: 'GET_SESSION_ERROR', payload: new Error('Session is null') });
       } else {
-        console.log("getSession success", JSON.stringify(currentSession, null, 2))
+        if (AUTH_LOGS) console.log("getSession success", JSON.stringify(currentSession, null, 2))
         dispatch({ type: 'GET_SESSION_SUCCESS', payload: currentSession });
       }
     } catch (error) {
@@ -182,7 +182,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       } else if (data === null || data.length === 0) {
         dispatch({ type: 'GET_PROFILE_ERROR', payload: new Error('Profile not found') });
       } else {
-        console.log("getProfile success", JSON.stringify(data[0], null, 2))
+        if (AUTH_LOGS) console.log("getProfile success", JSON.stringify(data[0], null, 2))
         dispatch({ type: 'GET_PROFILE_SUCCESS', payload: data[0] });
       }
     } catch (error) {

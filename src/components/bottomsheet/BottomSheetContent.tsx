@@ -96,7 +96,7 @@ export const BottomSheetContent = ({
     const tokio = async () => {
       if (piningInfo?.destination && piningInfo?.origin) {
         const resp = await fetch(
-          `http://172.20.10.12:6942/route?from=${piningInfo.origin.latitude},${piningInfo.origin.longitude}&to=${piningInfo.destination.latitude},${piningInfo.destination.longitude}`
+          `http://192.168.1.103:6942/route?from=${piningInfo.origin.latitude},${piningInfo.origin.longitude}&to=${piningInfo.destination.latitude},${piningInfo.destination.longitude}`
         );
         const respJson = await resp.json();
         const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map(
@@ -249,8 +249,8 @@ export const BottomSheetContent = ({
       <View className="w-[90%] h-full self-center overflow-visible">
 
 
-        {currentStep >= ClientSteps.RIDE ?
-          <View className="px-[5%] h-full self-center">
+        {currentStep >= ClientSteps.PICKUP ?
+          <View className="px-[5%]- h-full self-center">
             <View className="h-20 flex-row justify-between items-center">
               <View className="flex-row gap-3 items-center">
                 <Image
@@ -258,7 +258,7 @@ export const BottomSheetContent = ({
                   source={require('../../../assets/images/taxi_test.png')}
                 />
                 <View className="justify-center">
-                  <Text className="font-bold text-xl">{confirmedTaxi?.name}</Text>
+                  <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-bold text-xl">{confirmedTaxi?.name ?? "Anonymous"}</Text>
                   <View className="flex-row items-center">
                     <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] text-lg">★ </Text>
                     <Text className="text-[#1b1b1b] dark:text-[#C1C0C9]">4.9</Text>
@@ -281,19 +281,19 @@ export const BottomSheetContent = ({
             </View>
 
             <View className="flex-row gap-7 items-center py-2">
-              <ConfortSVG />
+              <ConfortSVG color={Colors[colorScheme ?? "light"].border} />
               <View className="flex-row items-center justify-between flex-1 mx-1">
                 <View className="gap-2">
                   <Text className="text-xl font-medium text-[#1b1b1b] dark:text-[#C1C0C9] text-center">Distance</Text>
-                  <Text className="text-xl font-bold">{routeInfo?.distance.text}</Text>
+                  <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] text-xl font-bold">{routeInfo?.distance.text}</Text>
                 </View>
                 <View className="gap-2">
                   <Text className="text-xl font-medium text-[#1b1b1b] dark:text-[#C1C0C9] text-center">Time</Text>
-                  <Text className="text-xl font-bold">{routeInfo?.duration.text}</Text>
+                  <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] text-xl font-bold">{routeInfo?.duration.text}</Text>
                 </View>
                 <View className="gap-2">
                   <Text className="text-lg font-medium text-[#1b1b1b] dark:text-[#C1C0C9] text-center">Price</Text>
-                  <Text className="text-xl font-bold">3000 CUP</Text>
+                  <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] text-xl font-bold">3000 CUP</Text>
                 </View>
               </View>
             </View>

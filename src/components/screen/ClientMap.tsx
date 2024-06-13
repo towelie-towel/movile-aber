@@ -1,18 +1,3 @@
-import { MaterialIcons, MaterialCommunityIcons, FontAwesome6 } from '@expo/vector-icons';
-import {
-    BottomSheetBackdrop,
-    BottomSheetBackdropProps,
-    BottomSheetModal,
-    BottomSheetModalProvider,
-    BottomSheetHandleProps,
-} from '@gorhom/bottom-sheet';
-import { Image } from 'expo-image';
-import { useKeepAwake } from 'expo-keep-awake';
-import * as ExpoLocation from 'expo-location';
-import * as NavigationBar from 'expo-navigation-bar';
-import { useRouter } from 'expo-router';
-import { MotiView } from '@motify/components';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
     StatusBar,
     useColorScheme,
@@ -24,6 +9,21 @@ import {
     LayoutAnimation,
     Switch
 } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Image } from 'expo-image';
+import { useKeepAwake } from 'expo-keep-awake';
+import * as ExpoLocation from 'expo-location';
+import * as NavigationBar from 'expo-navigation-bar';
+import { useRouter } from 'expo-router';
+import { BlurView } from 'expo-blur';
+import { MaterialIcons, MaterialCommunityIcons, FontAwesome6 } from '@expo/vector-icons';
+import {
+    BottomSheetBackdrop,
+    BottomSheetBackdropProps,
+    BottomSheetModal,
+    BottomSheetModalProvider,
+    BottomSheetHandleProps,
+} from '@gorhom/bottom-sheet';
 import { Drawer } from 'react-native-drawer-layout';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import MapView, { type LatLng, PROVIDER_GOOGLE, PROVIDER_DEFAULT, Polyline, Marker } from 'react-native-maps';
@@ -391,6 +391,17 @@ export default function ClientMap() {
                     );
                 }}>
                 <BottomSheetModalProvider>
+                    {Platform.OS === 'ios' && <BlurView
+                        style={{
+                            position: 'absolute',
+                            zIndex: 1000,
+                            height: insets.top,
+                            width,
+                            top: 0,
+                        }}
+                        tint="light"
+                        intensity={20}
+                    />}
                     <MapView
                         showsUserLocation
                         style={{ width: '100%', height: '100%' }}
