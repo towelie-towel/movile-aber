@@ -2,7 +2,7 @@ import { MaterialCommunityIcons, FontAwesome6, AntDesign } from '@expo/vector-ic
 import { BottomSheetView, useBottomSheet } from '@gorhom/bottom-sheet';
 import { Image } from 'expo-image';
 import * as ExpoLocation from 'expo-location';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
   Keyboard,
   Pressable,
   ScrollView,
+  ColorValue,
 } from 'react-native';
 import type { Address, LatLng } from 'react-native-maps';
 
@@ -24,13 +25,14 @@ import {
   GooglePlaceDetail,
   GooglePlacesAutocompleteRef,
 } from '~/lib/google-places-autocomplete/GooglePlacesAutocomplete';
-import type { TaxiProfile, TaxiType } from '~/constants/TaxiTypes';
+import type { TaxiType } from '~/constants/TaxiTypes';
 import { polylineDecode } from '~/utils/directions';
 import { taxiTypesInfo } from '~/constants/TaxiTypes';
-import { ClientSteps, RideInfo } from '~/constants/Configs';
+import { ClientSteps, DBRide, RideInfo } from '~/constants/Configs';
 import { useUser } from '~/context/UserContext';
 import DashedLine from './DashedLine';
 import { useWSActions, useWSState } from '~/context/WSContext';
+import TestRidesData from '~/constants/TestRidesData.json'
 
 interface BottomSheetContentProps {
   currentStep: ClientSteps;
@@ -61,7 +63,7 @@ export const BottomSheetContent = ({
 }: BottomSheetContentProps) => {
   const colorScheme = useColorScheme();
   const { width } = useWindowDimensions();
-  const { profile, userMarkers } = useUser()
+  const { profile } = useUser()
   const { collapse, snapToIndex, snapToPosition } = useBottomSheet();
   const { confirmedTaxi } = useWSState()
   const { cancelTaxi } = useWSActions()
@@ -114,6 +116,8 @@ export const BottomSheetContent = ({
         });
 
         setRideInfo({
+          status: "pending",
+          name: "Undefiend",
           client: profile!,
           origin: piningInfo.origin,
           destination: piningInfo.destination,
@@ -244,9 +248,9 @@ export const BottomSheetContent = ({
   };
 
   return (
-    <BottomSheetView className="flex-1 bg-white dark:bg-[#1b1b1b]">
+    <BottomSheetView className="flex-1">
 
-      <View className="w-[90%] h-full self-center overflow-visible">
+      <View className="w-[95%] h-full self-center overflow-visible">
 
 
         {currentStep >= ClientSteps.PICKUP ?
@@ -298,11 +302,11 @@ export const BottomSheetContent = ({
               </View>
             </View>
 
-            <View className="relative z-[1000] w-full pr-[5%] items-center- flex-row py-1">
+            <View className="relative z-[1000] w-full pr-[2.5%] items-center- flex-row py-1">
               <MaterialCommunityIcons className='mt-1' name="map-marker-account" size={32} color={Colors[colorScheme ?? "light"].border} />
               <Text className="ml-2 font-bold text-lg text-[#1b1b1b] dark:text-[#C1C0C9] ">{piningInfo?.origin?.address}</Text>
             </View>
-            <View className="relative z-[999] w-full pr-[5%] mb-3 items-end flex-row">
+            <View className="relative z-[999] w-full pr-[2.5%] mb-3 items-end flex-row">
               <DashedLine
                 axis="vertical"
                 style={{
@@ -330,12 +334,12 @@ export const BottomSheetContent = ({
           :
           <>
             <View className="h-10 flex-row justify-between items-center mx-1.5">
-              <Text className="font-bold text-xl text-[#C1C0C9] dark:text-[#]">A donde quieres ir?</Text>
+              <Text className="font-bold text-xl text-[#1b1b1b] dark:text-[#C1C0C9]">A donde quieres ir?</Text>
 
               {viewPinOnMap && !piningLocation && (
                 <ScaleBtn onPress={startPiningLocationHandler}>
                   <View className="flex-row items-center gap-2 p-1 px-2 border rounded-lg border-[#C1C0C9]">
-                    <Text className="h-full text-lg font-medium text-center text-[#C1C0C9]">Fijar en el Mapa</Text>
+                    <Text className="h-full text-lg font-medium text-center text-[#1b1b1b] dark:text-[#C1C0C9]">Fijar en el Mapa</Text>
                     <MaterialCommunityIcons name="map-search-outline" size={22} color={Colors[colorScheme ?? "light"].border} />
                   </View>
                 </ScaleBtn>
@@ -385,7 +389,7 @@ export const BottomSheetContent = ({
                 color={Colors[colorScheme ?? "light"].border} />
               <GooglePlacesAutocomplete
                 ref={originInputViewRef}
-                predefinedPlaces={userMarkers.map((marker) => ({
+                /* predefinedPlaces={userMarkers.map((marker) => ({
                   description: marker.name,
                   geometry: {
                     location: {
@@ -393,7 +397,7 @@ export const BottomSheetContent = ({
                       lng: marker.coords.longitude,
                     },
                   },
-                }))}
+                }))} */
                 placeholder="Lugar de Origen"
                 textInputProps={{
                   placeholderTextColor: colorScheme === 'light' ? 'black' : '#6C6C6C',
@@ -431,7 +435,7 @@ export const BottomSheetContent = ({
                     marginLeft: 12,
                     height: 46,
                     borderRadius: 10,
-                    width: width * 0.9 - 48,
+                    width: width * 0.95 - 48,
                   },
                   textInput: {
                     position: 'relative',
@@ -487,7 +491,7 @@ export const BottomSheetContent = ({
               />
               <GooglePlacesAutocomplete
                 ref={destinationInputViewRef}
-                predefinedPlaces={userMarkers.map((marker) => ({
+                /* predefinedPlaces={userMarkers.map((marker) => ({
                   description: marker.name,
                   geometry: {
                     location: {
@@ -495,7 +499,7 @@ export const BottomSheetContent = ({
                       lng: marker.coords.longitude,
                     },
                   },
-                }))}
+                }))} */
                 placeholder="Lugar Destino"
                 textInputProps={{
                   placeholderTextColor: colorScheme === 'light' ? 'black' : '#6C6C6C',
@@ -533,7 +537,7 @@ export const BottomSheetContent = ({
                     marginLeft: 12,
                     height: 46,
                     borderRadius: 10,
-                    width: width * 0.9 - 48,
+                    width: width * 0.95 - 48,
                   },
                   textInput: {
                     position: 'relative',
@@ -576,76 +580,58 @@ export const BottomSheetContent = ({
         {currentStep === ClientSteps.SEARCH &&
           <>
             <View className="mx-1.5 mt-7 overflow-visible">
-              <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-bold text-xl">Favoritos</Text>
+              <View className='flex-row justify-between'>
+                <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-bold text-xl">Favoritos</Text>
+                <Text className="text-[#21288a] dark:text-[#766acd] font-bold text-xl">mas</Text>
+              </View>
 
-              <ScrollView keyboardShouldPersistTaps="always" horizontal className="w-100 overflow-visible">
-                <View>
-                  <ScaleBtn
-                    className="mt-3 w-20 h-20 rounded-full border-2 border-[#C1C0C9] items-center justify-center"
-                    onPress={() => { }}>
-                    <FontAwesome6
-                      name="suitcase"
-                      size={32}
-                      color={Colors[colorScheme ?? 'light'].icons}
-                    />
-                  </ScaleBtn>
-                  <Text className="text-lg font-semibold text-center text-[#1b1b1b] dark:text-[#C1C0C9]">Trabajo</Text>
-                  <Text className="text-sm text-center text-[#1b1b1b] dark:text-[#C1C0C9]">Add</Text>
-                </View>
+              <View className='py-3 pl-[5%]- pr-[3%]- mt-3 rounded-lg bg-[#E9E9E9] dark:bg-[#333333] overflow-hidden shadow'>
+                <ScrollView keyboardShouldPersistTaps="always" horizontal className="w-100 overflow-visible">
+                  {
+                    [{ name: "Trabajo", icon: "suitcase", location: undefined, }, { name: "Casa", icon: "house", location: undefined, }].map(item => (
+                      <View className='ml-2 mr-3 items-center justify-center' key={item.icon}>
+                        <ScaleBtn
+                          className="w-[65px] h-[65px] rounded-full border-2 border-[#D8D8D8] dark:border-[#444444] bg-[#D8D8D8] dark:bg-[#444444] items-center justify-center"
+                          onPress={() => { }}>
+                          <FontAwesome6
+                            name={item.icon}
+                            size={24}
+                            color={Colors[colorScheme ?? 'light'].icons}
+                          />
+                        </ScaleBtn>
+                        <Text className="text-lg font-semibold text-center text-[#1b1b1b] dark:text-[#C1C0C9]">{item.name}</Text>
+                        <Text className="text-sm text-center text-[#1b1b1b] dark:text-[#C1C0C9]">Add</Text>
+                      </View>
+                    ))
+                  }
+                </ScrollView>
+              </View>
 
-                <View className="ml-5">
-                  <ScaleBtn
-                    className="mt-3 w-20 h-20 rounded-full border-2 border-[#C1C0C9] items-center justify-center"
-                    onPress={() => { }}>
-                    <FontAwesome6
-                      name="house"
-                      size={32}
-                      color={Colors[colorScheme ?? 'light'].icons}
-                    />
-                  </ScaleBtn>
-                  <Text className="text-lg font-semibold text-center text-[#1b1b1b] dark:text-[#C1C0C9]">Casa</Text>
-                  <Text className="text-sm text-center text-[#1b1b1b] dark:text-[#C1C0C9]">Add</Text>
-                </View>
-
-                <View className="ml-5">
-                  <ScaleBtn
-                    className="mt-3 w-20 h-20 rounded-full border-2 border-[#C1C0C9] items-center justify-center"
-                    onPress={() => { }}>
-                    <FontAwesome6
-                      name="plus"
-                      size={32}
-                      color={Colors[colorScheme ?? 'light'].icons}
-                    />
-                  </ScaleBtn>
-                  <Text className="text-lg font-semibold text-center text-[#1b1b1b] dark:text-[#C1C0C9]">Add</Text>
-                </View>
-              </ScrollView>
             </View>
 
             <View className="mx-1.5 mt-5 overflow-visible">
-              <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-bold text-xl">Recent</Text>
-
-              <View className="flex-row items-center gap-2 mt-3">
-                <View className="bg-[#C1C0C9] rounded-full items-center justify-center p-1 text-center">
-                  <MaterialCommunityIcons name="history" size={32} color={Colors[colorScheme ?? "light"].icons} />
-                </View>
-                <View>
-                  <Text numberOfLines={1} className="text-[#1b1b1b] dark:text-[#C1C0C9] font-lg font-medium">
-                    23 y 12, Plaza de la Revolucion, La Habana
-                  </Text>
-                </View>
+              <View className='flex-row justify-between'>
+                <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-bold text-xl">Recent</Text>
+                <Text className="text-[#21288a] dark:text-[#766acd] font-bold text-xl">mas</Text>
               </View>
 
-              <View className="flex-row items-center gap-2 mt-3">
-                <View className="bg-[#C1C0C9] rounded-full items-center justify-center p-1 text-center">
-                  <MaterialCommunityIcons name="history" size={32} color={Colors[colorScheme ?? "light"].icons} />
-                </View>
-                <View>
-                  <Text numberOfLines={1} className="text-[#1b1b1b] dark:text-[#C1C0C9] font-lg font-medium">
-                    Pedro Perez e/ Clavel y Mariano, Cerro, La...
-                  </Text>
-                </View>
+
+              <View className='pl-[5%]- pr-[3%]- h-60 mt-3 rounded-lg bg-[#E9E9E9] dark:bg-[#333333] overflow-hidden shadow'>
+                <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="always" className="w-100">
+                  {
+                    TestRidesData.map((item, index) => (
+                      <>
+                        <RidesHistoryItem
+                          key={item.id}
+                          // @ts-ignore
+                          ride={item} />
+                        {index !== TestRidesData.length - 1 ? <View style={{ height: 1, backgroundColor: Colors[colorScheme ?? 'light'].border_light, width: "90%", alignSelf: "center", marginTop: 8, marginBottom: 5 }} /> : <View style={{ height: 1, width: "90%", alignSelf: "center", marginTop: 8, marginBottom: 5 }} />}
+                      </>
+                    ))
+                  }
+                </ScrollView>
               </View>
+
             </View>
           </>
         }
@@ -711,3 +697,40 @@ export const BottomSheetContent = ({
     </BottomSheetView>
   );
 };
+
+const RidesHistoryItem = ({ ride }: { ride: DBRide }) => {
+
+  const getRideHistoryIcon = useMemo(() => {
+    switch (ride.status) {
+      case "calceled": return { icon: "map-marker-remove-variant", bgColor: "#242E42", color: "white" }
+      case "completed": return { icon: "map-marker-check", bgColor: "#25D366", color: "white" }
+      case "error": return { icon: "map-marker-alert", bgColor: "#f82f00", color: "white" }
+      case "ongoing": return { icon: "map-marker-account", bgColor: "#FCCB6F", color: "white" }
+      case "pending": return { icon: "map-marker-up", bgColor: "#FCCB6F", color: "white" }
+
+      default:
+        return null
+    }
+  }, [ride])
+
+  return (
+    <View className="flex-row items-center mt-3">
+      <ScrollView contentContainerClassName='items-center' showsHorizontalScrollIndicator={false} horizontal>
+        <View style={{ backgroundColor: getRideHistoryIcon?.bgColor, width: 40, height: 40 }} className="rounded-full items-center justify-center p-1 ml-3">
+          <MaterialCommunityIcons
+            // @ts-ignore
+            name={getRideHistoryIcon?.icon}
+            size={32} color={getRideHistoryIcon?.color} />
+        </View>
+        <View className='justify-between ml-2 mr-3'>
+          <Text numberOfLines={1} className="text-[#1b1b1b] dark:text-[#d6d6d6] text-2xl font-bold">
+            {ride.destination_address.split(",")[0]}
+          </Text>
+          <Text numberOfLines={1} className="text-[#1b1b1b] dark:text-[#d6d6d6] text-md font-medium">
+            {ride.destination_address}
+          </Text>
+        </View>
+      </ScrollView>
+    </View>
+  )
+}

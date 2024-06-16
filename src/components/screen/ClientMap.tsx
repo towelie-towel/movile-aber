@@ -62,7 +62,7 @@ export default function ClientMap() {
     const colorScheme = useColorScheme();
     const insets = useSafeAreaInsets();
     const router = useRouter();
-    const { profile, userMarkers, isSignedIn, signOut, toggleUserRole } = useUser();
+    const { profile, isSignedIn, signOut, toggleUserRole/* , ridesHistory */ } = useUser();
     const { findTaxi } = useWSActions();
 
     if (Platform.OS === 'android') {
@@ -108,7 +108,7 @@ export default function ClientMap() {
     useEffect(() => {
         switch (currentStep) {
             case ClientSteps.SEARCH:
-                setSnapPoints([195, 360, 550])
+                setSnapPoints([195, 360, 650])
                 break;
             case ClientSteps.TAXI:
                 setSnapPoints([250, 400])
@@ -427,7 +427,7 @@ export default function ClientMap() {
 
                         <AnimatedRouteMarker key={2} />
 
-                        {userMarkers.map((marker) => (
+                        {/* {userMarkers.map((marker) => (
                             <Marker key={marker.id} coordinate={{ ...marker.coords }}>
                                 <MaterialIcons
                                     name="location-on"
@@ -435,7 +435,7 @@ export default function ClientMap() {
                                     color={Colors[colorScheme ?? 'light'].text}
                                 />
                             </Marker>
-                        ))}
+                        ))} */}
 
                         {activeRoute && activeRoute.coords.length > 0 && (
                             <>
@@ -650,7 +650,7 @@ export default function ClientMap() {
                             backgroundColor: Colors[colorScheme ?? 'light'].border,
                         }}
                         handleStyle={{
-                            backgroundColor: Colors[colorScheme ?? 'light'].background_bsheet,
+                            // backgroundColor: Colors[colorScheme ?? 'light'].background_bsheet,
                             // backgroundColor: 'black',
                             borderTopRightRadius: 30,
                             borderTopLeftRadius: 30,
@@ -659,7 +659,7 @@ export default function ClientMap() {
                         containerStyle={{
                             backgroundColor: 'transparent',
                         }}
-                        backgroundComponent={() => <View className='absolute top-[24px] right-0 w-full h-full flex-1 bg-white dark:bg-[#1b1b1b]'></View>}
+                        backgroundComponent={() => <View style={{ backgroundColor: Colors[colorScheme ?? 'light'].background_light }} className='absolute top-[24px] right-0 w-full h-full flex-1'></View>}
 
                         style={{
                             // backgroundColor: Colors[colorScheme ?? 'light'].background_light,

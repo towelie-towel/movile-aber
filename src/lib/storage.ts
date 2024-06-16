@@ -17,3 +17,55 @@ export const getData = async (key: string) => {
     // error reading value
   }
 };
+
+const storage = {
+  get: async (key: string) => {
+    try {
+      const jsonValue = await AsyncStorage.getItem(key);
+      return jsonValue != null ? JSON.parse(jsonValue) : null;
+    } catch (e) {
+      // error reading value
+      throw e
+    }
+  }
+  ,
+  getBoolean: async (key: string) => {
+    try {
+      const jsonValue = await AsyncStorage.getItem(key);
+      const res = jsonValue != null ? JSON.parse(jsonValue) as boolean : null;
+      return res
+    } catch (e) {
+      // error reading value
+      throw e
+    }
+  },
+  set: async (key: string) => {
+    try {
+      const jsonValue = await AsyncStorage.getItem(key);
+      return jsonValue != null ? JSON.parse(jsonValue) : null;
+    } catch (e) {
+      // error reading value
+      throw e
+    }
+  },
+  delete: async (key: string) => {
+    try {
+      const jsonValue = await AsyncStorage.getItem(key);
+      return jsonValue != null ? JSON.parse(jsonValue) : null;
+    } catch (e) {
+      // error reading value
+      throw e
+    }
+  },
+  getString: async (key: string) => {
+    try {
+      const jsonValue = await AsyncStorage.getItem(key);
+      return jsonValue != null ? JSON.parse(jsonValue) : null;
+    } catch (e) {
+      // error reading value
+      throw e
+    }
+  }
+}
+
+export default storage

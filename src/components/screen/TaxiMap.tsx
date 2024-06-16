@@ -58,7 +58,7 @@ export default function ClientMap() {
     const colorScheme = useColorScheme();
     const insets = useSafeAreaInsets();
     const router = useRouter();
-    const { profile, userMarkers, isSignedIn, signOut, toggleUserRole } = useUser();
+    const { profile, isSignedIn, signOut, toggleUserRole } = useUser();
 
     if (Platform.OS === 'android') {
         NavigationBar.setBackgroundColorAsync('transparent');
@@ -751,7 +751,7 @@ export default function ClientMap() {
                         <DriverMarker activeWaves={findingRide} />
                         <AnimatedRouteMarker key={2} />
 
-                        {userMarkers.map((marker) => (
+                        {/* {userMarkers.map((marker) => (
                             <Marker key={marker.id} coordinate={{ ...marker.coords }}>
                                 <MaterialIcons
                                     name="location-on"
@@ -759,7 +759,7 @@ export default function ClientMap() {
                                     color={Colors[colorScheme ?? 'light'].text}
                                 />
                             </Marker>
-                        ))}
+                        ))} */}
 
                         {activeRoute && activeRoute.coords.length > 0 && (
                             <>

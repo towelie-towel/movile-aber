@@ -13,9 +13,11 @@ export default {
     primary: '#FCCB6F',
     secondary: '#F8F8F8',
     border: '#6C6C6C',
+    border_light: '#D8D8D8',
     shadow: '#000',
     btn_light_bg: '#eee',
     icons: '#8d8a9e',
+    icons_bg: "#C1C0C9"
   },
   dark: {
     text: '#fff',
@@ -23,16 +25,18 @@ export default {
     text_light1: '#FFFFFF',
     text_light2: '#FFFFFF',
     text_dark: '#C8C7CC',
-    background: '#000',
+    background: '#1b1b1b',
     background_bsheet: '#1b1b1b',
-    background_light: '#000',
+    background_light: '#1b1b1b',
     background_light1: '#333333',
-    background_dark: '#000',
+    background_dark: '#1b1b1b',
     primary: '#FCCB6F',
     secondary: '#222222',
     border: '#A3A3A3',
+    border_light: '#444444',
     shadow: '#000',
     btn_light_bg: '#eee',
     icons: '#C1C0C9',
+    icons_bg: "#A1A1A1"
   },
 };

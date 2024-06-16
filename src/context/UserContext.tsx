@@ -1,18 +1,24 @@
 import NetInfo from '@react-native-community/netinfo';
 import { User, type Session } from '@supabase/supabase-js';
 import React, { createContext, useCallback, useContext, useEffect, useReducer } from 'react';
+import { atomWithStorage, createJSONStorage, } from 'jotai/utils';
+import AsyncStorage from '@react-native-async-storage/async-storage'
 
 import { supabase } from '~/lib/supabase';
 import { UserMarkerIconType } from '~/components/markers/AddUserMarker';
 import { getData } from '~/lib/storage';
-import { UserRoles } from '~/constants/Configs';
+import { RideInfo, UserRoles } from '~/constants/Configs';
+
+const storedUserMarkers = createJSONStorage<UserMarkerIconType[]>(() => AsyncStorage)
+export const userMarkersAtom = atomWithStorage<UserMarkerIconType[]>('userMarkers', [], storedUserMarkers)
+const storedRidesHistoryMarkers = createJSONStorage<RideInfo[]>(() => AsyncStorage)
+export const ridesHistoryAtom = atomWithStorage<RideInfo[]>('userMarkers', [], storedRidesHistoryMarkers)
 
 const AUTH_LOGS = false;
 
 type State = {
   session: Session | null;
   profile: Profile | null;
-  userMarkers: UserMarkerIconType[];
   error: Error | null;
   isError: boolean;
   isSignedIn: boolean;
@@ -66,15 +72,13 @@ function reducer(state: State, action: Action): State {
     case 'UPDATE_PROFILE_SUCCESS':
       return { ...state, profile: action.payload, isError: false, error: null };
     case 'SIGN_OUT_SUCCESS':
-      return { session: null, profile: null, isSignedIn: false, error: null, isError: false, isInitializing: false, userMarkers: [] };
+      return { session: null, profile: null, isSignedIn: false, error: null, isError: false, isInitializing: false };
     case 'SET_ERROR':
       return { ...state, error: action.payload, isError: action.payload !== null };
     case 'SET_PROFILE':
       return { ...state, profile: action.payload };
     case 'SET_SESSION':
       return { ...state, session: action.payload, isSignedIn: action.payload !== null };
-    case 'SET_USER_MARKERS':
-      return { ...state, userMarkers: action.payload };
     case 'SET_SIGNED_IN':
       return { ...state, isSignedIn: action.payload };
     case 'SET_IS_INITIALIZED':
@@ -110,7 +114,6 @@ export type Profile = {
 const initialValue: UserContext = {
   session: null,
   profile: null,
-  userMarkers: [],
   error: null,
   isError: false,
   isSignedIn: false,
@@ -140,7 +143,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     session: null,
     error: null,
     profile: null,
-    userMarkers: [],
     isSignedIn: false,
     isError: false,
     isInitializing: true,
