@@ -12,7 +12,7 @@ export default {
     background_dark: '#D8D8D8',
     primary: '#FCCB6F',
     secondary: '#F8F8F8',
-    border: '#D8D8D8',
+    border: '#6C6C6C',
     shadow: '#000',
     btn_light_bg: '#eee',
     icons: '#8d8a9e',

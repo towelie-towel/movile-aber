@@ -627,7 +627,7 @@ export const BottomSheetContent = ({
 
               <View className="flex-row items-center gap-2 mt-3">
                 <View className="bg-[#C1C0C9] rounded-full items-center justify-center p-1 text-center">
-                  <MaterialCommunityIcons name="history" size={32} color={Colors[colorScheme ?? "light"].border} />
+                  <MaterialCommunityIcons name="history" size={32} color={Colors[colorScheme ?? "light"].icons} />
                 </View>
                 <View>
                   <Text numberOfLines={1} className="text-[#1b1b1b] dark:text-[#C1C0C9] font-lg font-medium">
@@ -638,7 +638,7 @@ export const BottomSheetContent = ({
 
               <View className="flex-row items-center gap-2 mt-3">
                 <View className="bg-[#C1C0C9] rounded-full items-center justify-center p-1 text-center">
-                  <MaterialCommunityIcons name="history" size={32} color={Colors[colorScheme ?? "light"].border} />
+                  <MaterialCommunityIcons name="history" size={32} color={Colors[colorScheme ?? "light"].icons} />
                 </View>
                 <View>
                   <Text numberOfLines={1} className="text-[#1b1b1b] dark:text-[#C1C0C9] font-lg font-medium">

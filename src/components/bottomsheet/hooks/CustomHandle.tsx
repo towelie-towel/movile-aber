@@ -1,6 +1,7 @@
 import { BottomSheetHandleProps } from '@gorhom/bottom-sheet';
+import { BlurView } from 'expo-blur';
 import React, { memo, useMemo } from 'react';
-import { StyleProp, StyleSheet, ViewStyle } from 'react-native';
+import { StyleProp, StyleSheet, ViewStyle, View, useColorScheme } from 'react-native';
 import Animated, {
   Extrapolation,
   interpolate,
@@ -31,18 +32,12 @@ interface CustomHandleProps extends BottomSheetHandleProps {
 }
 
 const CustomHandleComponent: React.FC<CustomHandleProps> = ({ style, animatedIndex }) => {
+  const colorScheme = useColorScheme()
   const indicatorTransformOriginY = useDerivedValue(() =>
     interpolate(animatedIndex.value, [0, 1, 2], [-1, 0, 1], Extrapolation.CLAMP)
   );
 
   const containerStyle = useMemo(() => [styles.container, style], [style]);
-  const containerAnimatedStyle = useAnimatedStyle(() => {
-    const borderTopRadius = interpolate(animatedIndex.value, [1, 2], [20, 0], Extrapolation.CLAMP);
-    return {
-      borderTopLeftRadius: borderTopRadius,
-      borderTopRightRadius: borderTopRadius,
-    };
-  });
   const leftIndicatorStyle = useMemo(
     () => ({
       ...styles.indicator,
@@ -99,10 +94,15 @@ const CustomHandleComponent: React.FC<CustomHandleProps> = ({ style, animatedInd
 
   // render
   return (
-    <Animated.View style={[containerStyle, containerAnimatedStyle]} renderToHardwareTextureAndroid>
-      <Animated.View style={[leftIndicatorStyle, leftIndicatorAnimatedStyle]} />
-      <Animated.View style={[rightIndicatorStyle, rightIndicatorAnimatedStyle]} />
-    </Animated.View>
+    <View style={{ borderTopRightRadius: 12, borderTopLeftRadius: 12, overflow: "hidden" }} >
+      <BlurView tint={colorScheme === "light" ? "light" : "dark"}
+        intensity={100} style={[{ flex: 1, }]}>
+        <Animated.View style={[containerStyle]} renderToHardwareTextureAndroid>
+          <Animated.View style={[leftIndicatorStyle, leftIndicatorAnimatedStyle]} />
+          <Animated.View style={[rightIndicatorStyle, rightIndicatorAnimatedStyle]} />
+        </Animated.View>
+      </BlurView>
+    </View>
   );
 };
 

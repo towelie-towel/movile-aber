@@ -655,9 +655,12 @@ export default function ClientMap() {
                             borderTopRightRadius: 30,
                             borderTopLeftRadius: 30,
                         }}
+
                         containerStyle={{
                             backgroundColor: 'transparent',
                         }}
+                        backgroundComponent={() => <View className='absolute top-[24px] right-0 w-full h-full flex-1 bg-white dark:bg-[#1b1b1b]'></View>}
+
                         style={{
                             // backgroundColor: Colors[colorScheme ?? 'light'].background_light,
                             // backgroundColor: 'rgba(50, 50, 50, 0.5)',
