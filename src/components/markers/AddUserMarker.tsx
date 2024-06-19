@@ -14,7 +14,7 @@ import Colors from '~/constants/Colors';
 import { IMarker } from '~/constants/Markers';
 import { getData } from '~/lib/storage';
 
-const selectableMarkerIcons = [
+export const selectableMarkerIcons = [
   {
     type: 'MCI',
     name: 'airplane-marker',

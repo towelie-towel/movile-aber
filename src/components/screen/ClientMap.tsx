@@ -108,7 +108,7 @@ export default function ClientMap() {
     useEffect(() => {
         switch (currentStep) {
             case ClientSteps.SEARCH:
-                setSnapPoints([195, 360, 650])
+                setSnapPoints([195, 380, 700])
                 break;
             case ClientSteps.TAXI:
                 setSnapPoints([250, 400])
@@ -462,47 +462,17 @@ export default function ClientMap() {
                         const west = -82.423028;
 
                         */}
-                        <Marker coordinate={{ latitude: 23.127778, longitude: -82.361833 }}>
-                            <MaterialIcons
-                                name="location-on"
-                                size={24}
-                                color={Colors[colorScheme ?? 'light'].text}
-                            />
-                        </Marker>
-                        <Marker coordinate={{ latitude: 23.127778, longitude: -82.423028 }}>
-                            <MaterialIcons
-                                name="location-on"
-                                size={24}
-                                color={Colors[colorScheme ?? 'light'].text}
-                            />
-                        </Marker>
-                        <Marker coordinate={{ latitude: 23.088667, longitude: -82.361833 }}>
-                            <MaterialIcons
-                                name="location-on"
-                                size={24}
-                                color={Colors[colorScheme ?? 'light'].text}
-                            />
-                        </Marker>
-                        <Marker coordinate={{ latitude: 23.088667, longitude: -82.423028 }}>
-                            <MaterialIcons
-                                name="location-on"
-                                size={24}
-                                color={Colors[colorScheme ?? 'light'].text}
-                            />
-                        </Marker>
-                    </MapView>
+                        {[{ latitude: 23.127778, longitude: -82.361833 }, { latitude: 23.127778, longitude: -82.423028 }, { latitude: 23.088667, longitude: -82.361833 }, { latitude: 23.088667, longitude: -82.423028 }].map((item, i) => (
+                            <Marker key={i} coordinate={{ latitude: item.latitude, longitude: item.longitude }}>
+                                <MaterialIcons
+                                    name="location-on"
+                                    size={24}
+                                    color={Colors[colorScheme ?? 'light'].text}
+                                />
+                            </Marker>
+                        ))}
 
-                    {/* <ScaleBtn
-                        containerStyle={{ position: 'absolute', left: 28, top: insets.top + 12 }}
-                        onPress={() => setDrawerOpen(true)}>
-                        <View className="bg-[#f8f8f8] dark:bg-[#000] p-1 rounded-xl border border-[#d8d8d8] dark:[#a3a3a3]">
-                            <MaterialIcons
-                                name="menu"
-                                size={36}
-                                color={Colors[colorScheme ?? 'light'].text_dark}
-                            />
-                        </View>
-                    </ScaleBtn> */}
+                    </MapView>
 
                     {piningLocation && (
                         <View
@@ -536,20 +506,6 @@ export default function ClientMap() {
                         </Animated.View>
                     )}
 
-                    {/*  <Animated.View
-                        style={topSheetBtnsAnimStyle}
-                        className="self-end justify-center items-center absolute top-0">
-                        <ScaleBtn
-                            className="mt-4"
-                            onPress={() => {
-                                animateToUserLocation();
-                            }}>
-                            <View className="bg-[#fff] rounded-lg p-3 shadow mr-5">
-                                <FontAwesome6 name="location-arrow" size={24} color="black" />
-                            </View>
-                        </ScaleBtn>
-                    </Animated.View>
-
                     {activeRoute && activeRoute.coords.length > 0 && (
                         <Animated.View
                             style={topSheetBtnsAnimStyle}
@@ -564,11 +520,11 @@ export default function ClientMap() {
                                 </View>
                             </ScaleBtn>
                         </Animated.View>
-                    )} */}
+                    )}
 
                     <Animated.View
                         style={topSheetBtnsAnimStyle}
-                        className="rounded-xl bg-[#f8f8f8] shadow 1b1a1e dark:bg-[#1b1a1e] self-end justify-center items-center absolute -top-20 right-[5%]">
+                        className="rounded-xl bg-[#f8f8f8] shadow dark:bg-[#1b1a1e] self-end justify-center items-center absolute -top-20 right-[5%]">
                         <ScaleBtn
                             containerStyle={{}}
                             onPress={() => setDrawerOpen(true)}>
