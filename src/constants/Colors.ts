@@ -17,7 +17,9 @@ export default {
     shadow: '#000',
     btn_light_bg: '#eee',
     icons: '#8d8a9e',
-    icons_bg: "#C1C0C9"
+    icons_bg: "#C1C0C9",
+    icons_link: "#21288a",
+    success: "#25D366",
   },
   dark: {
     text: '#fff',
@@ -37,6 +39,8 @@ export default {
     shadow: '#000',
     btn_light_bg: '#eee',
     icons: '#C1C0C9',
-    icons_bg: "#A1A1A1"
+    icons_bg: "#A1A1A1",
+    icons_link: "#766acd",
+    success: "#137136",
   },
 };

@@ -35,16 +35,15 @@ import { ClientSteps, DBRide, RideInfo } from '~/constants/Configs';
 import { useUser } from '~/context/UserContext';
 import DashedLine from './DashedLine';
 import { useWSActions, useWSState } from '~/context/WSContext';
-import TestRidesData from '~/constants/TestRidesData.json'
 import { userMarkersAtom } from '~/context/UserContext';
 import { selectableMarkerIcons, UserMarkerIconType } from '../markers/AddUserMarker';
+import TestRidesData from '~/constants/TestRidesData.json'
+import ColorsPalettes from '~/constants/ColorsPalettes.json'
 
 type AddMarker = {
-  name: string;
-  icon?: string;
-} | {
   name?: string;
-  icon: string;
+  icon?: string;
+  color?: string;
 }
 
 interface BottomSheetContentProps {
@@ -75,7 +74,7 @@ export const BottomSheetContent = ({
   setFindingRide,
 }: BottomSheetContentProps) => {
   const colorScheme = useColorScheme();
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const { profile } = useUser()
   const { collapse, snapToIndex, expand } = useBottomSheet();
   const { confirmedTaxi } = useWSState()
@@ -113,7 +112,7 @@ export const BottomSheetContent = ({
     const tokio = async () => {
       if (pinedInfo?.destination && pinedInfo?.origin) {
         const resp = await fetch(
-          `http://192.168.1.103:6942/route?from=${pinedInfo.origin.latitude},${pinedInfo.origin.longitude}&to=${pinedInfo.destination.latitude},${pinedInfo.destination.longitude}`
+          `http://172.20.10.12:6942/route?from=${pinedInfo.origin.latitude},${pinedInfo.origin.longitude}&to=${pinedInfo.destination.latitude},${pinedInfo.destination.longitude}`
         );
         const respJson = await resp.json();
         const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map(
@@ -200,9 +199,11 @@ export const BottomSheetContent = ({
   }, [startPiningLocation, originInputViewRef, destinationInputViewRef]);
   const cancelPiningLocationHandler = useCallback(() => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    cancelPiningLocation();
+    setSelectedTaxiType(null)
     setPiningInput(null)
     setPiningMarker(null)
+    setCurrentStep(ClientSteps.SEARCH);
+    cancelPiningLocation();
   }, [cancelPiningLocation]);
   const confirmPiningLocationHandler = useCallback(async () => {
     try {
@@ -221,6 +222,9 @@ export const BottomSheetContent = ({
             origin: { ...location, address: streetInfo },
             destination: pinedInfo?.destination ?? null,
           });
+          if (pinedInfo?.destination) {
+            setCurrentStep(ClientSteps.PINNING + 1)
+          }
         } else if (piningInput === 'destination') {
           destinationInputViewRef.current?.setAddressText(streetInfo);
           let originDestination = pinedInfo?.origin;
@@ -231,6 +235,7 @@ export const BottomSheetContent = ({
             origin: originDestination ?? null,
             destination: { ...location, address: streetInfo },
           });
+          setCurrentStep(ClientSteps.PINNING + 1)
         } else {
           if (piningMarker?.icon === "house") {
 
@@ -248,6 +253,7 @@ export const BottomSheetContent = ({
                 } 
             }]) */
           }
+          setCurrentStep(ClientSteps.PINNING + 1)
 
 
         }
@@ -279,7 +285,16 @@ export const BottomSheetContent = ({
 
   const goBackToSearch = useCallback(() => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setSelectedTaxiType(null)
+    setPiningInput(null)
+    setPiningMarker(null)
     setCurrentStep(ClientSteps.SEARCH);
+    if (pinedInfo?.origin) {
+      originInputViewRef.current?.setAddressText(pinedInfo.origin.address);
+    }
+    if (pinedInfo?.destination) {
+      destinationInputViewRef.current?.setAddressText(pinedInfo.destination.address);
+    }
   }, []);;
   const goToPinnedRouteTaxi = useCallback(() => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -287,15 +302,91 @@ export const BottomSheetContent = ({
   }, []);
 
   const addDefaultMarkerHandler = useCallback((addingMarker: AddMarker) => {
+    if (piningInput) {
+    } else {
+      startPiningLocationHandler()
+      setCurrentStep(ClientSteps.PINNING);
+      setPiningMarker(addingMarker)
+    }
+  }, [startPiningLocationHandler, piningInput]);
+  const addUserMarkerHandler = useCallback((addingMarker: AddMarker) => {
     startPiningLocationHandler()
-
+    setCurrentStep(ClientSteps.PINNING);
     setPiningMarker(addingMarker)
   }, [startPiningLocationHandler]);
 
   return (
     <BottomSheetView className="flex-1 bg-[#F8F8F8] dark:bg-[#1b1b1b]">
 
-      {!piningLocation && !piningInput ?
+      {piningLocation && !piningInput && currentStep === ClientSteps.PINNING ?
+        <View className="w-[95%] h-full self-center overflow-visible">
+          <View className='flex-row justify-between mt-3'>
+            <View className='flex-row gap-3 justify-center items-center'>
+              <ScaleBtn className='justify-center items-center' onPress={cancelPiningLocationHandler}>
+                <FontAwesome6 name="chevron-left" size={18} color={Colors[colorScheme ?? "light"].icons_link} />
+              </ScaleBtn>
+              <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-bold text-xl">Añadiendo Marcador</Text>
+            </View>
+            {/* <Text className="text-[#21288a] dark:text-[#766acd] font-bold text-xl">mas</Text> */}
+          </View>
+          <View className='pl-[5%]- pr-[3%]- h-[5rem] mt-3 rounded-lg bg-[#E9E9E9] dark:bg-[#333333] overflow-hidden shadow'>
+            <ScrollView contentContainerClassName='flex-row p-3 gap-5 self-center' horizontal showsHorizontalScrollIndicator={false}>
+
+
+              {Object.entries(ColorsPalettes).map(([colorName, colorShades]) => {
+                return (
+                  <ScaleBtn
+                    key={colorName}
+                    style={{ backgroundColor: Colors[colorScheme ?? "light"].border_light }}
+                    onPress={() => {
+                      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                      setPiningMarker({ ...piningMarker, color: colorName })
+                    }}
+                    className='rounded-full w-12 h-12 items-center justify-center'
+                  >
+                    {/* {piningMarker?.color === colorName && <View className='bg-[#D8D8D8]- dark:bg-[#444444]- bg-red-500 absolute w-full h-full top-0 rounded-full' style={{ backgroundColor: Colors[colorScheme === "light" ? "dark" : "light"].border_light }}></View>} */}
+                    <View className='w-10 h-10 rounded-full' style={{ backgroundColor: colorName }} />
+                  </ScaleBtn>
+                );
+              })}
+
+
+
+            </ScrollView>
+          </View>
+          <View className='flex-row justify-between mt-3'>
+            <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-bold text-xl">Favoritos</Text>
+
+            {/* <Text className="text-[#21288a] dark:text-[#766acd] font-bold text-xl">mas</Text> */}
+          </View>
+          <View className='pl-[5%]- pr-[3%]- h-[8rem] mt-3 rounded-lg bg-[#E9E9E9] dark:bg-[#333333] overflow-hidden shadow'>
+            <ScrollView contentContainerClassName='flex-wrap p-3 flex-row gap-2 self-center' showsHorizontalScrollIndicator={false}>
+              {selectableMarkerIcons.map((markerIcon) => {
+                return (
+                  <Pressable
+                    key={markerIcon.name}
+                    onPress={() => {
+                    }}
+                  >
+                    <MaterialCommunityIcons
+                      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                      // @ts-ignore
+                      name={markerIcon.name}
+                      size={45}
+                      color={Colors[colorScheme ?? "light"].border}
+                    />
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          </View>
+          <ScaleBtn className="mt-8 w-full gap-3" onPress={() => cancelRideInnerHandler()}>
+            <View className="h-18 flex-row items-center justify-center bg-[#25D366] dark:bg-[#137136] rounded-xl p-3">
+              <Text className="text-white font-bold text-xl">Guardar</Text>
+            </View>
+          </ScaleBtn>
+        </View>
+        :
         <View className="w-[95%] h-full self-center overflow-visible">
 
           {currentStep >= ClientSteps.PICKUP ?
@@ -378,14 +469,15 @@ export const BottomSheetContent = ({
             </View>
             :
             <>
-              <View className="h-10 flex-row justify-between items-center mx-1.5">
+              <View className="h-10 flex-row justify-between items-center mx-1.5 mt-3">
                 <Text className="font-bold text-xl text-[#1b1b1b] dark:text-[#C1C0C9]">A donde quieres ir?</Text>
 
-                {viewPinOnMap && !piningLocation && (
+                {viewPinOnMap && (
                   <ScaleBtn onPress={startPiningLocationHandler}>
-                    <View className="flex-row items-center gap-2 p-1 px-2 border rounded-lg border-[#C1C0C9]">
-                      <Text className="h-full text-lg font-medium text-center text-[#1b1b1b] dark:text-[#C1C0C9]">Fijar en el Mapa</Text>
-                      <MaterialCommunityIcons name="map-search-outline" size={22} color={Colors[colorScheme ?? "light"].border} />
+                    <View style={{ borderColor: Colors[colorScheme ?? "light"].icons_link }} className="flex-row items-center gap-2 p-1 px-2 border rounded-lg border-[#C1C0C9]-">
+                      {/* <Text className="h-full text-lg font-medium text-center text-[#1b1b1b] dark:text-[#C1C0C9]">Fijar en el Mapa</Text> */}
+                      <FontAwesome6 name="chevron-up" size={18} color={Colors[colorScheme ?? "light"].icons_link} />
+                      <MaterialCommunityIcons name="map-search-outline" size={22} color={Colors[colorScheme ?? "light"].icons_link} />
                     </View>
                   </ScaleBtn>
                 )}
@@ -455,7 +547,7 @@ export const BottomSheetContent = ({
                     onBlur: () => {
                       LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
                       setViewPinOnMap(false);
-                      setPiningInput(null);
+                      setPiningInput(null)
                     },
                   }}
                   enablePoweredByContainer={false}
@@ -557,7 +649,7 @@ export const BottomSheetContent = ({
                     onBlur: () => {
                       LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
                       setViewPinOnMap(false);
-                      setPiningInput(null);
+                      setPiningInput(null)
                     },
                   }}
                   enablePoweredByContainer={false}
@@ -642,7 +734,7 @@ export const BottomSheetContent = ({
                           )
                         } else {
                           return (
-                            <UserMarkerRowItem key={userMarker.id} userMarker={userMarker} />
+                            <UserMarkerRowItem key={userMarker.id} userMarker={userMarker} addHandler={addUserMarkerHandler} />
                           )
                         }
                       })
@@ -737,26 +829,6 @@ export const BottomSheetContent = ({
           }
 
         </View>
-        :
-        <View className='w-[95%] h-full self-center overflow-visible'>
-          {selectableMarkerIcons.map((markerIcon) => {
-            return (
-              <Pressable
-                key={markerIcon.name}
-                onPress={() => {
-                }}
-              >
-                <MaterialCommunityIcons
-                  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                  // @ts-ignore
-                  name={markerIcon.name}
-                  size={45}
-                  color="black"
-                />
-              </Pressable>
-            );
-          })}
-        </View>
       }
     </BottomSheetView>
   );
@@ -798,7 +870,7 @@ const RidesHistoryItem = ({ ride }: { ride: DBRide }) => {
   )
 }
 
-const UserMarkerRowItem = ({ userMarker, color, bgColor }: { userMarker: UserMarkerIconType, color?: string, bgColor?: string }) => {
+const UserMarkerRowItem = ({ userMarker, color, bgColor, addHandler }: { userMarker: UserMarkerIconType, addHandler: (addingMarker: AddMarker) => void, color?: string, bgColor?: string }) => {
 
   const colorScheme = useColorScheme();
 
@@ -808,7 +880,7 @@ const UserMarkerRowItem = ({ userMarker, color, bgColor }: { userMarker: UserMar
       <ScaleBtn
         style={{ backgroundColor: bgColor ?? Colors[colorScheme ?? 'light'].border_light }}
         className="w-[64px] h-[64px] rounded-full bg-[#D8D8D8] dark:bg-[#444444]- items-center justify-center"
-        onPress={() => { }}>
+        onPress={() => addHandler({})}>
         <FontAwesome6
           name={userMarker.icon.name}
           size={24}

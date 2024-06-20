@@ -30,11 +30,12 @@ export const drawerItems: {
 
 export enum ClientSteps {
   SEARCH = 1,
-  TAXI = 2,
-  FINDING = 2,
-  PICKUP = 3,
-  RIDE = 4,
-  FINISHED = 5,
+  PINNING = 2,
+  TAXI = 3,
+  FINDING = 4,
+  PICKUP = 5,
+  RIDE = 6,
+  FINISHED = 7,
 }
 
 export enum TaxiSteps {

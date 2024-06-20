@@ -110,6 +110,9 @@ export default function ClientMap() {
             case ClientSteps.SEARCH:
                 setSnapPoints([195, 380, 700])
                 break;
+            case ClientSteps.PINNING:
+                setSnapPoints([180, 420])
+                break;
             case ClientSteps.TAXI:
                 setSnapPoints([250, 400])
                 break;
@@ -474,6 +477,33 @@ export default function ClientMap() {
 
                     </MapView>
 
+                    {piningLocation && (
+                        <View
+                            style={{
+                                position: 'absolute',
+                                right: width / 2 - 24,
+                                top: height / 2 - 48,
+                                zIndex: 1000,
+                                alignItems: "flex-end",
+                                justifyContent: "flex-end"
+                            }}>
+                            {!ClientSteps.PINNING && <MaterialIcons
+                                name="location-pin"
+                                size={48}
+                                color={Colors[colorScheme ?? 'light'].text}
+                            />}
+                            {
+                                ClientSteps.PINNING && <>
+                                    <MaterialCommunityIcons
+                                        className='bg-red-50 items-end justify-end'
+                                        name="chevron-down"
+                                        size={48}
+                                        color={Colors[colorScheme ?? 'light'].border_light}
+                                    />
+                                </>
+                            }
+                        </View>
+                    )}
                     {piningLocation && (
                         <View
                             style={{
