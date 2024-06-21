@@ -40,7 +40,7 @@ import { selectableMarkerIcons, UserMarkerIconType } from '../markers/AddUserMar
 import TestRidesData from '~/constants/TestRidesData.json'
 import ColorsPalettes from '~/constants/ColorsPalettes.json'
 
-type AddMarker = {
+export type AddMarker = {
   name?: string;
   icon?: string;
   color?: string;
@@ -55,6 +55,8 @@ interface BottomSheetContentProps {
   cancelPiningLocation: () => void;
   confirmPiningLocation: () => Promise<{ latitude: number; longitude: number; address?: Address }>;
   piningLocation: boolean;
+  piningMarker: AddMarker | null;
+  setPiningMarker: React.Dispatch<AddMarker | null>;
   setFindingRide: React.Dispatch<boolean>;
   selectedTaxiType: string | null;
   setSelectedTaxiType: React.Dispatch<TaxiType | null>;
@@ -69,6 +71,8 @@ export const BottomSheetContent = ({
   cancelPiningLocation,
   confirmPiningLocation,
   piningLocation,
+  piningMarker,
+  setPiningMarker,
   selectedTaxiType,
   setSelectedTaxiType,
   setFindingRide,
@@ -83,7 +87,6 @@ export const BottomSheetContent = ({
 
   const [viewPinOnMap, setViewPinOnMap] = useState(false);
   const [piningInput, setPiningInput] = useState<'origin' | 'destination' | null>(null);
-  const [piningMarker, setPiningMarker] = useState<AddMarker | null>(null);
   const [pinedInfo, setPinedInfo] = useState<{
     origin: { latitude: number, longitude: number, address: string } | null,
     destination: { latitude: number, longitude: number, address: string } | null,
@@ -112,7 +115,7 @@ export const BottomSheetContent = ({
     const tokio = async () => {
       if (pinedInfo?.destination && pinedInfo?.origin) {
         const resp = await fetch(
-          `http://172.20.10.12:6942/route?from=${pinedInfo.origin.latitude},${pinedInfo.origin.longitude}&to=${pinedInfo.destination.latitude},${pinedInfo.destination.longitude}`
+          `http://192.168.1.103:6942/route?from=${pinedInfo.origin.latitude},${pinedInfo.origin.longitude}&to=${pinedInfo.destination.latitude},${pinedInfo.destination.longitude}`
         );
         const respJson = await resp.json();
         const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map(
@@ -344,7 +347,7 @@ export const BottomSheetContent = ({
                     }}
                     className='rounded-full w-12 h-12 items-center justify-center'
                   >
-                    {/* {piningMarker?.color === colorName && <View className='bg-[#D8D8D8]- dark:bg-[#444444]- bg-red-500 absolute w-full h-full top-0 rounded-full' style={{ backgroundColor: Colors[colorScheme === "light" ? "dark" : "light"].border_light }}></View>} */}
+                    {piningMarker?.color === colorName && <View className='bg-[#D8D8D8]- dark:bg-[#444444]- bg-red-500 absolute w-full h-full top-0 rounded-full' style={{ backgroundColor: Colors[colorScheme === "light" ? "dark" : "light"].border_light }}></View>}
                     <View className='w-10 h-10 rounded-full' style={{ backgroundColor: colorName }} />
                   </ScaleBtn>
                 );
@@ -359,28 +362,35 @@ export const BottomSheetContent = ({
 
             {/* <Text className="text-[#21288a] dark:text-[#766acd] font-bold text-xl">mas</Text> */}
           </View>
-          <View className='pl-[5%]- pr-[3%]- h-[8rem] mt-3 rounded-lg bg-[#E9E9E9] dark:bg-[#333333] overflow-hidden shadow'>
-            <ScrollView contentContainerClassName='flex-wrap p-3 flex-row gap-2 self-center' showsHorizontalScrollIndicator={false}>
+          <View className='pl-[5%]- pr-[3%]- h-[10rem] mt-3 rounded-lg bg-[#E9E9E9] dark:bg-[#333333] overflow-hidden shadow'>
+            <ScrollView contentContainerClassName='flex-wrap p-3 gap-5 flex-row self-center' showsHorizontalScrollIndicator={false}>
               {selectableMarkerIcons.map((markerIcon) => {
+                console.log(piningMarker?.icon === markerIcon.name)
                 return (
-                  <Pressable
+                  <ScaleBtn
                     key={markerIcon.name}
+                    style={{ backgroundColor: Colors[colorScheme ?? "light"].border_light }}
                     onPress={() => {
+                      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                      setPiningMarker({ ...piningMarker, icon: markerIcon.name })
                     }}
+                    className='rounded-full w-14 h-14 items-center justify-center'
                   >
+                    {piningMarker?.icon === markerIcon.name && <View className='bg-[#D8D8D8]- dark:bg-[#444444]- bg-red-500 absolute w-full h-full top-0 rounded-full' style={{ backgroundColor: Colors[colorScheme === "light" ? "dark" : "light"].border_light }}></View>}
                     <MaterialCommunityIcons
                       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                       // @ts-ignore
                       name={markerIcon.name}
-                      size={45}
-                      color={Colors[colorScheme ?? "light"].border}
+                      size={34}
+                      color={piningMarker?.icon === markerIcon.name ? (colorScheme === "light" ? "#D8D8D8" : "#444444") : (colorScheme === "light" ? "#444444" : "#D8D8D8")}
                     />
-                  </Pressable>
+
+                  </ScaleBtn>
                 );
               })}
             </ScrollView>
           </View>
-          <ScaleBtn className="mt-8 w-full gap-3" onPress={() => cancelRideInnerHandler()}>
+          <ScaleBtn className="mt-5 w-full gap-3" onPress={() => cancelRideInnerHandler()}>
             <View className="h-18 flex-row items-center justify-center bg-[#25D366] dark:bg-[#137136] rounded-xl p-3">
               <Text className="text-white font-bold text-xl">Guardar</Text>
             </View>

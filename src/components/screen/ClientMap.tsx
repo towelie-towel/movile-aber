@@ -36,14 +36,14 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { BottomSheetContent } from '~/components/bottomsheet/BottomSheetContent';
+import { AddMarker, BottomSheetContent } from '~/components/bottomsheet/BottomSheetContent';
 import { CustomHandle } from '~/components/bottomsheet/hooks/CustomHandle';
 import Ripple from '~/components/common/RippleBtn';
 import ScaleBtn from '~/components/common/ScaleBtn';
 import AnimatedRouteMarker from '~/components/markers/AnimatedRouteMarker';
 import TaxisMarkers from '~/components/markers/TaxiMarkers';
 // import UserMarker from '~/components/markers/UserMarker';
-import { ColorInstagram, ColorFacebook, ColorTwitter } from '~/components/svgs';
+import { ColorInstagram, ColorFacebook, ColorTwitter, MapMarkerSVG } from '~/components/svgs';
 import Colors from '~/constants/Colors';
 import { NightMap } from '~/constants/NightMap';
 import { drawerItems, ClientSteps, RideInfo } from '~/constants/Configs';
@@ -77,6 +77,7 @@ export default function ClientMap() {
     const [currentStep, setCurrentStep] = useState<ClientSteps>(ClientSteps.SEARCH);
     const [activeRoute, setActiveRoute] = useState<{ coords: LatLng[] } | null>(null);
     const [piningLocation, setPiningLocation] = useState(false);
+    const [piningMarker, setPiningMarker] = useState<AddMarker | null>(null);
     const [selectedTaxiType, setSelectedTaxiType] = useState<TaxiType | null>(null);
     const [findingRide, setFindingRide] = useState(false);
     const [rideInfo, setRideInfo] = useState<RideInfo | null>(null);
@@ -477,7 +478,7 @@ export default function ClientMap() {
 
                     </MapView>
 
-                    {piningLocation && (
+                    {piningLocation && piningMarker && (
                         <View
                             style={{
                                 position: 'absolute',
@@ -487,29 +488,35 @@ export default function ClientMap() {
                                 alignItems: "flex-end",
                                 justifyContent: "flex-end"
                             }}>
-                            {!ClientSteps.PINNING && <MaterialIcons
-                                name="location-pin"
-                                size={48}
-                                color={Colors[colorScheme ?? 'light'].text}
-                            />}
-                            {
-                                ClientSteps.PINNING && <>
-                                    <MaterialCommunityIcons
-                                        className='bg-red-50 items-end justify-end'
-                                        name="chevron-down"
-                                        size={48}
-                                        color={Colors[colorScheme ?? 'light'].border_light}
-                                    />
+                            {ClientSteps.PINNING &&
+                                <>
+                                    <View className='absolute top-0 z-10 w-[2.6rem] h-[2.6rem] self-center justify-center items-center'>
+                                        <MaterialCommunityIcons
+                                            className='relative self-center z-10'
+                                            // @ts-ignore
+                                            name={piningMarker.icon}
+                                            size={26}
+                                            color={colorScheme === "light" ? "#D8D8D8" : "#444444"}
+                                        />
+                                        <View style={{ backgroundColor: piningMarker?.color ?? Colors[colorScheme ?? 'light'].border_light }} className='bg-[#D8D8D8]- dark:bg-[#444444]- bg-red-500- absolute w-full h-full top-0 rounded-full' /* style={{ backgroundColor: Colors[colorScheme === "light" ? "dark" : "light"].border_light }} */></View>
+                                    </View>
+                                    <View className='relative z-0'>
+                                        <MapMarkerSVG
+                                            size={48}
+                                            color={piningMarker?.color ?? Colors[colorScheme ?? 'light'].border_light}
+                                        />
+                                    </View>
                                 </>
                             }
                         </View>
                     )}
-                    {piningLocation && (
+
+                    {/* {piningLocation && (
                         <View
                             style={{
                                 position: 'absolute',
                                 right: width / 2 - 24,
-                                top: height / 2 - 48,
+                                top: height / 2 - 48
                             }}>
                             <MaterialIcons
                                 name="location-pin"
@@ -517,7 +524,7 @@ export default function ClientMap() {
                                 color={Colors[colorScheme ?? 'light'].text}
                             />
                         </View>
-                    )}
+                    )} */}
 
                     {activeRoute && activeRoute.coords.length > 0 && currentStep < ClientSteps.RIDE && (
                         <Animated.View
@@ -670,6 +677,8 @@ export default function ClientMap() {
                             cancelPiningLocation={cancelPiningLocation}
                             confirmPiningLocation={confirmPiningLocation}
                             piningLocation={piningLocation}
+                            piningMarker={piningMarker}
+                            setPiningMarker={setPiningMarker}
                             setRideInfo={setRideInfo}
                             setActiveRoute={setActiveRoute}
                             selectedTaxiType={selectedTaxiType}

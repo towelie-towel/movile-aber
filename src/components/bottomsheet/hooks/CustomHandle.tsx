@@ -96,7 +96,7 @@ const CustomHandleComponent: React.FC<CustomHandleProps> = ({ style, animatedInd
   return (
     <View style={{ borderTopRightRadius: 12, borderTopLeftRadius: 12, overflow: "hidden" }} >
       <BlurView tint={colorScheme === "light" ? "light" : "dark"}
-        intensity={100} style={[{ flex: 1, }]}>
+        intensity={80} style={[{ flex: 1, }]}>
         <Animated.View style={[containerStyle]} renderToHardwareTextureAndroid>
           <Animated.View style={[leftIndicatorStyle, leftIndicatorAnimatedStyle]} />
           <Animated.View style={[rightIndicatorStyle, rightIndicatorAnimatedStyle]} />

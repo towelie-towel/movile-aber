@@ -11,6 +11,22 @@ import Svg, {
   LinearGradient
 } from 'react-native-svg';
 
+
+export const MapMarkerSVG = ({ size = 48, color = "#000" }) => {
+  return (
+    <Svg id="_x32_"
+      width={size} height={size} viewBox="0 0 512 512">
+      <G>
+        <Path fill={color} d="M390.54,55.719C353.383,18.578,304.696,0,255.993,0c-48.688,0-97.391,18.578-134.547,55.719
+		c-59.219,59.219-74.641,149.563-36.094,218.875C129.586,354.109,255.993,512,255.993,512s126.422-157.891,170.656-237.406
+		C465.195,205.281,449.773,114.938,390.54,55.719z M255.993,305.844c-63.813,0-115.563-51.75-115.563-115.547
+		c0-63.859,51.75-115.609,115.563-115.609c63.828,0,115.578,51.75,115.578,115.609C371.571,254.094,319.821,305.844,255.993,305.844
+		z"/>
+      </G>
+    </Svg>
+  )
+}
+
 export const ColorInstagram = ({ color = false }) => {
   const colorScheme = useColorScheme();
   const lineColor = colorScheme === 'light' || color ? '#444444' : '#fff';
