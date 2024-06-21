@@ -54,6 +54,7 @@ import type { TaxiType } from '~/constants/TaxiTypes';
 import UserWavesMarker from '../markers/UserWavesMarker';
 import MagnometerArrow from '../common/MagnometerArrow';
 import { CardinalDirections } from '~/utils/directions';
+import { UserMapMarker } from '../markers/UserMapMarker';
 
 export default function ClientMap() {
     useKeepAwake();
@@ -107,15 +108,18 @@ export default function ClientMap() {
     }), [snapPoints]);
 
     useEffect(() => {
+        console.log(currentStep)
         switch (currentStep) {
             case ClientSteps.SEARCH:
-                setSnapPoints([195, 380, 700])
+                setSnapPoints([210, 390, 700])
                 break;
             case ClientSteps.PINNING:
-                setSnapPoints([180, 420])
+                if (piningLocation) setSnapPoints([270, 420])
+                else setSnapPoints([180, 420])
                 break;
             case ClientSteps.TAXI:
-                setSnapPoints([250, 400])
+                bottomSheetModalRef.current?.collapse();
+                setSnapPoints([520, 800])
                 break;
             case ClientSteps.RIDE:
                 setSnapPoints([360, 500])
@@ -459,13 +463,7 @@ export default function ClientMap() {
                                 </Marker>
                             </>
                         )}
-                        {/* 
-                            const north = 23.127778;
-                        const south = 23.127778;
-                        const east = -82.361833;
-                        const west = -82.423028;
 
-                        */}
                         {[{ latitude: 23.127778, longitude: -82.361833 }, { latitude: 23.127778, longitude: -82.423028 }, { latitude: 23.088667, longitude: -82.361833 }, { latitude: 23.088667, longitude: -82.423028 }].map((item, i) => (
                             <Marker key={i} coordinate={{ latitude: item.latitude, longitude: item.longitude }}>
                                 <MaterialIcons
@@ -478,7 +476,7 @@ export default function ClientMap() {
 
                     </MapView>
 
-                    {piningLocation && piningMarker && (
+                    {currentStep === ClientSteps.PINNING && (
                         <View
                             style={{
                                 position: 'absolute',
@@ -488,128 +486,87 @@ export default function ClientMap() {
                                 alignItems: "flex-end",
                                 justifyContent: "flex-end"
                             }}>
-                            {ClientSteps.PINNING &&
-                                <>
-                                    <View className='absolute top-0 z-10 w-[2.6rem] h-[2.6rem] self-center justify-center items-center'>
-                                        <MaterialCommunityIcons
-                                            className='relative self-center z-10'
-                                            // @ts-ignore
-                                            name={piningMarker.icon}
-                                            size={26}
-                                            color={colorScheme === "light" ? "#D8D8D8" : "#444444"}
-                                        />
-                                        <View style={{ backgroundColor: piningMarker?.color ?? Colors[colorScheme ?? 'light'].border_light }} className='bg-[#D8D8D8]- dark:bg-[#444444]- bg-red-500- absolute w-full h-full top-0 rounded-full' /* style={{ backgroundColor: Colors[colorScheme === "light" ? "dark" : "light"].border_light }} */></View>
-                                    </View>
-                                    <View className='relative z-0'>
-                                        <MapMarkerSVG
-                                            size={48}
-                                            color={piningMarker?.color ?? Colors[colorScheme ?? 'light'].border_light}
-                                        />
-                                    </View>
-                                </>
+                            {piningMarker &&
+                                <UserMapMarker piningMarker={piningMarker} />
                             }
+
+                            {piningLocation && (
+                                <MaterialIcons
+                                    name="location-pin"
+                                    size={48}
+                                    color={Colors[colorScheme ?? 'light'].text}
+                                />
+                            )}
                         </View>
-                    )}
-
-                    {/* {piningLocation && (
-                        <View
-                            style={{
-                                position: 'absolute',
-                                right: width / 2 - 24,
-                                top: height / 2 - 48
-                            }}>
-                            <MaterialIcons
-                                name="location-pin"
-                                size={48}
-                                color={Colors[colorScheme ?? 'light'].text}
-                            />
-                        </View>
-                    )} */}
-
-                    {activeRoute && activeRoute.coords.length > 0 && currentStep < ClientSteps.RIDE && (
-                        <Animated.View
-                            style={topSheetBtnsAnimStyle}
-                            className="self-center justify-center items-center absolute top-0">
-                            <ScaleBtn
-                                disabled={findingRide || !selectedTaxiType}
-                                className=""
-                                onPress={findRideHandler}>
-                                <View className="bg-[#FCCB6F] w-40 h-14 rounded-lg p-3">
-                                    <Text className="text-center text-lg font-bold w-auto text-[#fff]">
-                                        {findingRide ? 'Finding Ride' : 'Request Ride'}
-                                    </Text>
-                                </View>
-                            </ScaleBtn>
-                        </Animated.View>
-                    )}
-
-                    {activeRoute && activeRoute.coords.length > 0 && (
-                        <Animated.View
-                            style={topSheetBtnsAnimStyle}
-                            className="self-start justify-center items-center absolute top-0">
-                            <ScaleBtn
-                                className="mt-4"
-                                onPress={() => {
-                                    animateToActiveRoute();
-                                }}>
-                                <View className="bg-[#fff] rounded-lg p-3 shadow ml-5">
-                                    <FontAwesome6 name="route" size={24} color="black" />
-                                </View>
-                            </ScaleBtn>
-                        </Animated.View>
                     )}
 
                     <Animated.View
+                        pointerEvents={"box-none"}
                         style={topSheetBtnsAnimStyle}
-                        className="rounded-xl bg-[#f8f8f8] shadow dark:bg-[#1b1a1e] self-end justify-center items-center absolute -top-20 right-[5%]">
-                        <ScaleBtn
-                            containerStyle={{}}
-                            onPress={() => setDrawerOpen(true)}>
-                            <View className="p-2 bg-transparent">
-                                <MaterialIcons
-                                    name="menu"
-                                    size={30}
-                                    color={Colors[colorScheme ?? 'light'].text_dark}
-                                />
-                            </View>
-                        </ScaleBtn>
-
+                        className="w-[95%] self-center justify-between border flex-row items-end absolute -top-20">
                         {activeRoute && activeRoute.coords.length > 0 && (
+                            <>
+                                <ScaleBtn
+                                    containerStyle={{}}
+                                    onPress={() => {
+                                        animateToActiveRoute();
+                                    }}>
+                                    <View className="bg-[#fff] rounded-lg p-3 shadow">
+                                        <FontAwesome6 name="route" size={24} color="black" />
+                                    </View>
+                                </ScaleBtn>
+
+                                {currentStep < ClientSteps.PICKUP &&
+                                    <ScaleBtn
+                                        containerStyle={{}}
+                                        disabled={findingRide || !selectedTaxiType}
+                                        onPress={findRideHandler}>
+                                        <View className="bg-[#FCCB6F] w-40 h-14 rounded-lg p-3">
+                                            <Text className="text-center text-lg font-bold w-auto text-[#fff]">
+                                                {findingRide ? 'Finding Ride' : 'Request Ride'}
+                                            </Text>
+                                        </View>
+                                    </ScaleBtn>
+                                }
+                            </>
+                        )}
+                        <View
+                            className="rounded-xl bg-[#f8f8f8] shadow dark:bg-[#1b1a1e] !self-end justify-center items-center">
                             <ScaleBtn
-                                onPress={() => {
-                                    animateToActiveRoute();
-                                }}>
-                                <View className="bg-transparent rounded-lg p-3 ">
-                                    <FontAwesome6 name="route" size={24} color={Colors[colorScheme ?? 'light'].text_dark} />
+                                containerStyle={{}}
+                                onPress={() => setDrawerOpen(true)}>
+                                <View className="p-2 bg-transparent">
+                                    <MaterialIcons
+                                        name="menu"
+                                        size={30}
+                                        color={Colors[colorScheme ?? 'light'].text_dark}
+                                    />
                                 </View>
                             </ScaleBtn>
-                        )}
 
-                        <ScaleBtn
-                            onPress={() => {
-                                animateToUserLocation();
+                            {activeRoute && activeRoute.coords.length > 0 && (
+                                <ScaleBtn
+                                    onPress={() => {
+                                        animateToActiveRoute();
+                                    }}>
+                                    <View className="bg-transparent rounded-lg p-3 ">
+                                        <FontAwesome6 name="route" size={24} color={Colors[colorScheme ?? 'light'].text_dark} />
+                                    </View>
+                                </ScaleBtn>
+                            )}
 
-                                /* mapViewRef.current?.fitToElements({
-                                    edgePadding: {
-                                        top: 100,
-                                        right: 100,
-                                        bottom: 100,
-                                        left: 100,
-                                    },
-                                    animated: true,
-                                }) */
-                            }}>
-                            <View className="bg-transparent rounded-lg p-3 shadow">
-                                <MagnometerArrow cardinalDirection={CardinalDirections.NORTH} />
-                            </View>
-                        </ScaleBtn>
-
-                        {/* <ScaleBtn>
-                            <View className="bg-transparent rounded-lg p-3 shadow">
-                                <FontAwesome6 name="location-arrow" size={24} color={Colors[colorScheme ?? 'light'].text_dark} />
-                            </View>
-                        </ScaleBtn> */}
+                            <ScaleBtn
+                                onPress={() => {
+                                    animateToUserLocation();
+                                }}>
+                                <View className="bg-transparent rounded-lg p-3 shadow">
+                                    {/* <MagnometerArrow cardinalDirection={CardinalDirections.NORTH} /> */}
+                                    <FontAwesome6 /* FontAwesome location-arrow-up */ name="location-arrow" size={24} color={Colors[colorScheme ?? 'light'].text_dark} />
+                                </View>
+                            </ScaleBtn>
+                        </View>
                     </Animated.View>
+
 
                     <BottomSheetModal
                         animatedPosition={animatedPosition}
@@ -629,9 +586,9 @@ export default function ClientMap() {
                         }}
                         // enableDynamicSizing
                         android_keyboardInputMode="adjustResize"
-                        // enableContentPanningGesture={false}
+                        enableContentPanningGesture={!piningLocation && currentStep !== ClientSteps.TAXI}
+                        enableHandlePanningGesture={!piningLocation && currentStep !== ClientSteps.TAXI}
                         enableDismissOnClose={false}
-                        // enableHandlePanningGesture={false}
                         enablePanDownToClose={false}
                         snapPoints={snapPoints}
                         backgroundStyle={{

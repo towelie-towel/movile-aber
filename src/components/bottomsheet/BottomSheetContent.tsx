@@ -18,6 +18,7 @@ import {
 } from 'react-native';
 import type { Address, LatLng } from 'react-native-maps';
 import { useAtom } from 'jotai/react';
+import * as ImagePicker from 'expo-image-picker';
 
 import { ConfortSVG } from '../svgs';
 import { ScaleBtn } from '~/components/common';
@@ -95,6 +96,7 @@ export const BottomSheetContent = ({
     distance: { value: number; text: string };
     duration: { value: number; text: string };
   } | null>(null);
+  const [markerImage, setMarkerImage] = useState<ImagePicker.ImagePickerResult | null>(null)
 
   const originInputViewRef = useRef<GooglePlacesAutocompleteRef>(null);
   const destinationInputViewRef = useRef<GooglePlacesAutocompleteRef>(null);
@@ -127,6 +129,9 @@ export const BottomSheetContent = ({
         setActiveRoute({
           coords: decodedCoords,
         });
+        console.log("setActiveRoute", {
+          coords: decodedCoords,
+        })
         setRouteInfo({
           distance: respJson[0].legs[0].distance,
           duration: respJson[0].legs[0].duration,
@@ -159,6 +164,22 @@ export const BottomSheetContent = ({
     }
     tokio()
   }, [pinedInfo])
+
+  const pickMarkerImage = useCallback(async () => {
+    // No permissions request is necessary for launching the image library
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    console.log(result);
+
+    if (!result.canceled) {
+      setMarkerImage(result);
+    }
+  }, []);
 
   const getCurrentPositionAsync = useCallback(async () => {
     const currentPosition = await ExpoLocation.getCurrentPositionAsync({
@@ -195,6 +216,7 @@ export const BottomSheetContent = ({
   const startPiningLocationHandler = useCallback(() => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     startPiningLocation();
+    setCurrentStep(ClientSteps.PINNING);
     Keyboard.dismiss();
     collapse();
     originInputViewRef.current?.blur();
@@ -209,6 +231,7 @@ export const BottomSheetContent = ({
     cancelPiningLocation();
   }, [cancelPiningLocation]);
   const confirmPiningLocationHandler = useCallback(async () => {
+    console.log("confirmPiningLocationHandler")
     try {
       const location = await confirmPiningLocation();
       const resp = await fetch(
@@ -234,6 +257,10 @@ export const BottomSheetContent = ({
           if (!originDestination) {
             originDestination = await getCurrentPositionAsync()
           }
+          console.log("setPinedInfo", {
+            origin: originDestination ?? null,
+            destination: { ...location, address: streetInfo },
+          })
           setPinedInfo({
             origin: originDestination ?? null,
             destination: { ...location, address: streetInfo },
@@ -271,7 +298,7 @@ export const BottomSheetContent = ({
       setPiningInput(null)
       setPiningMarker(null)
     }
-  }, [confirmPiningLocation, piningInput, pinedInfo, originInputViewRef, destinationInputViewRef, piningMarker]);
+  }, [confirmPiningLocation, piningInput, pinedInfo, piningMarker, originInputViewRef, destinationInputViewRef]);
   const cancelRideInnerHandler = useCallback(() => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     // setPinedInfo({
@@ -279,6 +306,7 @@ export const BottomSheetContent = ({
     //   destination: null,
     // })
     // setActiveRoute(null);
+    setPiningInput(null)
     setCurrentStep(ClientSteps.SEARCH);
     cancelTaxi()
     // setRouteInfo(null);
@@ -298,30 +326,24 @@ export const BottomSheetContent = ({
     if (pinedInfo?.destination) {
       destinationInputViewRef.current?.setAddressText(pinedInfo.destination.address);
     }
-  }, []);;
+  }, [originInputViewRef, destinationInputViewRef, pinedInfo]);;
   const goToPinnedRouteTaxi = useCallback(() => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setCurrentStep(ClientSteps.TAXI);
   }, []);
 
-  const addDefaultMarkerHandler = useCallback((addingMarker: AddMarker) => {
+  const addMarkerHandler = useCallback((addingMarker?: AddMarker) => {
     if (piningInput) {
     } else {
-      startPiningLocationHandler()
+      setPiningMarker(addingMarker ?? {})
       setCurrentStep(ClientSteps.PINNING);
-      setPiningMarker(addingMarker)
     }
-  }, [startPiningLocationHandler, piningInput]);
-  const addUserMarkerHandler = useCallback((addingMarker: AddMarker) => {
-    startPiningLocationHandler()
-    setCurrentStep(ClientSteps.PINNING);
-    setPiningMarker(addingMarker)
-  }, [startPiningLocationHandler]);
+  }, [piningInput]);
 
   return (
     <BottomSheetView className="flex-1 bg-[#F8F8F8] dark:bg-[#1b1b1b]">
 
-      {piningLocation && !piningInput && currentStep === ClientSteps.PINNING ?
+      {!piningLocation && !piningInput && piningMarker && currentStep === ClientSteps.PINNING ?
         <View className="w-[95%] h-full self-center overflow-visible">
           <View className='flex-row justify-between mt-3'>
             <View className='flex-row gap-3 justify-center items-center'>
@@ -360,12 +382,14 @@ export const BottomSheetContent = ({
           <View className='flex-row justify-between mt-3'>
             <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-bold text-xl">Favoritos</Text>
 
+            <ScaleBtn onPress={pickMarkerImage}>
+              <MaterialCommunityIcons name="file-image-marker" size={28} color={Colors[colorScheme ?? "light"].icons_link} />
+            </ScaleBtn>
             {/* <Text className="text-[#21288a] dark:text-[#766acd] font-bold text-xl">mas</Text> */}
           </View>
           <View className='pl-[5%]- pr-[3%]- h-[10rem] mt-3 rounded-lg bg-[#E9E9E9] dark:bg-[#333333] overflow-hidden shadow'>
             <ScrollView contentContainerClassName='flex-wrap p-3 gap-5 flex-row self-center' showsHorizontalScrollIndicator={false}>
               {selectableMarkerIcons.map((markerIcon) => {
-                console.log(piningMarker?.icon === markerIcon.name)
                 return (
                   <ScaleBtn
                     key={markerIcon.name}
@@ -471,7 +495,7 @@ export const BottomSheetContent = ({
                 <Text className="ml-2 font-bold text-lg text-[#1b1b1b] dark:text-[#C1C0C9]">{pinedInfo?.destination?.address}</Text>
               </View>
 
-              <ScaleBtn className="mt-4 w-full gap-3" onPress={() => cancelRideInnerHandler()}>
+              <ScaleBtn className="mt-4 w-full gap-3" onPress={cancelRideInnerHandler}>
                 <View className="h-18 flex-row items-center justify-center bg-[#242E42] rounded-xl p-3">
                   <Text className="text-white font-bold text-xl">Cancel</Text>
                 </View>
@@ -480,7 +504,30 @@ export const BottomSheetContent = ({
             :
             <>
               <View className="h-10 flex-row justify-between items-center mx-1.5 mt-3">
-                <Text className="font-bold text-xl text-[#1b1b1b] dark:text-[#C1C0C9]">A donde quieres ir?</Text>
+                <View className='flex-row gap-3 justify-center items-center'>
+                  {
+                    currentStep === ClientSteps.TAXI &&
+                    <>
+                      <ScaleBtn className='justify-center items-center' onPress={goBackToSearch}>
+                        <FontAwesome6 name="chevron-left" size={18} color={Colors[colorScheme ?? "light"].icons_link} />
+                      </ScaleBtn>
+                      <Text className="font-bold text-xl text-[#1b1b1b] dark:text-[#C1C0C9]">Cómo quieres ir?</Text>
+                    </>
+                  }
+                  {
+                    currentStep === ClientSteps.SEARCH &&
+                    <Text className="font-bold text-xl text-[#1b1b1b] dark:text-[#C1C0C9]">A dónde quieres ir?</Text>
+                  }
+
+                  {currentStep === ClientSteps.PINNING && piningLocation &&
+                    <>
+                      <ScaleBtn className='justify-center items-center' onPress={goBackToSearch}>
+                        <FontAwesome6 name="chevron-left" size={18} color={Colors[colorScheme ?? "light"].icons_link} />
+                      </ScaleBtn>
+                      <Text className="font-bold text-xl text-[#1b1b1b] dark:text-[#C1C0C9]">Seleccione el lugar {piningInput === "destination" ? "destino" : "origen"}</Text>
+                    </>
+                  }
+                </View>
 
                 {viewPinOnMap && (
                   <ScaleBtn onPress={startPiningLocationHandler}>
@@ -492,38 +539,13 @@ export const BottomSheetContent = ({
                   </ScaleBtn>
                 )}
 
-                {piningLocation && (
-                  <View className="flex-row gap-4">
-                    <ScaleBtn onPress={confirmPiningLocationHandler}>
-                      <View className="p-1 border border-[#25D366] bg-[#25D366] rounded-lg">
-                        <MaterialCommunityIcons name="check" size={28} color={"white"} />
-                      </View>
-                    </ScaleBtn>
-                    <ScaleBtn onPress={cancelPiningLocationHandler}>
-                      <View className="p-1 border border-[#f82f00] bg-[#f82f00] rounded-lg">
-                        <MaterialCommunityIcons name="cancel" size={28} color={"white"} />
-                      </View>
-                    </ScaleBtn>
-                  </View>
-                )}
-
                 {!viewPinOnMap && !piningLocation && <>
-                  {
-                    currentStep === ClientSteps.TAXI &&
-                    <ScaleBtn onPress={goBackToSearch}>
-                      <View className="flex-row items-center justify-center p-1 border border-[#C1C0C9] rounded-lg bg-[#FCCB6F]">
-                        <MaterialCommunityIcons name={"chevron-left"} size={24} color={Colors[colorScheme ?? "light"].border} />
-                        <MaterialCommunityIcons name="star" size={24} color={Colors[colorScheme ?? "light"].border} />
-                      </View>
-                    </ScaleBtn>
-                  }
-
                   {
                     currentStep === ClientSteps.SEARCH && pinedInfo?.origin && pinedInfo.destination &&
                     <ScaleBtn onPress={goToPinnedRouteTaxi}>
-                      <View className="flex-row items-center justify-center p-1 border border-[#C1C0C9] rounded-lg bg-[#FCCB6F]">
-                        <MaterialCommunityIcons name="car-multiple" size={24} color={Colors[colorScheme ?? "light"].border} />
-                        <MaterialCommunityIcons name="chevron-right" size={24} color={Colors[colorScheme ?? "light"].border} />
+                      <View style={{ borderColor: Colors[colorScheme ?? "light"].icons_link }} className="flex-row items-center justify-center p-1 border rounded-lg">
+                        <MaterialCommunityIcons name="car-multiple" size={24} color={Colors[colorScheme ?? "light"].icons_link} />
+                        <MaterialCommunityIcons name="chevron-right" size={24} color={Colors[colorScheme ?? "light"].icons_link} />
                       </View>
                     </ScaleBtn>
                   }
@@ -557,7 +579,6 @@ export const BottomSheetContent = ({
                     onBlur: () => {
                       LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
                       setViewPinOnMap(false);
-                      setPiningInput(null)
                     },
                   }}
                   enablePoweredByContainer={false}
@@ -659,7 +680,6 @@ export const BottomSheetContent = ({
                     onBlur: () => {
                       LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
                       setViewPinOnMap(false);
-                      setPiningInput(null)
                     },
                   }}
                   enablePoweredByContainer={false}
@@ -724,6 +744,28 @@ export const BottomSheetContent = ({
             </>
           }
 
+          {/* {currentStep === ClientSteps.PINNING && piningLocation &&
+            <View className="mx-1.5 flex-row justify-between mt-5 gap-5">
+              <ScaleBtn containerStyle={{ flex: 1 }} className="h-18" onPress={confirmPiningLocationHandler}>
+                <View className="w-full flex-row items-center justify-center bg-[#25D366] dark:bg-[#137136] rounded-xl p-3">
+                  <Text className="text-white font-bold text-xl">Guardar</Text>
+                </View>
+              </ScaleBtn>
+              <ScaleBtn containerStyle={{ flex: 1 }} className="h-18" onPress={cancelPiningLocationHandler}>
+                <View className="w-full flex-row items-center justify-center bg-[#242E42] rounded-xl p-3">
+                  <Text className="text-white font-bold text-xl">Cancel</Text>
+                </View>
+              </ScaleBtn>
+            </View>
+          } */}
+          {currentStep === ClientSteps.PINNING && piningLocation &&
+            <ScaleBtn containerStyle={{ flex: 1 }} className="mx-1.5 mt-5" onPress={confirmPiningLocationHandler}>
+              <View className="h-18 flex-row items-center justify-center bg-[#25D366] dark:bg-[#137136] rounded-xl p-3">
+                <Text className="text-white font-bold text-xl">Guardar</Text>
+              </View>
+            </ScaleBtn>
+          }
+
           {currentStep === ClientSteps.SEARCH &&
             <>
               <View className="mx-1.5 mt-7 overflow-visible">
@@ -735,16 +777,16 @@ export const BottomSheetContent = ({
                 <View className='py-3 pl-[5%]- pr-[3%]- mt-3 rounded-lg bg-[#E9E9E9] dark:bg-[#333333] overflow-hidden shadow'>
                   <ScrollView keyboardShouldPersistTaps="always" horizontal className="w-100 overflow-visible">
                     {
-                      [{ name: "Trabajo", icon: "suitcase" }, { name: "Casa", icon: "house" }].map((defaultMarker) => {
+                      [{ name: "Trabajo", icon: "folder-marker" }, { name: "Casa", icon: "home-map-marker" }].map((defaultMarker) => {
                         const userMarker = userMarkers.find(item => item.name === defaultMarker.name)
 
                         if (userMarkers.length === 0 || !userMarker) {
                           return (
-                            <DefaultMarkerRowItem key={defaultMarker.icon} addHandler={addDefaultMarkerHandler} defaultMarker={defaultMarker} />
+                            <DefaultMarkerRowItem key={defaultMarker.icon} addHandler={addMarkerHandler} defaultMarker={defaultMarker} />
                           )
                         } else {
                           return (
-                            <UserMarkerRowItem key={userMarker.id} userMarker={userMarker} addHandler={addUserMarkerHandler} />
+                            <UserMarkerRowItem key={userMarker.id} userMarker={userMarker} addHandler={addMarkerHandler} />
                           )
                         }
                       })
@@ -781,59 +823,66 @@ export const BottomSheetContent = ({
             </>
           }
 
-          {
-            currentStep === ClientSteps.TAXI && <View className="w-full h-full self-center mt-5">
-              <View className="">
-                {taxiTypesInfo.map(({ slug, Icon, name, pricePerKm, timePerKm }) => {
-                  if (selectedTaxiType === slug) {
+          {currentStep === ClientSteps.TAXI &&
+            <View className="mx-1.5 mt-7 overflow-visible">
+              <View className='flex-row justify-between'>
+                <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-bold text-xl">Taxis</Text>
+                {/* <Text className="text-[#21288a] dark:text-[#766acd] font-bold text-xl">mas</Text> */}
+              </View>
+
+              <View className='pl-[5%]- pr-[3%]- h-[18.5rem] mt-3 rounded-lg bg-[#E9E9E9] dark:bg-[#333333] overflow-hidden shadow'>
+                <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="always" className="w-100 px-3">
+                  {taxiTypesInfo.map(({ slug, Icon, name, pricePerKm, timePerKm }) => {
+                    if (selectedTaxiType === slug) {
+                      return (
+                        <Pressable
+                          onPress={() => setSelectedTaxiType(slug as TaxiType)}
+                          key={name}
+                          className="mx-[-10%] px-[10%] bg-[#FCCB6F] flex-row gap-7 items-center py-3">
+                          <Icon color={"black"} />
+                          <View className="flex-row items-center justify-between flex-1 px-2">
+                            <View>
+                              <Text className="text-[#1b1b1b] text-xl font-medium">{name}</Text>
+                              <Text className="text-[#1b1b1b] ">
+                                {Math.round(Math.random() * 100) / 100} Km
+                              </Text>
+                            </View>
+                            <View>
+                              <Text className="text-[#1b1b1b] text-lg font-medium text-right">
+                                ${(pricePerKm * (routeInfo?.distance.value ?? 0 / 1000)).toFixed(2)}
+                              </Text>
+                              <Text className="text-[#1b1b1b]">
+                                {(timePerKm * (routeInfo?.duration.value ?? 0 / 60)).toFixed(2)} min
+                              </Text>
+                            </View>
+                          </View>
+                        </Pressable>
+                      );
+                    }
                     return (
                       <Pressable
                         onPress={() => setSelectedTaxiType(slug as TaxiType)}
                         key={name}
-                        className="mx-[-10%] px-[10%] bg-[#FCCB6F] flex-row gap-7 items-center py-3">
-                        <Icon color={"black"} />
+                        className="mx-[-10%] px-[10%] flex-row gap-7 items-center py-3">
+                        <Icon color={Colors[colorScheme ?? "light"].border} />
                         <View className="flex-row items-center justify-between flex-1 px-2">
                           <View>
-                            <Text className="text-[#1b1b1b] text-xl font-medium">{name}</Text>
-                            <Text className="text-[#1b1b1b] ">
-                              {Math.round(Math.random() * 100) / 100} Km
-                            </Text>
+                            <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] text-xl font-medium">{name}</Text>
+                            <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] ">{Math.round(Math.random() * 100) / 100} Km</Text>
                           </View>
                           <View>
-                            <Text className="text-[#1b1b1b] text-lg font-medium text-right">
+                            <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] text-lg font-medium text-right">
                               ${(pricePerKm * (routeInfo?.distance.value ?? 0 / 1000)).toFixed(2)}
                             </Text>
-                            <Text className="text-[#1b1b1b]">
+                            <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] ">
                               {(timePerKm * (routeInfo?.duration.value ?? 0 / 60)).toFixed(2)} min
                             </Text>
                           </View>
                         </View>
                       </Pressable>
                     );
-                  }
-                  return (
-                    <Pressable
-                      onPress={() => setSelectedTaxiType(slug as TaxiType)}
-                      key={name}
-                      className="mx-[-10%] px-[10%] flex-row gap-7 items-center py-3">
-                      <Icon color={Colors[colorScheme ?? "light"].border} />
-                      <View className="flex-row items-center justify-between flex-1 px-2">
-                        <View>
-                          <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] text-xl font-medium">{name}</Text>
-                          <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] ">{Math.round(Math.random() * 100) / 100} Km</Text>
-                        </View>
-                        <View>
-                          <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] text-lg font-medium text-right">
-                            ${(pricePerKm * (routeInfo?.distance.value ?? 0 / 1000)).toFixed(2)}
-                          </Text>
-                          <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] ">
-                            {(timePerKm * (routeInfo?.duration.value ?? 0 / 60)).toFixed(2)} min
-                          </Text>
-                        </View>
-                      </View>
-                    </Pressable>
-                  );
-                })}
+                  })}
+                </ScrollView>
               </View>
             </View>
           }
@@ -880,7 +929,7 @@ const RidesHistoryItem = ({ ride }: { ride: DBRide }) => {
   )
 }
 
-const UserMarkerRowItem = ({ userMarker, color, bgColor, addHandler }: { userMarker: UserMarkerIconType, addHandler: (addingMarker: AddMarker) => void, color?: string, bgColor?: string }) => {
+const UserMarkerRowItem = ({ userMarker, color, bgColor, addHandler }: { userMarker: UserMarkerIconType, addHandler: (addingMarker?: AddMarker) => void, color?: string, bgColor?: string }) => {
 
   const colorScheme = useColorScheme();
 
@@ -890,7 +939,7 @@ const UserMarkerRowItem = ({ userMarker, color, bgColor, addHandler }: { userMar
       <ScaleBtn
         style={{ backgroundColor: bgColor ?? Colors[colorScheme ?? 'light'].border_light }}
         className="w-[64px] h-[64px] rounded-full bg-[#D8D8D8] dark:bg-[#444444]- items-center justify-center"
-        onPress={() => addHandler({})}>
+        onPress={addHandler}>
         <FontAwesome6
           name={userMarker.icon.name}
           size={24}
@@ -904,7 +953,7 @@ const UserMarkerRowItem = ({ userMarker, color, bgColor, addHandler }: { userMar
   )
 }
 
-const DefaultMarkerRowItem = ({ defaultMarker, color, bgColor, addHandler }: { defaultMarker: { name: string, icon: string }, addHandler: (addingMarker: AddMarker) => void, color?: string, bgColor?: string }) => {
+const DefaultMarkerRowItem = ({ defaultMarker, color, bgColor, addHandler }: { defaultMarker: { name: string, icon: string }, addHandler: (addingMarker?: AddMarker) => void, color?: string, bgColor?: string }) => {
 
   const colorScheme = useColorScheme();
   const shakeAnimatedValue = React.useRef(new Animated.Value(0)).current;
@@ -920,6 +969,9 @@ const DefaultMarkerRowItem = ({ defaultMarker, color, bgColor, addHandler }: { d
       }
     ).start()
   }
+  const addInnerHandler = useCallback(() => {
+    addHandler(defaultMarker)
+  }, [defaultMarker])
   // 1c1818
   return (
     <View className='ml-5 items-center justify-center' key={defaultMarker.icon}>
@@ -929,9 +981,10 @@ const DefaultMarkerRowItem = ({ defaultMarker, color, bgColor, addHandler }: { d
         onPress={() => {
           startShake()
         }}>
-        <FontAwesome6
+        <MaterialCommunityIcons
+          // @ts-ignore
           name={defaultMarker.icon}
-          size={24}
+          size={38}
           color={color ?? Colors[colorScheme ?? 'light'].icons}
         />
       </ScaleBtn>
@@ -947,7 +1000,7 @@ const DefaultMarkerRowItem = ({ defaultMarker, color, bgColor, addHandler }: { d
         }}>
           <ScaleBtn
             className=""
-            onPress={() => addHandler(defaultMarker)}>
+            onPress={addInnerHandler}>
             <Text className="text-sm text-center text-[#1b1b1b] dark:text-[#C1C0C9]">Add</Text>
           </ScaleBtn>
         </Animated.View>

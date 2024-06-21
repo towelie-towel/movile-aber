@@ -52,6 +52,14 @@ const defineConfig = (): ExpoConfig => ({
     tsconfigPaths: true,
   },
   plugins: [
+    [
+      "expo-image-picker",
+      {
+        "photosPermission": "Allow $(PRODUCT_NAME) to access your photos.",
+        "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera.",
+        "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone."
+      }
+    ],
     'expo-router',
     '@react-native-google-signin/google-signin',
     '@react-native-firebase/app',

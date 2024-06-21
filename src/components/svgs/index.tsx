@@ -11,7 +11,6 @@ import Svg, {
   LinearGradient
 } from 'react-native-svg';
 
-
 export const MapMarkerSVG = ({ size = 48, color = "#000" }) => {
   return (
     <Svg id="_x32_"
