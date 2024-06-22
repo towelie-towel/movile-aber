@@ -17,6 +17,14 @@ import { getData } from '~/lib/storage';
 export const selectableMarkerIcons = [
   {
     type: 'MCI',
+    name: 'folder-marker',
+  },
+  {
+    type: 'MCI',
+    name: 'home-map-marker',
+  },
+  {
+    type: 'MCI',
     name: 'airplane-marker',
   },
   {

@@ -503,7 +503,7 @@ export default function ClientMap() {
                     <Animated.View
                         pointerEvents={"box-none"}
                         style={topSheetBtnsAnimStyle}
-                        className="w-[95%] self-center justify-between border flex-row items-end absolute -top-20">
+                        className="absolute bottom-[750px] w-[95%] self-center flex-row items-end justify-between border-">
                         {activeRoute && activeRoute.coords.length > 0 && (
                             <>
                                 <ScaleBtn
@@ -531,7 +531,7 @@ export default function ClientMap() {
                             </>
                         )}
                         <View
-                            className="rounded-xl bg-[#f8f8f8] shadow dark:bg-[#1b1a1e] !self-end justify-center items-center">
+                            className="rounded-xl bg-[#f8f8f8] shadow dark:bg-[#1b1a1e] !self-end justify-center items-center absolute right-0">
                             <ScaleBtn
                                 containerStyle={{}}
                                 onPress={() => setDrawerOpen(true)}>

@@ -23,7 +23,7 @@ export const UserMapMarker = ({ piningMarker }: { piningMarker: AddMarker }) => 
             <View className='relative z-0'>
                 <MapMarkerSVG
                     size={48}
-                    color={piningMarker?.color ?? Colors[colorScheme ?? 'light'].border_light}
+                    color={/* piningMarker?.color ??  */Colors[colorScheme ?? 'light'].border_light}
                 />
             </View>
         </>

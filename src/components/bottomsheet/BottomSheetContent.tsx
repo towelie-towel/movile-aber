@@ -65,18 +65,18 @@ interface BottomSheetContentProps {
 
 export const BottomSheetContent = ({
   currentStep,
+  piningMarker,
+  setPiningMarker,
   setCurrentStep,
   setRideInfo,
+  setFindingRide,
   setActiveRoute,
+  piningLocation,
   startPiningLocation,
   cancelPiningLocation,
   confirmPiningLocation,
-  piningLocation,
-  piningMarker,
-  setPiningMarker,
   selectedTaxiType,
   setSelectedTaxiType,
-  setFindingRide,
 }: BottomSheetContentProps) => {
   const colorScheme = useColorScheme();
   const { width, height } = useWindowDimensions();
@@ -215,10 +215,10 @@ export const BottomSheetContent = ({
 
   const startPiningLocationHandler = useCallback(() => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    collapse();
     startPiningLocation();
     setCurrentStep(ClientSteps.PINNING);
     Keyboard.dismiss();
-    collapse();
     originInputViewRef.current?.blur();
     destinationInputViewRef.current?.blur();
   }, [startPiningLocation, originInputViewRef, destinationInputViewRef]);
@@ -256,6 +256,7 @@ export const BottomSheetContent = ({
           let originDestination = pinedInfo?.origin;
           if (!originDestination) {
             originDestination = await getCurrentPositionAsync()
+            originDestination && originInputViewRef.current?.setAddressText(originDestination.address);
           }
           console.log("setPinedInfo", {
             origin: originDestination ?? null,
@@ -316,25 +317,30 @@ export const BottomSheetContent = ({
 
   const goBackToSearch = useCallback(() => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    expand()
     setSelectedTaxiType(null)
     setPiningInput(null)
     setPiningMarker(null)
     setCurrentStep(ClientSteps.SEARCH);
-    if (pinedInfo?.origin) {
+    /* if (pinedInfo?.origin) {
       originInputViewRef.current?.setAddressText(pinedInfo.origin.address);
     }
     if (pinedInfo?.destination) {
       destinationInputViewRef.current?.setAddressText(pinedInfo.destination.address);
-    }
-  }, [originInputViewRef, destinationInputViewRef, pinedInfo]);;
+    } */
+    fetchOrigin()
+  }, [fetchOrigin/* , originInputViewRef, destinationInputViewRef, pinedInfo */]);;
   const goToPinnedRouteTaxi = useCallback(() => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    snapToIndex(1)
     setCurrentStep(ClientSteps.TAXI);
   }, []);
 
   const addMarkerHandler = useCallback((addingMarker?: AddMarker) => {
+    snapToIndex(1)
     if (piningInput) {
     } else {
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
       setPiningMarker(addingMarker ?? {})
       setCurrentStep(ClientSteps.PINNING);
     }
