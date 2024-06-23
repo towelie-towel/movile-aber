@@ -18,7 +18,7 @@ export const UserMapMarker = ({ piningMarker }: { piningMarker: AddMarker }) => 
                     size={26}
                     color={colorScheme === "light" ? "#D8D8D8" : "#444444"}
                 />
-                <View style={{ backgroundColor: piningMarker?.color ?? Colors[colorScheme ?? 'light'].border_light }} className='bg-[#D8D8D8]- dark:bg-[#444444]- bg-red-500- absolute w-full h-full top-0 rounded-full' /* style={{ backgroundColor: Colors[colorScheme === "light" ? "dark" : "light"].border_light }} */></View>
+                <View style={{ backgroundColor: piningMarker?.color ?? Colors[colorScheme ?? 'light'].border_light_i }} className='bg-[#D8D8D8]- dark:bg-[#444444]- bg-red-500- absolute w-full h-full top-0 rounded-full' /* style={{ backgroundColor: Colors[colorScheme === "light" ? "dark" : "light"].border_light }} */></View>
             </View>
             <View className='relative z-0'>
                 <MapMarkerSVG

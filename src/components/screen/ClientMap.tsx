@@ -116,10 +116,11 @@ export default function ClientMap() {
             case ClientSteps.PINNING:
                 if (piningLocation) setSnapPoints([270, 420])
                 else setSnapPoints([180, 420])
+                bottomSheetModalRef.current?.collapse()
                 break;
             case ClientSteps.TAXI:
-                bottomSheetModalRef.current?.collapse();
-                setSnapPoints([520, 800])
+                setSnapPoints([210, 520])
+                //bottomSheetModalRef.current?.expand();
                 break;
             case ClientSteps.RIDE:
                 setSnapPoints([360, 500])
@@ -412,7 +413,7 @@ export default function ClientMap() {
                     />}
                     <MapView
                         showsUserLocation
-                        style={{ width: '100%', height: '100%' }}
+                        style={{ flex: 1 }}
                         onTouchMove={() => { }}
                         onTouchStart={() => { }}
                         onTouchEnd={() => { }}
@@ -506,15 +507,16 @@ export default function ClientMap() {
                         className="absolute bottom-[750px] w-[95%] self-center flex-row items-end justify-between border-">
                         {activeRoute && activeRoute.coords.length > 0 && (
                             <>
-                                <ScaleBtn
+                                {/* <ScaleBtn
                                     containerStyle={{}}
                                     onPress={() => {
                                         animateToActiveRoute();
                                     }}>
-                                    <View className="bg-[#fff] rounded-lg p-3 shadow">
-                                        <FontAwesome6 name="route" size={24} color="black" />
+                                    <View className="bg-[#f8f8f8] dark:bg-[#1b1a1e] rounded-lg p-3 shadow">
+                                        <FontAwesome6 name="route" size={24} color={Colors[colorScheme ?? 'light'].text_dark} />
                                     </View>
-                                </ScaleBtn>
+                                </ScaleBtn> */}
+                                <View className='w-12'></View>
 
                                 {currentStep < ClientSteps.PICKUP &&
                                     <ScaleBtn
@@ -530,6 +532,7 @@ export default function ClientMap() {
                                 }
                             </>
                         )}
+                        <View className='w-12'></View>
                         <View
                             className="rounded-xl bg-[#f8f8f8] shadow dark:bg-[#1b1a1e] !self-end justify-center items-center absolute right-0">
                             <ScaleBtn
@@ -573,6 +576,7 @@ export default function ClientMap() {
                         animatedIndex={animatedIndex}
                         ref={bottomSheetModalRef}
                         // overDragResistanceFactor={6}
+                        stackBehavior='push'
                         keyboardBehavior="extend"
                         // keyboardBlurBehavior="restore"
                         handleComponent={renderCustomHandle}
@@ -586,8 +590,8 @@ export default function ClientMap() {
                         }}
                         // enableDynamicSizing
                         android_keyboardInputMode="adjustResize"
-                        enableContentPanningGesture={!piningLocation && currentStep !== ClientSteps.TAXI}
-                        enableHandlePanningGesture={!piningLocation && currentStep !== ClientSteps.TAXI}
+                        // enableContentPanningGesture={!piningLocation && currentStep !== ClientSteps.TAXI}
+                        // enableHandlePanningGesture={!piningLocation && currentStep !== ClientSteps.TAXI}
                         enableDismissOnClose={false}
                         enablePanDownToClose={false}
                         snapPoints={snapPoints}

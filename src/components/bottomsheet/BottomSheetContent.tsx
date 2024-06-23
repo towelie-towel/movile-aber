@@ -81,7 +81,7 @@ export const BottomSheetContent = ({
   const colorScheme = useColorScheme();
   const { width, height } = useWindowDimensions();
   const { profile } = useUser()
-  const { collapse, snapToIndex, expand } = useBottomSheet();
+  // const { collapse, snapToIndex, expand } = useBottomSheet();
   const { confirmedTaxi } = useWSState()
   const { cancelTaxi } = useWSActions()
   const [userMarkers, setUserMarkers] = useAtom(userMarkersAtom)
@@ -125,7 +125,7 @@ export const BottomSheetContent = ({
         );
 
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-        snapToIndex(1);
+        // snapToIndex(1);
         setActiveRoute({
           coords: decodedCoords,
         });
@@ -159,7 +159,7 @@ export const BottomSheetContent = ({
           overview_polyline: respJson[0].overview_polyline,
           // navigationInfo: respJson[0].legs[0],
         })
-        setCurrentStep(ClientSteps.TAXI)
+        // setCurrentStep(ClientSteps.TAXI)
       }
     }
     tokio()
@@ -215,7 +215,7 @@ export const BottomSheetContent = ({
 
   const startPiningLocationHandler = useCallback(() => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    collapse();
+    // collapse();
     startPiningLocation();
     setCurrentStep(ClientSteps.PINNING);
     Keyboard.dismiss();
@@ -317,7 +317,7 @@ export const BottomSheetContent = ({
 
   const goBackToSearch = useCallback(() => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    expand()
+    // expand()
     setSelectedTaxiType(null)
     setPiningInput(null)
     setPiningMarker(null)
@@ -332,12 +332,12 @@ export const BottomSheetContent = ({
   }, [fetchOrigin/* , originInputViewRef, destinationInputViewRef, pinedInfo */]);;
   const goToPinnedRouteTaxi = useCallback(() => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    snapToIndex(1)
+    // snapToIndex(1)
     setCurrentStep(ClientSteps.TAXI);
   }, []);
 
   const addMarkerHandler = useCallback((addingMarker?: AddMarker) => {
-    snapToIndex(1)
+    // snapToIndex(1)
     if (piningInput) {
     } else {
       LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -388,9 +388,9 @@ export const BottomSheetContent = ({
           <View className='flex-row justify-between mt-3'>
             <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-bold text-xl">Favoritos</Text>
 
-            <ScaleBtn onPress={pickMarkerImage}>
+            {/* <ScaleBtn onPress={pickMarkerImage}>
               <MaterialCommunityIcons name="file-image-marker" size={28} color={Colors[colorScheme ?? "light"].icons_link} />
-            </ScaleBtn>
+            </ScaleBtn> */}
             {/* <Text className="text-[#21288a] dark:text-[#766acd] font-bold text-xl">mas</Text> */}
           </View>
           <View className='pl-[5%]- pr-[3%]- h-[10rem] mt-3 rounded-lg bg-[#E9E9E9] dark:bg-[#333333] overflow-hidden shadow'>
