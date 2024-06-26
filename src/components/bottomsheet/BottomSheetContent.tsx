@@ -101,19 +101,38 @@ export const BottomSheetContent = ({
 
   const originInputViewRef = useRef<GooglePlacesAutocompleteRef>(null);
   const destinationInputViewRef = useRef<GooglePlacesAutocompleteRef>(null);
-  const shakeAnimatedValue = React.useRef(new Animated.Value(0)).current;
+  const markerShakeAnimatedValue = React.useRef(new Animated.Value(0)).current;
+  const originShakeAnimatedValue = React.useRef(new Animated.Value(0)).current;
+  const destinationShakeAnimatedValue = React.useRef(new Animated.Value(0)).current;
 
-  const shortShake = () => {
-    shakeAnimatedValue.setValue(0);
-    Animated.timing(shakeAnimatedValue,
-      {
+  const emptyMarkerShake = useCallback(() => {
+    markerShakeAnimatedValue.setValue(0);
+    Animated.timing(markerShakeAnimatedValue, {
+      toValue: 1,
+      duration: 150,
+      easing: Easing.linear,
+      useNativeDriver: true
+    }).start()
+  }, [markerShakeAnimatedValue])
+  const inputsShake = useCallback(() => {
+    if (piningInput === "destination") {
+      destinationShakeAnimatedValue.setValue(0);
+      Animated.timing(destinationShakeAnimatedValue, {
         toValue: 1,
         duration: 150,
         easing: Easing.linear,
         useNativeDriver: true
-      }
-    ).start()
-  }
+      }).start()
+    } else if (piningInput === "origin") {
+      originShakeAnimatedValue.setValue(0);
+      Animated.timing(originShakeAnimatedValue, {
+        toValue: 1,
+        duration: 150,
+        easing: Easing.linear,
+        useNativeDriver: true
+      }).start()
+    }
+  }, [piningInput, originShakeAnimatedValue, destinationShakeAnimatedValue])
 
   useEffect(() => {
     if (confirmedTaxi) {
@@ -361,6 +380,7 @@ export const BottomSheetContent = ({
   const startAddingMarkerHandler = useCallback((addingMarker?: AddMarker) => {
     // snapToIndex(1)
     if (piningInput) {
+      inputsShake()
       console.warn("case not handled yet", piningInput)
     } else {
       LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -405,7 +425,7 @@ export const BottomSheetContent = ({
       }])
       goBackToSearch();
     } else {
-      shortShake()
+      emptyMarkerShake()
     }
   }, [confirmPiningLocation, getCoordinateAddress, piningMarker, userMarkers, goBackToSearch]);
   const deleteMarkerHandler = useCallback(async (deletingMarker: UserMarkerIconType) => {
@@ -456,7 +476,7 @@ export const BottomSheetContent = ({
           </View> */}
           <Animated.View style={{
             transform: [{
-              translateX: shakeAnimatedValue.interpolate({
+              translateX: markerShakeAnimatedValue.interpolate({
                 inputRange: [0, 0.25, 0.50, 0.75, 1],
                 outputRange: [0, 5, -5, 5, 0]
               })
@@ -627,91 +647,100 @@ export const BottomSheetContent = ({
               </View>
 
               <View className="relative z-[1000] w-full h-12 px-0 mt-3 items-start flex-row">
-                <MaterialCommunityIcons className='mt-1' name="map-marker-account" size={32}
-                  color={Colors[colorScheme ?? "light"].border} />
-                <GooglePlacesAutocomplete
-                  ref={originInputViewRef}
-                  /* predefinedPlaces={userMarkers.map((marker) => ({
-                    description: marker.name,
-                    geometry: {
-                      location: {
-                        lat: marker.coords.latitude,
-                        lng: marker.coords.longitude,
+                <MaterialCommunityIcons className='mt-1' name="map-marker-account" size={32} color={Colors[colorScheme ?? "light"].border} />
+                <Animated.View style={{
+                  transform: [{
+                    translateX: originShakeAnimatedValue.interpolate({
+                      inputRange: [0, 0.25, 0.50, 0.75, 1],
+                      outputRange: [0, 5, -5, 5, 0]
+                    })
+                  }]
+                }}>
+                  <GooglePlacesAutocomplete
+                    ref={originInputViewRef}
+                    /* predefinedPlaces={userMarkers.map((marker) => ({
+                      description: marker.name,
+                      geometry: {
+                        location: {
+                          lat: marker.coords.latitude,
+                          lng: marker.coords.longitude,
+                        },
                       },
-                    },
-                  }))} */
-                  placeholder="Lugar de Origen"
-                  textInputProps={{
-                    placeholderTextColor: colorScheme === 'light' ? 'black' : '#6C6C6C',
-                    onFocus: () => {
-                      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-                      if (piningLocation) cancelPiningLocationHandler();
-                      setViewPinOnMap(true);
-                      setPiningInput('origin');
-                    },
-                    onBlur: () => {
-                      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-                      setViewPinOnMap(false);
-                    },
-                  }}
-                  enablePoweredByContainer={false}
-                  onPress={(data, details) => {
-                    const tokio = async (
-                      _data: GooglePlaceData,
-                      _details: GooglePlaceDetail | null
-                    ) => { };
-                    tokio(data, details);
-                  }}
-                  debounce={400}
-                  styles={{
-                    container: {
-                      position: 'relative',
-                      zIndex: 1000,
-                      overflow: 'visible',
-                    },
-                    textInputContainer: {
-                      position: 'relative',
-                      zIndex: 1000,
-                      overflow: 'hidden',
-                      marginLeft: 12,
-                      height: 46,
-                      borderRadius: 10,
-                      width: width * 0.95 - 48,
-                    },
-                    textInput: {
-                      position: 'relative',
-                      zIndex: 1000,
+                    }))} */
+                    placeholder="Lugar de Origen"
+                    textInputProps={{
+                      placeholderTextColor: colorScheme === 'light' ? 'black' : '#6C6C6C',
+                      onFocus: () => {
+                        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                        if (piningLocation) cancelPiningLocationHandler();
+                        setViewPinOnMap(true);
+                        setPiningInput('origin');
+                      },
+                      onBlur: () => {
+                        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                        setViewPinOnMap(false);
+                        if (currentStep !== ClientSteps.PICKUP) setPiningInput(null);
+                      },
+                    }}
+                    enablePoweredByContainer={false}
+                    onPress={(data, details) => {
+                      const tokio = async (
+                        _data: GooglePlaceData,
+                        _details: GooglePlaceDetail | null
+                      ) => { };
+                      tokio(data, details);
+                    }}
+                    debounce={400}
+                    styles={{
+                      container: {
+                        position: 'relative',
+                        zIndex: 1000,
+                        overflow: 'visible',
+                      },
+                      textInputContainer: {
+                        position: 'relative',
+                        zIndex: 1000,
+                        overflow: 'hidden',
+                        marginLeft: 12,
+                        height: 46,
+                        borderRadius: 10,
+                        width: width * 0.95 - 48,
+                      },
+                      textInput: {
+                        position: 'relative',
+                        zIndex: 1000,
 
-                      height: '100%',
-                      fontWeight: '400',
-                      borderRadius: 10,
-                      fontSize: 16,
-                      textAlignVertical: 'center',
-                      color: Colors[colorScheme ?? 'light'].text_dark,
-                      backgroundColor: Colors[colorScheme ?? 'light'].background_light1,
+                        height: '100%',
+                        fontWeight: '400',
+                        borderRadius: 10,
+                        fontSize: 16,
+                        textAlignVertical: 'center',
+                        color: Colors[colorScheme ?? 'light'].text_dark,
+                        backgroundColor: Colors[colorScheme ?? 'light'].background_light1,
 
-                      borderTopRightRadius: 10,
-                      borderBottomRightRadius: 10,
-                    },
-                    listView: {
-                      position: 'absolute',
-                      zIndex: 1000,
-                      backgroundColor: 'white',
-                      borderRadius: 5,
-                      flex: 1,
-                      elevation: 3,
-                      marginTop: 12,
-                    },
-                  }}
-                  fetchDetails
-                  query={{
-                    key: 'AIzaSyAtcwUbA0jjJ6ARXl5_FqIqYcGbTI_XZEE',
-                    language: 'es',
-                    components: 'country:cu',
-                    location: '23.11848,-82.38052',
-                    radius: 100,
-                  }}
-                />
+                        borderTopRightRadius: 10,
+                        borderBottomRightRadius: 10,
+                      },
+                      listView: {
+                        position: 'absolute',
+                        zIndex: 1000,
+                        backgroundColor: 'white',
+                        borderRadius: 5,
+                        flex: 1,
+                        elevation: 3,
+                        marginTop: 12,
+                      },
+                    }}
+                    fetchDetails
+                    query={{
+                      key: 'AIzaSyAtcwUbA0jjJ6ARXl5_FqIqYcGbTI_XZEE',
+                      language: 'es',
+                      components: 'country:cu',
+                      location: '23.11848,-82.38052',
+                      radius: 100,
+                    }}
+                  />
+                </Animated.View>
               </View>
 
               <View className="relative z-[999] w-full h-12 px-0 mt-5 items-end flex-row">
@@ -730,89 +759,99 @@ export const BottomSheetContent = ({
                   size={32}
                   color={Colors[colorScheme ?? "light"].border}
                 />
-                <GooglePlacesAutocomplete
-                  ref={destinationInputViewRef}
-                  /* predefinedPlaces={userMarkers.map((marker) => ({
-                    description: marker.name,
-                    geometry: {
-                      location: {
-                        lat: marker.coords.latitude,
-                        lng: marker.coords.longitude,
+                <Animated.View style={{
+                  transform: [{
+                    translateX: destinationShakeAnimatedValue.interpolate({
+                      inputRange: [0, 0.25, 0.50, 0.75, 1],
+                      outputRange: [0, 5, -5, 5, 0]
+                    })
+                  }]
+                }}>
+                  <GooglePlacesAutocomplete
+                    ref={destinationInputViewRef}
+                    /* predefinedPlaces={userMarkers.map((marker) => ({
+                      description: marker.name,
+                      geometry: {
+                        location: {
+                          lat: marker.coords.latitude,
+                          lng: marker.coords.longitude,
+                        },
                       },
-                    },
-                  }))} */
-                  placeholder="Lugar Destino"
-                  textInputProps={{
-                    placeholderTextColor: colorScheme === 'light' ? 'black' : '#6C6C6C',
-                    onFocus: () => {
-                      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-                      if (piningLocation) cancelPiningLocationHandler();
-                      setViewPinOnMap(true);
-                      setPiningInput('destination');
-                    },
-                    onBlur: () => {
-                      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-                      setViewPinOnMap(false);
-                    },
-                  }}
-                  enablePoweredByContainer={false}
-                  onPress={(data, details) => {
-                    const tokio = async (
-                      _data: GooglePlaceData,
-                      _details: GooglePlaceDetail | null
-                    ) => { };
-                    tokio(data, details);
-                  }}
-                  debounce={400}
-                  styles={{
-                    container: {
-                      position: 'relative',
-                      zIndex: 999,
-                      overflow: 'visible',
-                    },
-                    textInputContainer: {
-                      position: 'relative',
-                      zIndex: 999,
-                      overflow: 'hidden',
-                      marginLeft: 12,
-                      height: 46,
-                      borderRadius: 10,
-                      width: width * 0.95 - 48,
-                    },
-                    textInput: {
-                      position: 'relative',
-                      zIndex: 999,
+                    }))} */
+                    placeholder="Lugar Destino"
+                    textInputProps={{
+                      placeholderTextColor: colorScheme === 'light' ? 'black' : '#6C6C6C',
+                      onFocus: () => {
+                        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                        if (piningLocation) cancelPiningLocationHandler();
+                        setViewPinOnMap(true);
+                        setPiningInput('destination');
+                      },
+                      onBlur: () => {
+                        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                        setViewPinOnMap(false);
+                        if (currentStep !== ClientSteps.PICKUP) setPiningInput(null);
+                      },
+                    }}
+                    enablePoweredByContainer={false}
+                    onPress={(data, details) => {
+                      const tokio = async (
+                        _data: GooglePlaceData,
+                        _details: GooglePlaceDetail | null
+                      ) => { };
+                      tokio(data, details);
+                    }}
+                    debounce={400}
+                    styles={{
+                      container: {
+                        position: 'relative',
+                        zIndex: 999,
+                        overflow: 'visible',
+                      },
+                      textInputContainer: {
+                        position: 'relative',
+                        zIndex: 999,
+                        overflow: 'hidden',
+                        marginLeft: 12,
+                        height: 46,
+                        borderRadius: 10,
+                        width: width * 0.95 - 48,
+                      },
+                      textInput: {
+                        position: 'relative',
+                        zIndex: 999,
 
-                      height: '100%',
-                      fontWeight: '400',
-                      borderRadius: 10,
-                      fontSize: 16,
-                      textAlignVertical: 'center',
-                      color: Colors[colorScheme ?? 'light'].text_dark,
-                      backgroundColor: Colors[colorScheme ?? 'light'].background_light1,
+                        height: '100%',
+                        fontWeight: '400',
+                        borderRadius: 10,
+                        fontSize: 16,
+                        textAlignVertical: 'center',
+                        color: Colors[colorScheme ?? 'light'].text_dark,
+                        backgroundColor: Colors[colorScheme ?? 'light'].background_light1,
 
-                      borderTopRightRadius: 10,
-                      borderBottomRightRadius: 10,
-                    },
-                    listView: {
-                      position: 'absolute',
-                      zIndex: 999,
-                      backgroundColor: 'white',
-                      borderRadius: 5,
-                      flex: 1,
-                      elevation: 3,
-                      marginTop: 12,
-                    },
-                  }}
-                  fetchDetails
-                  query={{
-                    key: 'AIzaSyAtcwUbA0jjJ6ARXl5_FqIqYcGbTI_XZEE',
-                    language: 'es',
-                    components: 'country:cu',
-                    location: '23.11848,-82.38052',
-                    radius: 100,
-                  }}
-                />
+                        borderTopRightRadius: 10,
+                        borderBottomRightRadius: 10,
+                      },
+                      listView: {
+                        position: 'absolute',
+                        zIndex: 999,
+                        backgroundColor: 'white',
+                        borderRadius: 5,
+                        flex: 1,
+                        elevation: 3,
+                        marginTop: 12,
+                      },
+                    }}
+                    fetchDetails
+                    query={{
+                      key: 'AIzaSyAtcwUbA0jjJ6ARXl5_FqIqYcGbTI_XZEE',
+                      language: 'es',
+                      components: 'country:cu',
+                      location: '23.11848,-82.38052',
+                      radius: 100,
+                    }}
+                  />
+                </Animated.View>
               </View>
             </>
           }
