@@ -489,7 +489,7 @@ export default function ClientMap() {
                                 alignItems: "flex-end",
                                 justifyContent: "flex-end"
                             }}>
-                            {piningMarker &&
+                            {!piningLocation && /* piningMarker && */
                                 <UserMapMarker piningMarker={piningMarker} />
                             }
 

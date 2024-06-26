@@ -101,6 +101,19 @@ export const BottomSheetContent = ({
 
   const originInputViewRef = useRef<GooglePlacesAutocompleteRef>(null);
   const destinationInputViewRef = useRef<GooglePlacesAutocompleteRef>(null);
+  const shakeAnimatedValue = React.useRef(new Animated.Value(0)).current;
+
+  const shortShake = () => {
+    shakeAnimatedValue.setValue(0);
+    Animated.timing(shakeAnimatedValue,
+      {
+        toValue: 1,
+        duration: 150,
+        easing: Easing.linear,
+        useNativeDriver: true
+      }
+    ).start()
+  }
 
   useEffect(() => {
     if (confirmedTaxi) {
@@ -288,8 +301,6 @@ export const BottomSheetContent = ({
 
           }
           setCurrentStep(ClientSteps.PINNING + 1)
-
-
         }
       } else {
         throw new Error('No street address found in the response.');
@@ -350,9 +361,10 @@ export const BottomSheetContent = ({
   const startAddingMarkerHandler = useCallback((addingMarker?: AddMarker) => {
     // snapToIndex(1)
     if (piningInput) {
+      console.warn("case not handled yet", piningInput)
     } else {
       LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-      setPiningMarker(addingMarker ?? {});
+      setPiningMarker(addingMarker ?? null);
       setCurrentStep(ClientSteps.PINNING);
     }
   }, [piningInput]);
@@ -393,7 +405,7 @@ export const BottomSheetContent = ({
       }])
       goBackToSearch();
     } else {
-      throw new Error("Can't add marker if not pinning")
+      shortShake()
     }
   }, [confirmPiningLocation, getCoordinateAddress, piningMarker, userMarkers, goBackToSearch]);
   const deleteMarkerHandler = useCallback(async (deletingMarker: UserMarkerIconType) => {
@@ -406,7 +418,7 @@ export const BottomSheetContent = ({
   return (
     <BottomSheetView className="flex-1 bg-[#F8F8F8] dark:bg-[#1b1b1b]">
 
-      {!piningLocation && !piningInput && piningMarker && currentStep === ClientSteps.PINNING ?
+      {!piningLocation && !piningInput/*  && piningMarker */ && currentStep === ClientSteps.PINNING ?
         <View className="w-[95%] h-full self-center overflow-visible">
           <View className='flex-row justify-between mt-3'>
             <View className='flex-row gap-3 justify-center items-center'>
@@ -442,7 +454,14 @@ export const BottomSheetContent = ({
 
             </ScrollView>
           </View> */}
-          <View className='pl-[5%]- pr-[3%]- h-[10rem] mt-3 rounded-lg bg-[#E9E9E9] dark:bg-[#333333] overflow-hidden shadow'>
+          <Animated.View style={{
+            transform: [{
+              translateX: shakeAnimatedValue.interpolate({
+                inputRange: [0, 0.25, 0.50, 0.75, 1],
+                outputRange: [0, 5, -5, 5, 0]
+              })
+            }]
+          }} className='pl-[5%]- pr-[3%]- h-[10rem] mt-3 rounded-lg bg-[#E9E9E9] dark:bg-[#333333] overflow-hidden shadow'>
             <ScrollView contentContainerClassName='flex-wrap p-3 gap-5 flex-row self-center' showsHorizontalScrollIndicator={false}>
               {selectableMarkerIcons.map((markerIcon) => {
                 return (
@@ -467,7 +486,7 @@ export const BottomSheetContent = ({
                 );
               })}
             </ScrollView>
-          </View>
+          </Animated.View>
           <ScaleBtn className="mt-5 w-full gap-3" onPress={addMarkerHandler}>
             <View className="h-18 flex-row items-center justify-center bg-[#25D366] dark:bg-[#137136] rounded-xl p-3">
               <Text className="text-white font-bold text-xl">Guardar</Text>
@@ -848,6 +867,27 @@ export const BottomSheetContent = ({
                         }
                       })
                     }
+                    {
+                      !editingMarkers && <View className='relative ml-5 items-center justify-center' key={"add-marker"}>
+                        <View className={""}>
+                          <ScaleBtn
+                            style={{ backgroundColor: Colors[colorScheme ?? 'light'].border_light }}
+                            className="w-[64px] h-[64px] rounded-full bg-[#D8D8D8] dark:bg-[#444444]- items-center justify-center"
+                            onPress={startAddingMarkerHandler}
+                          >
+                            <MaterialCommunityIcons
+                              // @ts-ignore
+                              name={"plus-circle"}
+                              size={38}
+                              color={Colors[colorScheme ?? 'light'].icons}
+                            />
+                          </ScaleBtn>
+                        </View>
+                        <View className='h-12 w-full'>
+                          <Text className="text-lg font-semibold text-center text-[#1b1b1b] dark:text-[#C1C0C9]">{"Add"}</Text>
+                        </View>
+                      </View>
+                    }
                   </ScrollView>
                 </View>
               </View>
@@ -991,7 +1031,7 @@ const UserMarkerRowItem = ({ userMarker, color, bgColor, pressHandler, editingMa
 
   const pressInnerHandler = useCallback(() => {
     if (editingMarkers) {
-      console.warn("case not handled")
+      console.warn("case not handled yet")
     } else {
       pressHandler(userMarker)
     }
@@ -1000,7 +1040,7 @@ const UserMarkerRowItem = ({ userMarker, color, bgColor, pressHandler, editingMa
     if (editingMarkers) {
       deleteHandler(userMarker)
     } else {
-      console.warn("case not handled")
+      console.warn("case not handled yet")
     }
   }, [editingMarkers, userMarker, deleteHandler])
 

@@ -6,7 +6,7 @@ import { MapMarkerSVG2 } from '../svgs';
 import { AddMarker } from '../bottomsheet/BottomSheetContent';
 import Colors from '~/constants/Colors';
 
-export const UserMapMarker = ({ piningMarker }: { piningMarker: AddMarker }) => {
+export const UserMapMarker = ({ piningMarker }: { piningMarker: AddMarker | null }) => {
     const colorScheme = useColorScheme()
     return (
         <>
@@ -19,7 +19,7 @@ export const UserMapMarker = ({ piningMarker }: { piningMarker: AddMarker }) => 
                 <MaterialCommunityIcons
                     className='relative self-center z-10'
                     // @ts-ignore
-                    name={piningMarker.icon}
+                    name={piningMarker?.icon}
                     size={38}
                     color={piningMarker?.color ?? Colors[colorScheme ?? 'light'].border_light_i}
                 />
