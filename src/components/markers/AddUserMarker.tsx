@@ -70,6 +70,7 @@ export interface UserMarkerIconType {
   coords: {
     latitude: number;
     longitude: number;
+    address: string;
   };
 }
 
@@ -90,6 +91,7 @@ const AddUserMarker: React.FC<{
     coords: {
       latitude: 69.42,
       longitude: 69.42,
+      address: "69 420",
     },
     icon: selectableMarkerIcons.find(
       (markerIcon) => !userMarkers.some((marker) => marker.icon === markerIcon.name)
@@ -138,6 +140,7 @@ const AddUserMarker: React.FC<{
       coords: {
         latitude: 69.42,
         longitude: 69.42,
+        address: "69 420",
       },
     };
     toggleAddUserMarker();

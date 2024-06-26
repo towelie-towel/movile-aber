@@ -47,7 +47,7 @@ import { ColorInstagram, ColorFacebook, ColorTwitter, MapMarkerSVG } from '~/com
 import Colors from '~/constants/Colors';
 import { NightMap } from '~/constants/NightMap';
 import { drawerItems, ClientSteps, RideInfo } from '~/constants/Configs';
-import { useUser } from '~/context/UserContext';
+import { userMarkersAtom, useUser } from '~/context/UserContext';
 import { useWSActions } from '~/context/WSContext';
 import { calculateMiddlePointAndDelta } from '~/utils/directions';
 import type { TaxiType } from '~/constants/TaxiTypes';
@@ -55,6 +55,7 @@ import UserWavesMarker from '../markers/UserWavesMarker';
 import MagnometerArrow from '../common/MagnometerArrow';
 import { CardinalDirections } from '~/utils/directions';
 import { UserMapMarker } from '../markers/UserMapMarker';
+import { useAtom } from 'jotai/react';
 
 export default function ClientMap() {
     useKeepAwake();
@@ -65,6 +66,7 @@ export default function ClientMap() {
     const router = useRouter();
     const { profile, isSignedIn, signOut, toggleUserRole/* , ridesHistory */ } = useUser();
     const { findTaxi } = useWSActions();
+    const [userMarkers] = useAtom(userMarkersAtom)
 
     if (Platform.OS === 'android') {
         NavigationBar.setBackgroundColorAsync('transparent');
@@ -115,7 +117,7 @@ export default function ClientMap() {
                 break;
             case ClientSteps.PINNING:
                 if (piningLocation) setSnapPoints([270, 420])
-                else setSnapPoints([180, 420])
+                else setSnapPoints([180, 305])
                 bottomSheetModalRef.current?.collapse()
                 break;
             case ClientSteps.TAXI:
@@ -436,7 +438,7 @@ export default function ClientMap() {
 
                         <AnimatedRouteMarker key={2} />
 
-                        {/* {userMarkers.map((marker) => (
+                        {userMarkers.map((marker) => (
                             <Marker key={marker.id} coordinate={{ ...marker.coords }}>
                                 <MaterialIcons
                                     name="location-on"
@@ -444,7 +446,7 @@ export default function ClientMap() {
                                     color={Colors[colorScheme ?? 'light'].text}
                                 />
                             </Marker>
-                        ))} */}
+                        ))}
 
                         {activeRoute && activeRoute.coords.length > 0 && (
                             <>
@@ -481,8 +483,8 @@ export default function ClientMap() {
                         <View
                             style={{
                                 position: 'absolute',
-                                right: width / 2 - 24,
-                                top: height / 2 - 48,
+                                right: width / 2 - 41,
+                                top: height / 2 - 82,
                                 zIndex: 1000,
                                 alignItems: "flex-end",
                                 justifyContent: "flex-end"

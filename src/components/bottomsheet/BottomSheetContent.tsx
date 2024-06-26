@@ -39,7 +39,7 @@ import { useWSActions, useWSState } from '~/context/WSContext';
 import { userMarkersAtom } from '~/context/UserContext';
 import { selectableMarkerIcons, UserMarkerIconType } from '../markers/AddUserMarker';
 import TestRidesData from '~/constants/TestRidesData.json'
-import ColorsPalettes from '~/constants/ColorsPalettes.json'
+// import ColorsPalettes from '~/constants/ColorsPalettes.json'
 
 export type AddMarker = {
   name?: string;
@@ -54,7 +54,7 @@ interface BottomSheetContentProps {
   setActiveRoute: React.Dispatch<{ coords: LatLng[] } | null>;
   startPiningLocation: () => void;
   cancelPiningLocation: () => void;
-  confirmPiningLocation: () => Promise<{ latitude: number; longitude: number; address?: Address }>;
+  confirmPiningLocation: () => Promise<{ latitude: number; longitude: number }>;
   piningLocation: boolean;
   piningMarker: AddMarker | null;
   setPiningMarker: React.Dispatch<AddMarker | null>;
@@ -87,6 +87,7 @@ export const BottomSheetContent = ({
   const [userMarkers, setUserMarkers] = useAtom(userMarkersAtom)
 
   const [viewPinOnMap, setViewPinOnMap] = useState(false);
+  const [editingMarkers, setEditingMarkers] = useState(false);
   const [piningInput, setPiningInput] = useState<'origin' | 'destination' | null>(null);
   const [pinedInfo, setPinedInfo] = useState<{
     origin: { latitude: number, longitude: number, address: string } | null,
@@ -96,7 +97,7 @@ export const BottomSheetContent = ({
     distance: { value: number; text: string };
     duration: { value: number; text: string };
   } | null>(null);
-  const [markerImage, setMarkerImage] = useState<ImagePicker.ImagePickerResult | null>(null)
+  const [markerImage, setMarkerImage] = useState<ImagePicker.ImagePickerResult | null>(null);
 
   const originInputViewRef = useRef<GooglePlacesAutocompleteRef>(null);
   const destinationInputViewRef = useRef<GooglePlacesAutocompleteRef>(null);
@@ -108,16 +109,19 @@ export const BottomSheetContent = ({
       setFindingRide(false);
     }
   }, [confirmedTaxi]);
-
   useEffect(() => {
-    fetchOrigin();
-  }, []);
-
+    if (currentStep === ClientSteps.SEARCH) {
+      fetchOrigin();
+      if (pinedInfo?.destination) {
+        destinationInputViewRef.current?.setAddressText(pinedInfo.destination.address);
+      }
+    }
+  }, [currentStep]);
   useEffect(() => {
     const tokio = async () => {
       if (pinedInfo?.destination && pinedInfo?.origin) {
         const resp = await fetch(
-          `http://192.168.1.103:6942/route?from=${pinedInfo.origin.latitude},${pinedInfo.origin.longitude}&to=${pinedInfo.destination.latitude},${pinedInfo.destination.longitude}`
+          `http://172.20.10.12:6942/route?from=${pinedInfo.origin.latitude},${pinedInfo.origin.longitude}&to=${pinedInfo.destination.latitude},${pinedInfo.destination.longitude}`
         );
         const respJson = await resp.json();
         const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map(
@@ -213,6 +217,19 @@ export const BottomSheetContent = ({
     }
   }, [getCurrentPositionAsync, originInputViewRef, pinedInfo]);
 
+  const getCoordinateAddress = useCallback(async (latitude: number, longitude: number) => {
+    const resp = await fetch(
+      `https://revgeocode.search.hereapi.com/v1/revgeocode?at=${latitude},${longitude}&types=street&limit=5&apiKey=mRASkFtnRqYimoHBzud5-kSsj0y_FvqR-1jwJHrfUvQ&showMapReferences=pointAddress&show=streetInfo`
+    );
+    const addressRes = await resp.json();
+    if (addressRes.items.length > 0) {
+      const streetInfo = `${addressRes.items[0].address.street.replace('Calle ', '')} e/ ${addressRes.items[1].address.street.replace('Calle ', '')} y ${addressRes.items[2].address.street.replace('Calle ', '')}, ${addressRes.items[2].address.district}, Habana, Cuba`;
+      return streetInfo;
+    } else {
+      return null;
+    }
+  }, [])
+
   const startPiningLocationHandler = useCallback(() => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     // collapse();
@@ -224,24 +241,19 @@ export const BottomSheetContent = ({
   }, [startPiningLocation, originInputViewRef, destinationInputViewRef]);
   const cancelPiningLocationHandler = useCallback(() => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    cancelPiningLocation();
     setSelectedTaxiType(null)
     setPiningInput(null)
     setPiningMarker(null)
     setCurrentStep(ClientSteps.SEARCH);
-    cancelPiningLocation();
   }, [cancelPiningLocation]);
   const confirmPiningLocationHandler = useCallback(async () => {
     console.log("confirmPiningLocationHandler")
     try {
       const location = await confirmPiningLocation();
-      const resp = await fetch(
-        `https://revgeocode.search.hereapi.com/v1/revgeocode?at=${location.latitude},${location.longitude}&types=street&limit=5&apiKey=mRASkFtnRqYimoHBzud5-kSsj0y_FvqR-1jwJHrfUvQ&showMapReferences=pointAddress&show=streetInfo`
-      );
-      const respJson = await resp.json();
+      const streetInfo = await getCoordinateAddress(location.latitude, location.longitude);
 
-      if (respJson.items.length > 0) {
-        const streetInfo = `${respJson.items[0].address.street.replace('Calle ', '')} e/ ${respJson.items[1].address.street.replace('Calle ', '')} y ${respJson.items[2].address.street.replace('Calle ', '')}, ${respJson.items[2].address.district}, Habana, Cuba`;
-
+      if (streetInfo) {
         if (piningInput === 'origin') {
           originInputViewRef.current?.setAddressText(streetInfo);
           setPinedInfo({
@@ -273,16 +285,7 @@ export const BottomSheetContent = ({
           } else if (piningMarker?.icon === "work") {
 
           } else {
-            /* setUserMarkers([...userMarkers, 
-              { 
-                id: userMarkers.length.toString(), 
-                name: piningMarker ?? respJson.items[0].address.street, 
-                coords: location,
-                icon: {
-                  name: piningMarker,
-                  type: "FontAwesome6",
-                } 
-            }]) */
+
           }
           setCurrentStep(ClientSteps.PINNING + 1)
 
@@ -299,7 +302,7 @@ export const BottomSheetContent = ({
       setPiningInput(null)
       setPiningMarker(null)
     }
-  }, [confirmPiningLocation, piningInput, pinedInfo, piningMarker, originInputViewRef, destinationInputViewRef]);
+  }, [getCoordinateAddress, confirmPiningLocation, piningInput, pinedInfo, piningMarker, originInputViewRef, destinationInputViewRef]);
   const cancelRideInnerHandler = useCallback(() => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     // setPinedInfo({
@@ -313,14 +316,15 @@ export const BottomSheetContent = ({
     // setRouteInfo(null);
     // setSelectedTaxiType(null)
     // collapse();
-  }, [cancelTaxi]);;
+  }, [cancelTaxi]);
 
   const goBackToSearch = useCallback(() => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     // expand()
-    setSelectedTaxiType(null)
+    // setSelectedTaxiType(null)
     setPiningInput(null)
     setPiningMarker(null)
+    cancelPiningLocation()
     setCurrentStep(ClientSteps.SEARCH);
     /* if (pinedInfo?.origin) {
       originInputViewRef.current?.setAddressText(pinedInfo.origin.address);
@@ -328,23 +332,76 @@ export const BottomSheetContent = ({
     if (pinedInfo?.destination) {
       destinationInputViewRef.current?.setAddressText(pinedInfo.destination.address);
     } */
-    fetchOrigin()
-  }, [fetchOrigin/* , originInputViewRef, destinationInputViewRef, pinedInfo */]);;
+    // fetchOrigin()
+  }, [/* fetchOrigin, originInputViewRef, destinationInputViewRef, pinedInfo */]);;
   const goToPinnedRouteTaxi = useCallback(() => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     // snapToIndex(1)
     setCurrentStep(ClientSteps.TAXI);
   }, []);
 
-  const addMarkerHandler = useCallback((addingMarker?: AddMarker) => {
+  const startEditingMarkers = useCallback(() => {
+    setEditingMarkers(true)
+  }, [])
+  const endEditingMarkers = useCallback(() => {
+    setEditingMarkers(false)
+  }, [])
+
+  const startAddingMarkerHandler = useCallback((addingMarker?: AddMarker) => {
     // snapToIndex(1)
     if (piningInput) {
     } else {
       LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-      setPiningMarker(addingMarker ?? {})
+      setPiningMarker(addingMarker ?? {});
       setCurrentStep(ClientSteps.PINNING);
     }
   }, [piningInput]);
+  const selectMarkerHandler = useCallback((selectedMarker?: UserMarkerIconType) => {
+    // snapToIndex(1)
+    if (piningInput) {
+      if (piningInput === "destination") {
+        selectedMarker?.coords.address && destinationInputViewRef.current?.setAddressText(selectedMarker.coords.address);
+        setPinedInfo({
+          origin: pinedInfo?.origin ?? null,
+          destination: selectedMarker?.coords ?? null,
+        });
+      } else if (piningInput === "origin") {
+        selectedMarker?.coords.address && originInputViewRef.current?.setAddressText(selectedMarker.coords.address);
+        setPinedInfo({
+          origin: selectedMarker?.coords ?? null,
+          destination: pinedInfo?.destination ?? null,
+        });
+      }
+    } else {
+    }
+  }, [piningInput]);
+  const addMarkerHandler = useCallback(async () => {
+    if (piningMarker) {
+      const location = await confirmPiningLocation();
+      const streetInfo = await getCoordinateAddress(location.latitude, location.longitude);
+      streetInfo && await setUserMarkers([...userMarkers, {
+        id: userMarkers.length.toString(),
+        name: piningMarker.name ?? "Anonymous",
+        coords: {
+          ...location,
+          address: streetInfo,
+        },
+        icon: {
+          name: piningMarker.icon ?? "anonymous",
+          type: "MCI",
+        }
+      }])
+      goBackToSearch();
+    } else {
+      throw new Error("Can't add marker if not pinning")
+    }
+  }, [confirmPiningLocation, getCoordinateAddress, piningMarker, userMarkers, goBackToSearch]);
+  const deleteMarkerHandler = useCallback(async (deletingMarker: UserMarkerIconType) => {
+    await setUserMarkers(userMarkers.filter(marker => marker.id !== deletingMarker.id))
+    if (userMarkers.length === 0) {
+      endEditingMarkers()
+    }
+  }, [userMarkers, endEditingMarkers]);
 
   return (
     <BottomSheetView className="flex-1 bg-[#F8F8F8] dark:bg-[#1b1b1b]">
@@ -358,11 +415,13 @@ export const BottomSheetContent = ({
               </ScaleBtn>
               <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-bold text-xl">Añadiendo Marcador</Text>
             </View>
+            <ScaleBtn onPress={pickMarkerImage}>
+              <MaterialCommunityIcons name="file-image-marker" size={28} color={Colors[colorScheme ?? "light"].icons_link} />
+            </ScaleBtn>
             {/* <Text className="text-[#21288a] dark:text-[#766acd] font-bold text-xl">mas</Text> */}
           </View>
-          <View className='pl-[5%]- pr-[3%]- h-[5rem] mt-3 rounded-lg bg-[#E9E9E9] dark:bg-[#333333] overflow-hidden shadow'>
+          {/* <View className='pl-[5%]- pr-[3%]- h-[5rem] mt-3 rounded-lg bg-[#E9E9E9] dark:bg-[#333333] overflow-hidden shadow'>
             <ScrollView contentContainerClassName='flex-row p-3 gap-5 self-center' horizontal showsHorizontalScrollIndicator={false}>
-
 
               {Object.entries(ColorsPalettes).map(([colorName, colorShades]) => {
                 return (
@@ -381,18 +440,8 @@ export const BottomSheetContent = ({
                 );
               })}
 
-
-
             </ScrollView>
-          </View>
-          <View className='flex-row justify-between mt-3'>
-            <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-bold text-xl">Favoritos</Text>
-
-            {/* <ScaleBtn onPress={pickMarkerImage}>
-              <MaterialCommunityIcons name="file-image-marker" size={28} color={Colors[colorScheme ?? "light"].icons_link} />
-            </ScaleBtn> */}
-            {/* <Text className="text-[#21288a] dark:text-[#766acd] font-bold text-xl">mas</Text> */}
-          </View>
+          </View> */}
           <View className='pl-[5%]- pr-[3%]- h-[10rem] mt-3 rounded-lg bg-[#E9E9E9] dark:bg-[#333333] overflow-hidden shadow'>
             <ScrollView contentContainerClassName='flex-wrap p-3 gap-5 flex-row self-center' showsHorizontalScrollIndicator={false}>
               {selectableMarkerIcons.map((markerIcon) => {
@@ -414,13 +463,12 @@ export const BottomSheetContent = ({
                       size={34}
                       color={piningMarker?.icon === markerIcon.name ? (colorScheme === "light" ? "#D8D8D8" : "#444444") : (colorScheme === "light" ? "#444444" : "#D8D8D8")}
                     />
-
                   </ScaleBtn>
                 );
               })}
             </ScrollView>
           </View>
-          <ScaleBtn className="mt-5 w-full gap-3" onPress={() => cancelRideInnerHandler()}>
+          <ScaleBtn className="mt-5 w-full gap-3" onPress={addMarkerHandler}>
             <View className="h-18 flex-row items-center justify-center bg-[#25D366] dark:bg-[#137136] rounded-xl p-3">
               <Text className="text-white font-bold text-xl">Guardar</Text>
             </View>
@@ -764,6 +812,7 @@ export const BottomSheetContent = ({
               </ScaleBtn>
             </View>
           } */}
+
           {currentStep === ClientSteps.PINNING && piningLocation &&
             <ScaleBtn containerStyle={{ flex: 1 }} className="mx-1.5 mt-5" onPress={confirmPiningLocationHandler}>
               <View className="h-18 flex-row items-center justify-center bg-[#25D366] dark:bg-[#137136] rounded-xl p-3">
@@ -777,7 +826,9 @@ export const BottomSheetContent = ({
               <View className="mx-1.5 mt-7 overflow-visible">
                 <View className='flex-row justify-between'>
                   <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-bold text-xl">Favoritos</Text>
-                  {/* <Text className="text-[#21288a] dark:text-[#766acd] font-bold text-xl">mas</Text> */}
+                  {userMarkers.length > 0 && <ScaleBtn onPress={editingMarkers ? endEditingMarkers : startEditingMarkers}>
+                    <Text className="text-[#21288a] dark:text-[#766acd] font-bold text-xl">{editingMarkers ? "done" : "editar"}</Text>
+                  </ScaleBtn>}
                 </View>
 
                 <View className='py-3 pl-[5%]- pr-[3%]- mt-3 rounded-lg bg-[#E9E9E9] dark:bg-[#333333] overflow-hidden shadow'>
@@ -788,18 +839,17 @@ export const BottomSheetContent = ({
 
                         if (userMarkers.length === 0 || !userMarker) {
                           return (
-                            <DefaultMarkerRowItem key={defaultMarker.icon} addHandler={addMarkerHandler} defaultMarker={defaultMarker} />
+                            <DefaultMarkerRowItem key={defaultMarker.icon} addHandler={startAddingMarkerHandler} defaultMarker={defaultMarker} />
                           )
                         } else {
                           return (
-                            <UserMarkerRowItem key={userMarker.id} userMarker={userMarker} addHandler={addMarkerHandler} />
+                            <UserMarkerRowItem key={userMarker.id} userMarker={userMarker} pressHandler={selectMarkerHandler} editingMarkers={editingMarkers} deleteHandler={deleteMarkerHandler} />
                           )
                         }
                       })
                     }
                   </ScrollView>
                 </View>
-
               </View>
 
               <View className="mx-1.5 mt-5 overflow-visible">
@@ -824,7 +874,6 @@ export const BottomSheetContent = ({
                     }
                   </ScrollView>
                 </View>
-
               </View>
             </>
           }
@@ -935,23 +984,78 @@ const RidesHistoryItem = ({ ride }: { ride: DBRide }) => {
   )
 }
 
-const UserMarkerRowItem = ({ userMarker, color, bgColor, addHandler }: { userMarker: UserMarkerIconType, addHandler: (addingMarker?: AddMarker) => void, color?: string, bgColor?: string }) => {
+const UserMarkerRowItem = ({ userMarker, color, bgColor, pressHandler, editingMarkers, deleteHandler }: { userMarker: UserMarkerIconType, pressHandler: (addingMarker: UserMarkerIconType) => void, color?: string, bgColor?: string, editingMarkers: boolean, deleteHandler: (deletingMarker: UserMarkerIconType) => void }) => {
 
+  const shakeAnimatedValue = React.useRef(new Animated.Value(0)).current;
   const colorScheme = useColorScheme();
 
-  // 1c1818
+  const pressInnerHandler = useCallback(() => {
+    if (editingMarkers) {
+      console.warn("case not handled")
+    } else {
+      pressHandler(userMarker)
+    }
+  }, [editingMarkers, userMarker, pressHandler])
+  const deleteInnerHandler = useCallback(() => {
+    if (editingMarkers) {
+      deleteHandler(userMarker)
+    } else {
+      console.warn("case not handled")
+    }
+  }, [editingMarkers, userMarker, deleteHandler])
+
+  const startShaking = () => {
+    Animated.loop(
+      Animated.timing(shakeAnimatedValue, {
+        toValue: 1,
+        duration: 300,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    ).start();
+  };
+  const stopShaking = () => {
+    shakeAnimatedValue.stopAnimation();
+    shakeAnimatedValue.setValue(0);
+  };
+  useEffect(() => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    if (editingMarkers) {
+      startShaking();
+    } else {
+      stopShaking();
+    }
+  }, [editingMarkers]);
+
+
   return (
-    <View className='ml-5 items-center justify-center' key={userMarker.id}>
-      <ScaleBtn
-        style={{ backgroundColor: bgColor ?? Colors[colorScheme ?? 'light'].border_light }}
-        className="w-[64px] h-[64px] rounded-full bg-[#D8D8D8] dark:bg-[#444444]- items-center justify-center"
-        onPress={addHandler}>
-        <FontAwesome6
-          name={userMarker.icon.name}
-          size={24}
-          color={color ?? Colors[colorScheme ?? 'light'].icons}
-        />
-      </ScaleBtn>
+    <View className='relative ml-5 items-center justify-center' key={userMarker.id}>
+      <Animated.View className={""}
+        style={{
+          transform: [
+            {
+              rotate: shakeAnimatedValue.interpolate({
+                inputRange: [0, 0.25, 0.5, 0.75, 1],
+                outputRange: ["0deg", "5deg", "-5deg", "5deg", "0deg"],
+              }),
+            },
+          ],
+        }}>
+        <ScaleBtn
+          style={{ backgroundColor: bgColor ?? Colors[colorScheme ?? 'light'].border_light }}
+          className="w-[64px] h-[64px] rounded-full bg-[#D8D8D8] dark:bg-[#444444]- items-center justify-center"
+          onPress={pressInnerHandler}>
+          <MaterialCommunityIcons
+            // @ts-ignore
+            name={userMarker.icon.name}
+            size={38}
+            color={color ?? Colors[colorScheme ?? 'light'].icons}
+          />
+        </ScaleBtn>
+      </Animated.View>
+      {editingMarkers && <ScaleBtn onPress={deleteInnerHandler} containerStyle={{ position: "absolute", right: 0 }}>
+        <FontAwesome6 name="circle-minus" size={24} color={Colors[colorScheme ?? 'light'].delete} />
+      </ScaleBtn>}
       <View className='h-12 w-full'>
         <Text className="text-lg font-semibold text-center text-[#1b1b1b] dark:text-[#C1C0C9]">{userMarker.name}</Text>
       </View>
@@ -964,7 +1068,7 @@ const DefaultMarkerRowItem = ({ defaultMarker, color, bgColor, addHandler }: { d
   const colorScheme = useColorScheme();
   const shakeAnimatedValue = React.useRef(new Animated.Value(0)).current;
 
-  const startShake = () => {
+  const shortShake = () => {
     shakeAnimatedValue.setValue(0);
     Animated.timing(shakeAnimatedValue,
       {
@@ -985,7 +1089,7 @@ const DefaultMarkerRowItem = ({ defaultMarker, color, bgColor, addHandler }: { d
         style={{ backgroundColor: bgColor ?? Colors[colorScheme ?? 'light'].border_light }}
         className="w-[64px] h-[64px] rounded-full bg-[#D8D8D8]- dark:bg-[#444444]- items-center justify-center"
         onPress={() => {
-          startShake()
+          shortShake()
         }}>
         <MaterialCommunityIcons
           // @ts-ignore
