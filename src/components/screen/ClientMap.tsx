@@ -93,6 +93,7 @@ export default function ClientMap() {
     const [snapPoints, setSnapPoints] = useState<number[]>([195, 360, 550]);
     const animatedPosition = useSharedValue(0);
     const animatedIndex = useSharedValue(0);
+    const [sheetCurrentSnap, setSheetCurrentSnap] = useState(1);
     const sheetCurrentSnapRef = useRef(1);
     const bottomSheetModalRef = useRef<BottomSheetModal>(null);
 
@@ -107,7 +108,7 @@ export default function ClientMap() {
                 ),
             },
         ],
-    }), [snapPoints]);
+    }), [snapPoints, /* sheetCurrentSnapRef, animatedPosition, animatedIndex, sheetCurrentSnap */]);
 
     useEffect(() => {
         console.log(currentStep)
@@ -117,7 +118,7 @@ export default function ClientMap() {
                 break;
             case ClientSteps.PINNING:
                 if (piningLocation) setSnapPoints([270, 420])
-                else setSnapPoints([180, 305])
+                else setSnapPoints([180, 365, 690])
                 bottomSheetModalRef.current?.collapse()
                 break;
             case ClientSteps.TAXI:
@@ -159,7 +160,7 @@ export default function ClientMap() {
             latitudeDelta: 0.00922,
             longitudeDelta: 0.009121,
         });
-    }, []);
+    }, [sheetCurrentSnapRef]);
     const animateToActiveRoute = useCallback(() => {
         activeRoute &&
             animateToRegion(
@@ -479,7 +480,7 @@ export default function ClientMap() {
 
                     </MapView>
 
-                    {currentStep === ClientSteps.PINNING && (
+                    {currentStep === ClientSteps.PINNING && sheetCurrentSnap !== 2 && (
                         <View
                             style={{
                                 position: 'absolute',
@@ -520,7 +521,7 @@ export default function ClientMap() {
                                 </ScaleBtn> */}
                                 <View className='w-12'></View>
 
-                                {currentStep < ClientSteps.PICKUP &&
+                                {currentStep < ClientSteps.FINDING && currentStep !== ClientSteps.PINNING &&
                                     <ScaleBtn
                                         containerStyle={{}}
                                         disabled={findingRide || !selectedTaxiType}
@@ -589,6 +590,7 @@ export default function ClientMap() {
                             }
                             LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
                             sheetCurrentSnapRef.current = e;
+                            setSheetCurrentSnap(e)
                         }}
                         // enableDynamicSizing
                         android_keyboardInputMode="adjustResize"
@@ -634,6 +636,7 @@ export default function ClientMap() {
                         }}
                         backdropComponent={renderBackdrop}>
                         <BottomSheetContent
+                            sheetCurrentSnap={sheetCurrentSnap}
                             currentStep={currentStep}
                             setCurrentStep={setCurrentStep}
                             startPiningLocation={startPiningLocation}

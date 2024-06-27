@@ -2,7 +2,7 @@ import { MaterialCommunityIcons, FontAwesome6, AntDesign } from '@expo/vector-ic
 import { BottomSheetView, useBottomSheet } from '@gorhom/bottom-sheet';
 import { Image } from 'expo-image';
 import * as ExpoLocation from 'expo-location';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState, ComponentRef } from 'react';
 import {
   View,
   Text,
@@ -30,17 +30,17 @@ import {
   GooglePlaceDetail,
   GooglePlacesAutocompleteRef,
 } from '~/lib/google-places-autocomplete/GooglePlacesAutocomplete';
-import type { TaxiType } from '~/constants/TaxiTypes';
-import { polylineDecode } from '~/utils/directions';
-import { taxiTypesInfo } from '~/constants/TaxiTypes';
+import { type TaxiType, taxiTypesInfo } from '~/constants/TaxiTypes';
 import { ClientSteps, DBRide, RideInfo } from '~/constants/Configs';
+import { generateUniqueId } from '~/utils';
+import { getCoordinateAddress, polylineDecode } from '~/utils/directions';
 import { useUser } from '~/context/UserContext';
 import DashedLine from './DashedLine';
 import { useWSActions, useWSState } from '~/context/WSContext';
 import { userMarkersAtom } from '~/context/UserContext';
 import { selectableMarkerIcons, UserMarkerIconType } from '../markers/AddUserMarker';
 import TestRidesData from '~/constants/TestRidesData.json'
-import { generateUniqueId } from '~/utils';
+import FloatingLabelInput from '~/lib/floating-label-input';
 // import ColorsPalettes from '~/constants/ColorsPalettes.json'
 
 const DEFAULT_MARKERS = [{ name: "Trabajo", icon: "folder-marker" }, { name: "Casa", icon: "home-map-marker" }]
@@ -52,6 +52,7 @@ export type AddMarker = {
 }
 
 interface BottomSheetContentProps {
+  sheetCurrentSnap: number;
   currentStep: ClientSteps;
   setCurrentStep: React.Dispatch<ClientSteps>;
   setRideInfo: React.Dispatch<RideInfo | null>;
@@ -68,6 +69,7 @@ interface BottomSheetContentProps {
 }
 
 export const BottomSheetContent = ({
+  sheetCurrentSnap,
   currentStep,
   piningMarker,
   setPiningMarker,
@@ -85,7 +87,7 @@ export const BottomSheetContent = ({
   const colorScheme = useColorScheme();
   const { width, height } = useWindowDimensions();
   const { profile } = useUser()
-  // const { collapse, snapToIndex, expand } = useBottomSheet();
+  const { snapToPosition, snapToIndex, collapse, expand } = useBottomSheet();
   const { confirmedTaxi } = useWSState()
   const { cancelTaxi } = useWSActions()
   const [userMarkers, setUserMarkers] = useAtom(userMarkersAtom)
@@ -102,7 +104,9 @@ export const BottomSheetContent = ({
     duration: { value: number; text: string };
   } | null>(null);
   const [markerImage, setMarkerImage] = useState<ImagePicker.ImagePickerResult | null>(null);
+  const [markerName, setMarkerName] = useState<string | null>(null);
 
+  const markerNameInputViewRef = useRef<ComponentRef<typeof FloatingLabelInput>>(null);
   const originInputViewRef = useRef<GooglePlacesAutocompleteRef>(null);
   const destinationInputViewRef = useRef<GooglePlacesAutocompleteRef>(null);
   const markerShakeAnimatedValue = React.useRef(new Animated.Value(0)).current;
@@ -138,6 +142,13 @@ export const BottomSheetContent = ({
     }
   }, [piningInput, originShakeAnimatedValue, destinationShakeAnimatedValue])
 
+
+  useEffect(() => {
+    if (sheetCurrentSnap === 2) {
+      markerNameInputViewRef.current?.focus()
+    }
+    if (editingMarkers) endEditingMarkers()
+  }, [sheetCurrentSnap]);
   useEffect(() => {
     if (confirmedTaxi) {
       LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -253,19 +264,6 @@ export const BottomSheetContent = ({
     }
   }, [getCurrentPositionAsync, originInputViewRef, pinedInfo]);
 
-  const getCoordinateAddress = useCallback(async (latitude: number, longitude: number) => {
-    const resp = await fetch(
-      `https://revgeocode.search.hereapi.com/v1/revgeocode?at=${latitude},${longitude}&types=street&limit=5&apiKey=mRASkFtnRqYimoHBzud5-kSsj0y_FvqR-1jwJHrfUvQ&showMapReferences=pointAddress&show=streetInfo`
-    );
-    const addressRes = await resp.json();
-    if (addressRes.items.length > 0) {
-      const streetInfo = `${addressRes.items[0].address.street.replace('Calle ', '')} e/ ${addressRes.items[1].address.street.replace('Calle ', '')} y ${addressRes.items[2].address.street.replace('Calle ', '')}, ${addressRes.items[2].address.district}, Habana, Cuba`;
-      return streetInfo;
-    } else {
-      return null;
-    }
-  }, [])
-
   const startPiningLocationHandler = useCallback(() => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     // collapse();
@@ -281,6 +279,7 @@ export const BottomSheetContent = ({
     setSelectedTaxiType(null)
     setPiningInput(null)
     setPiningMarker(null)
+    setMarkerName(null)
     setCurrentStep(ClientSteps.SEARCH);
   }, [cancelPiningLocation]);
   const confirmPiningLocationHandler = useCallback(async () => {
@@ -336,7 +335,7 @@ export const BottomSheetContent = ({
       setPiningInput(null)
       setPiningMarker(null)
     }
-  }, [getCoordinateAddress, confirmPiningLocation, piningInput, pinedInfo, piningMarker, originInputViewRef, destinationInputViewRef]);
+  }, [confirmPiningLocation, piningInput, pinedInfo, piningMarker, originInputViewRef, destinationInputViewRef]);
   const cancelRideInnerHandler = useCallback(() => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     // setPinedInfo({
@@ -358,6 +357,7 @@ export const BottomSheetContent = ({
     // setSelectedTaxiType(null)
     setPiningInput(null)
     setPiningMarker(null)
+    setMarkerName(null)
     cancelPiningLocation()
     setCurrentStep(ClientSteps.SEARCH);
     /* if (pinedInfo?.origin) {
@@ -375,9 +375,13 @@ export const BottomSheetContent = ({
   }, []);
 
   const startEditingMarkers = useCallback(() => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setEditingMarkers(true)
-  }, [])
+    if (piningInput) {
+      inputsShake()
+    } else {
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+      setEditingMarkers(true)
+    }
+  }, [inputsShake])
   const endEditingMarkers = useCallback(() => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setEditingMarkers(false)
@@ -392,26 +396,23 @@ export const BottomSheetContent = ({
       setPiningMarker(addingMarker ?? null);
       setCurrentStep(ClientSteps.PINNING);
     }
-  }, [piningInput]);
+  }, [piningInput, inputsShake]);
   const selectMarkerHandler = useCallback((selectedMarker?: UserMarkerIconType) => {
     // snapToIndex(1)
-    if (piningInput) {
-      if (piningInput === "destination") {
-        selectedMarker?.coords.address && destinationInputViewRef.current?.setAddressText(selectedMarker.coords.address);
-        setPinedInfo({
-          origin: pinedInfo?.origin ?? null,
-          destination: selectedMarker?.coords ?? null,
-        });
-      } else if (piningInput === "origin") {
-        selectedMarker?.coords.address && originInputViewRef.current?.setAddressText(selectedMarker.coords.address);
-        setPinedInfo({
-          origin: selectedMarker?.coords ?? null,
-          destination: pinedInfo?.destination ?? null,
-        });
-      }
+    if (piningInput === "origin") {
+      selectedMarker?.coords.address && originInputViewRef.current?.setAddressText(selectedMarker.coords.address);
+      setPinedInfo({
+        origin: selectedMarker?.coords ?? null,
+        destination: pinedInfo?.destination ?? null,
+      });
     } else {
+      selectedMarker?.coords.address && destinationInputViewRef.current?.setAddressText(selectedMarker.coords.address);
+      setPinedInfo({
+        origin: pinedInfo?.origin ?? null,
+        destination: selectedMarker?.coords ?? null,
+      });
     }
-  }, [piningInput]);
+  }, [piningInput, pinedInfo, destinationInputViewRef, originInputViewRef]);
   const addMarkerHandler = useCallback(async () => {
     if (piningMarker) {
       const iconDefaultMarker = selectableMarkerIcons.find(marker => marker.icon === piningMarker.icon)
@@ -422,9 +423,10 @@ export const BottomSheetContent = ({
       }
       const location = await confirmPiningLocation();
       const streetInfo = await getCoordinateAddress(location.latitude, location.longitude);
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
       streetInfo && await setUserMarkers([...userMarkers, {
         id: generateUniqueId(),
-        name: piningMarker.name ?? iconDefaultMarker?.name ?? "Anonymous",
+        name: markerName ?? piningMarker.name ?? iconDefaultMarker?.name ?? "Anonymous",
         coords: {
           ...location,
           address: streetInfo,
@@ -438,9 +440,10 @@ export const BottomSheetContent = ({
     } else {
       emptyMarkerShake()
     }
-  }, [confirmPiningLocation, getCoordinateAddress, piningMarker, userMarkers, goBackToSearch]);
+  }, [confirmPiningLocation, markerName, piningMarker, userMarkers, goBackToSearch, emptyMarkerShake]);
   const deleteMarkerHandler = useCallback(async (deletingMarker: UserMarkerIconType) => {
     const newUserMarkers = userMarkers.filter(marker => marker.id !== deletingMarker.id);
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     await setUserMarkers(newUserMarkers)
     if (newUserMarkers.length === 0) {
       console.log("ended editing marker bc lack of user markers")
@@ -460,9 +463,9 @@ export const BottomSheetContent = ({
               </ScaleBtn>
               <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-bold text-xl">Añadiendo Marcador</Text>
             </View>
-            <ScaleBtn onPress={pickMarkerImage}>
+            {/* <ScaleBtn onPress={pickMarkerImage}>
               <MaterialCommunityIcons name="file-image-marker" size={28} color={Colors[colorScheme ?? "light"].icons_link} />
-            </ScaleBtn>
+            </ScaleBtn> */}
             {/* <Text className="text-[#21288a] dark:text-[#766acd] font-bold text-xl">mas</Text> */}
           </View>
           {/* <View className='pl-[5%]- pr-[3%]- h-[5rem] mt-3 rounded-lg bg-[#E9E9E9] dark:bg-[#333333] overflow-hidden shadow'>
@@ -487,6 +490,51 @@ export const BottomSheetContent = ({
 
             </ScrollView>
           </View> */}
+
+          <View className='pl-[5%]- pr-[3%]- h-[3rem]- mt-3 rounded-lg bg-[#E9E9E9]- dark:bg-[#333333]- overflow-hidden shadow'>
+            <FloatingLabelInput
+              label={"Nombre del Marcador"}
+              value={markerName ?? undefined}
+              onChangeText={value => setMarkerName(value)}
+              onFocus={() => {
+                snapToIndex(2);
+              }}
+              onBlur={() => {
+                snapToIndex(1);
+              }}
+              ref={markerNameInputViewRef}
+
+              containerStyles={{
+                height: 52,
+                // borderWidth: 2,
+                paddingHorizontal: 10,
+                backgroundColor: Colors[colorScheme ?? "light"].background_light1,
+                // borderColor: 'blue',
+                borderRadius: 8,
+              }}
+              customLabelStyles={{
+                colorFocused: Colors[colorScheme ?? "light"].border,
+                colorBlurred: Colors[colorScheme ?? "light"].border,
+                fontSizeFocused: 12,
+                fontSizeBlurred: 18,
+              }}
+              labelStyles={{
+                backgroundColor: "transparent",
+                paddingHorizontal: 5,
+              }}
+              inputStyles={{
+                marginTop: 8,
+                color: Colors[colorScheme ?? 'light'].text_dark,
+                paddingHorizontal: 10,
+
+                fontWeight: '400',
+                borderRadius: 10,
+                fontSize: 18,
+                textAlignVertical: 'bottom',
+              }}
+            />
+          </View>
+
           <Animated.View style={{
             transform: [{
               translateX: markerShakeAnimatedValue.interpolate({
@@ -503,7 +551,7 @@ export const BottomSheetContent = ({
                     style={{ backgroundColor: Colors[colorScheme ?? "light"].border_light }}
                     onPress={() => {
                       LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-                      setPiningMarker({ ...piningMarker, icon: markerIcon.name })
+                      setPiningMarker({ ...piningMarker, icon: markerIcon.icon })
                     }}
                     className='rounded-full w-14 h-14 items-center justify-center'
                   >
@@ -520,6 +568,7 @@ export const BottomSheetContent = ({
               })}
             </ScrollView>
           </Animated.View>
+
           <ScaleBtn className="mt-5 w-full gap-3" onPress={addMarkerHandler}>
             <View className="h-18 flex-row items-center justify-center bg-[#25D366] dark:bg-[#137136] rounded-xl p-3">
               <Text className="text-white font-bold text-xl">Guardar</Text>
@@ -686,6 +735,7 @@ export const BottomSheetContent = ({
                       onFocus: () => {
                         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
                         if (piningLocation) cancelPiningLocationHandler();
+                        if (editingMarkers) endEditingMarkers();
                         setViewPinOnMap(true);
                         setPiningInput('origin');
                       },
@@ -797,6 +847,7 @@ export const BottomSheetContent = ({
                       onFocus: () => {
                         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
                         if (piningLocation) cancelPiningLocationHandler();
+                        if (editingMarkers) endEditingMarkers();
                         setViewPinOnMap(true);
                         setPiningInput('destination');
                       },
@@ -909,6 +960,9 @@ export const BottomSheetContent = ({
                         const userMarker = userMarkers.find(item => item.name === defaultMarker.name)
 
                         if (userMarkers.length === 0 || !userMarker) {
+                          if (editingMarkers) {
+                            return null
+                          }
                           return (
                             <DefaultMarkerRowItem key={defaultMarker.icon} addHandler={startAddingMarkerHandler} defaultMarker={defaultMarker} />
                           )
@@ -947,6 +1001,7 @@ export const BottomSheetContent = ({
                         </View>
                       </View>
                     }
+                    <View className='w-3'></View>
                   </ScrollView>
                 </View>
               </View>

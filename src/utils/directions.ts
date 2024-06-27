@@ -16,6 +16,19 @@ export const getAddress = async (latitude: number, longitude: number) => {
   return streets;
 };
 
+export const getCoordinateAddress = async (latitude: number, longitude: number) => {
+  const resp = await fetch(
+    `https://revgeocode.search.hereapi.com/v1/revgeocode?at=${latitude},${longitude}&types=street&limit=5&apiKey=mRASkFtnRqYimoHBzud5-kSsj0y_FvqR-1jwJHrfUvQ&showMapReferences=pointAddress&show=streetInfo`
+  );
+  const addressRes = await resp.json();
+  if (addressRes.items.length > 0) {
+    const streetInfo = `${addressRes.items[0].address.street.replace('Calle ', '')} e/ ${addressRes.items[1].address.street.replace('Calle ', '')} y ${addressRes.items[2].address.street.replace('Calle ', '')}, ${addressRes.items[2].address.district}, Habana, Cuba`;
+    return streetInfo;
+  } else {
+    return null;
+  }
+};
+
 export const getDirections = async (startLoc: string, destinationLoc: string) => {
   try {
     const resp = await fetch(
