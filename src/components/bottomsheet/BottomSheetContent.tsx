@@ -14,7 +14,8 @@ import {
   ScrollView,
   ColorValue,
   Animated,
-  Easing
+  Easing,
+  Alert
 } from 'react-native';
 import type { Address, LatLng } from 'react-native-maps';
 import { useAtom } from 'jotai/react';
@@ -39,7 +40,10 @@ import { useWSActions, useWSState } from '~/context/WSContext';
 import { userMarkersAtom } from '~/context/UserContext';
 import { selectableMarkerIcons, UserMarkerIconType } from '../markers/AddUserMarker';
 import TestRidesData from '~/constants/TestRidesData.json'
+import { generateUniqueId } from '~/utils';
 // import ColorsPalettes from '~/constants/ColorsPalettes.json'
+
+const DEFAULT_MARKERS = [{ name: "Trabajo", icon: "folder-marker" }, { name: "Casa", icon: "home-map-marker" }]
 
 export type AddMarker = {
   name?: string;
@@ -371,9 +375,11 @@ export const BottomSheetContent = ({
   }, []);
 
   const startEditingMarkers = useCallback(() => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setEditingMarkers(true)
   }, [])
   const endEditingMarkers = useCallback(() => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setEditingMarkers(false)
   }, [])
 
@@ -381,7 +387,6 @@ export const BottomSheetContent = ({
     // snapToIndex(1)
     if (piningInput) {
       inputsShake()
-      console.warn("case not handled yet", piningInput)
     } else {
       LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
       setPiningMarker(addingMarker ?? null);
@@ -409,11 +414,17 @@ export const BottomSheetContent = ({
   }, [piningInput]);
   const addMarkerHandler = useCallback(async () => {
     if (piningMarker) {
+      const iconDefaultMarker = selectableMarkerIcons.find(marker => marker.icon === piningMarker.icon)
+      const existentMarker = userMarkers.find(marker => ((marker.icon.name === piningMarker.icon) && (marker.name === piningMarker.name || !piningMarker.name)));
+      if (existentMarker) {
+        Alert.alert("Marcador Repetido", "Ya tienes un markador con el ícono y nombre seleccionado")
+        return;
+      }
       const location = await confirmPiningLocation();
       const streetInfo = await getCoordinateAddress(location.latitude, location.longitude);
       streetInfo && await setUserMarkers([...userMarkers, {
-        id: userMarkers.length.toString(),
-        name: piningMarker.name ?? "Anonymous",
+        id: generateUniqueId(),
+        name: piningMarker.name ?? iconDefaultMarker?.name ?? "Anonymous",
         coords: {
           ...location,
           address: streetInfo,
@@ -429,8 +440,10 @@ export const BottomSheetContent = ({
     }
   }, [confirmPiningLocation, getCoordinateAddress, piningMarker, userMarkers, goBackToSearch]);
   const deleteMarkerHandler = useCallback(async (deletingMarker: UserMarkerIconType) => {
-    await setUserMarkers(userMarkers.filter(marker => marker.id !== deletingMarker.id))
-    if (userMarkers.length === 0) {
+    const newUserMarkers = userMarkers.filter(marker => marker.id !== deletingMarker.id);
+    await setUserMarkers(newUserMarkers)
+    if (newUserMarkers.length === 0) {
+      console.log("ended editing marker bc lack of user markers")
       endEditingMarkers()
     }
   }, [userMarkers, endEditingMarkers]);
@@ -486,7 +499,7 @@ export const BottomSheetContent = ({
               {selectableMarkerIcons.map((markerIcon) => {
                 return (
                   <ScaleBtn
-                    key={markerIcon.name}
+                    key={markerIcon.icon}
                     style={{ backgroundColor: Colors[colorScheme ?? "light"].border_light }}
                     onPress={() => {
                       LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -498,7 +511,7 @@ export const BottomSheetContent = ({
                     <MaterialCommunityIcons
                       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                       // @ts-ignore
-                      name={markerIcon.name}
+                      name={markerIcon.icon}
                       size={34}
                       color={piningMarker?.icon === markerIcon.name ? (colorScheme === "light" ? "#D8D8D8" : "#444444") : (colorScheme === "light" ? "#444444" : "#D8D8D8")}
                     />
@@ -890,9 +903,9 @@ export const BottomSheetContent = ({
                 </View>
 
                 <View className='py-3 pl-[5%]- pr-[3%]- mt-3 rounded-lg bg-[#E9E9E9] dark:bg-[#333333] overflow-hidden shadow'>
-                  <ScrollView keyboardShouldPersistTaps="always" horizontal className="w-100 overflow-visible">
+                  <ScrollView keyboardShouldPersistTaps="always" showsHorizontalScrollIndicator={false} horizontal className="w-100 overflow-visible">
                     {
-                      [{ name: "Trabajo", icon: "folder-marker" }, { name: "Casa", icon: "home-map-marker" }].map((defaultMarker) => {
+                      DEFAULT_MARKERS.map((defaultMarker) => {
                         const userMarker = userMarkers.find(item => item.name === defaultMarker.name)
 
                         if (userMarkers.length === 0 || !userMarker) {
@@ -904,6 +917,13 @@ export const BottomSheetContent = ({
                             <UserMarkerRowItem key={userMarker.id} userMarker={userMarker} pressHandler={selectMarkerHandler} editingMarkers={editingMarkers} deleteHandler={deleteMarkerHandler} />
                           )
                         }
+                      })
+                    }
+                    {
+                      userMarkers.filter(marker => !DEFAULT_MARKERS.find(m => m.icon === marker.icon.name)).map((userMarker) => {
+                        return (
+                          <UserMarkerRowItem key={userMarker.id} userMarker={userMarker} pressHandler={selectMarkerHandler} editingMarkers={editingMarkers} deleteHandler={deleteMarkerHandler} />
+                        )
                       })
                     }
                     {
@@ -1160,7 +1180,7 @@ const DefaultMarkerRowItem = ({ defaultMarker, color, bgColor, addHandler }: { d
   }
   const addInnerHandler = useCallback(() => {
     addHandler(defaultMarker)
-  }, [defaultMarker])
+  }, [addHandler, defaultMarker])
   // 1c1818
   return (
     <View className='ml-5 items-center justify-center' key={defaultMarker.icon}>

@@ -17,43 +17,53 @@ import { getData } from '~/lib/storage';
 export const selectableMarkerIcons = [
   {
     type: 'MCI',
-    name: 'folder-marker',
+    name: 'Trabajo',
+    icon: 'folder-marker',
   },
   {
     type: 'MCI',
-    name: 'home-map-marker',
+    name: 'Casa',
+    icon: 'home-map-marker',
   },
   {
     type: 'MCI',
     name: 'airplane-marker',
+    icon: 'airplane-marker',
   },
   {
     type: 'MCI',
     name: 'archive-marker',
+    icon: 'archive-marker',
   },
   {
     type: 'MCI',
     name: 'book-marker',
+    icon: 'book-marker',
   },
   {
     type: 'MCI',
     name: 'bus-marker',
+    icon: 'bus-marker',
   },
   {
     type: 'MCI',
     name: 'camera-marker',
+    icon: 'camera-marker',
   },
   {
     type: 'MCI',
     name: 'cash-marker',
+    icon: 'cash-marker',
   },
   {
     type: 'MCI',
     name: 'cellphone-marker',
+    icon: 'cellphone-marker',
   },
   {
     type: 'MCI',
     name: 'credit-card-marker',
+    icon: 'credit-card-marker',
   },
 ];
 
