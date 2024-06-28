@@ -583,7 +583,8 @@ export const GooglePlacesAutocomplete = forwardRef((props, ref) => {
         keyboardShouldPersistTaps={props.keyboardShouldPersistTaps}
         horizontal={true}
         showsHorizontalScrollIndicator={false}
-        showsVerticalScrollIndicator={false}>
+        showsVerticalScrollIndicator={false}
+      >
         <TouchableHighlight
           style={props.isRowScrollable ? { minWidth: '100%' } : { width: '100%' }}
           onPress={() => _onPress(rowData)}

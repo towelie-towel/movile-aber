@@ -786,13 +786,25 @@ export const BottomSheetContent = ({
                       },
                       listView: {
                         position: 'absolute',
+                        height: 150,
                         zIndex: 1000,
-                        backgroundColor: 'white',
+                        backgroundColor: Colors[colorScheme ?? 'light'].background_light,
                         borderRadius: 5,
                         flex: 1,
                         elevation: 3,
                         marginTop: 12,
+                        borderColor: Colors[colorScheme ?? 'light'].icons,
+                        borderWidth: 1
                       },
+                      row: {
+                        backgroundColor: Colors[colorScheme ?? 'light'].background_light1,
+                      },
+                      description: {
+                        color: Colors[colorScheme ?? 'light'].text_dark
+                      },
+                      separator: {
+                        backgroundColor: Colors[colorScheme ?? 'light'].icons
+                      }
                     }}
                     fetchDetails
                     query={{
@@ -898,13 +910,25 @@ export const BottomSheetContent = ({
                       },
                       listView: {
                         position: 'absolute',
-                        zIndex: 999,
-                        backgroundColor: 'white',
+                        maxHeight: 150,
+                        zIndex: 1000,
+                        backgroundColor: Colors[colorScheme ?? 'light'].background_light,
                         borderRadius: 5,
                         flex: 1,
                         elevation: 3,
                         marginTop: 12,
+                        borderColor: Colors[colorScheme ?? 'light'].icons,
+                        borderWidth: 1
                       },
+                      row: {
+                        backgroundColor: Colors[colorScheme ?? 'light'].background_light1,
+                      },
+                      description: {
+                        color: Colors[colorScheme ?? 'light'].text_dark
+                      },
+                      separator: {
+                        backgroundColor: Colors[colorScheme ?? 'light'].icons
+                      }
                     }}
                     fetchDetails
                     query={{

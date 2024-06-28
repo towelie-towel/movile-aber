@@ -97,19 +97,6 @@ export default function ClientMap() {
     const sheetCurrentSnapRef = useRef(1);
     const bottomSheetModalRef = useRef<BottomSheetModal>(null);
 
-    const topSheetBtnsAnimStyle = useAnimatedStyle(() => ({
-        transform: [
-            {
-                translateY: interpolate(
-                    animatedIndex.value,
-                    snapPoints.map((_, i) => i),
-                    snapPoints.map((item) => (item * -1) + 740),
-                    Extrapolation.CLAMP
-                ),
-            },
-        ],
-    }), [snapPoints, /* sheetCurrentSnapRef, animatedPosition, animatedIndex, sheetCurrentSnap */]);
-
     useEffect(() => {
         console.log(currentStep)
         switch (currentStep) {
@@ -149,6 +136,19 @@ export default function ClientMap() {
             bottomSheetModalRef.current?.dismiss();
         }
     }, [isSignedIn]);
+
+    const topSheetBtnsAnimStyle = useAnimatedStyle(() => ({
+        transform: [
+            {
+                translateY: interpolate(
+                    animatedIndex.value,
+                    snapPoints.map((_, i) => i),
+                    snapPoints.map((item) => (item * -1) + 740),
+                    Extrapolation.CLAMP
+                ),
+            },
+        ],
+    }), [snapPoints, /* sheetCurrentSnapRef, animatedPosition, animatedIndex, sheetCurrentSnap */]);
 
     const animateToUserLocation = useCallback(async () => {
         const position = await ExpoLocation.getCurrentPositionAsync({
