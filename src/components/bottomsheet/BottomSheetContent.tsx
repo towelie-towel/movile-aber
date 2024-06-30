@@ -15,7 +15,8 @@ import {
   ColorValue,
   Animated,
   Easing,
-  Alert
+  Alert,
+  ActivityIndicator
 } from 'react-native';
 import type { Address, LatLng } from 'react-native-maps';
 import { useAtom } from 'jotai/react';
@@ -33,7 +34,7 @@ import {
 import { type TaxiType, taxiTypesInfo } from '~/constants/TaxiTypes';
 import { ClientSteps, DBRide, RideInfo } from '~/constants/Configs';
 import { generateUniqueId } from '~/utils';
-import { getCoordinateAddress, polylineDecode } from '~/utils/directions';
+import { getCoordinateAddress, getDirections, polylineDecode } from '~/utils/directions';
 import { useUser } from '~/context/UserContext';
 import DashedLine from './DashedLine';
 import { useWSActions, useWSState } from '~/context/WSContext';
@@ -51,6 +52,11 @@ export type AddMarker = {
   color?: string;
 }
 
+/* 
+  endPiningLocation={endPiningLocation}
+  getMiddlePoint={getMiddlePoint}
+*/
+
 interface BottomSheetContentProps {
   sheetCurrentSnap: number;
   currentStep: ClientSteps;
@@ -58,8 +64,8 @@ interface BottomSheetContentProps {
   setRideInfo: React.Dispatch<RideInfo | null>;
   setActiveRoute: React.Dispatch<{ coords: LatLng[] } | null>;
   startPiningLocation: () => void;
-  cancelPiningLocation: () => void;
-  confirmPiningLocation: () => Promise<{ latitude: number; longitude: number }>;
+  endPiningLocation: () => void;
+  getMiddlePoint: () => Promise<{ latitude: number; longitude: number }>;
   piningLocation: boolean;
   piningMarker: AddMarker | null;
   setPiningMarker: React.Dispatch<AddMarker | null>;
@@ -79,8 +85,8 @@ export const BottomSheetContent = ({
   setActiveRoute,
   piningLocation,
   startPiningLocation,
-  cancelPiningLocation,
-  confirmPiningLocation,
+  endPiningLocation,
+  getMiddlePoint,
   selectedTaxiType,
   setSelectedTaxiType,
 }: BottomSheetContentProps) => {
@@ -105,6 +111,10 @@ export const BottomSheetContent = ({
   } | null>(null);
   const [markerImage, setMarkerImage] = useState<ImagePicker.ImagePickerResult | null>(null);
   const [markerName, setMarkerName] = useState<string | null>(null);
+
+  const [routeLoading, setRouteLoading] = useState(false);
+  const [originLoading, setOriginLoading] = useState(false);
+  const [destinationLoading, setDestinationLoading] = useState(false);
 
   const markerNameInputViewRef = useRef<ComponentRef<typeof FloatingLabelInput>>(null);
   const originInputViewRef = useRef<GooglePlacesAutocompleteRef>(null);
@@ -142,7 +152,6 @@ export const BottomSheetContent = ({
     }
   }, [piningInput, originShakeAnimatedValue, destinationShakeAnimatedValue])
 
-
   useEffect(() => {
     if (sheetCurrentSnap === 2) {
       markerNameInputViewRef.current?.focus()
@@ -163,58 +172,46 @@ export const BottomSheetContent = ({
         destinationInputViewRef.current?.setAddressText(pinedInfo.destination.address);
       }
     }
+    setOriginLoading(false)
+    setDestinationLoading(false)
+    setRouteLoading(false)
   }, [currentStep]);
   useEffect(() => {
-    const tokio = async () => {
-      if (pinedInfo?.destination && pinedInfo?.origin) {
-        const resp = await fetch(
-          `http://172.20.10.12:6942/route?from=${pinedInfo.origin.latitude},${pinedInfo.origin.longitude}&to=${pinedInfo.destination.latitude},${pinedInfo.destination.longitude}`
-        );
-        const respJson = await resp.json();
-        const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map(
-          (point) => ({ latitude: point[0]!, longitude: point[1]! })
-        );
+    handleActiveRouteTokio()
+  }, [pinedInfo])
 
+  const handleActiveRouteTokio = useCallback(async () => {
+    if (pinedInfo?.destination && pinedInfo?.origin) {
+      try {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+        setRouteLoading(true)
+        const { overview_polyline, decodedCoords, distance, duration } = await getDirections(`${pinedInfo.origin.latitude},${pinedInfo.origin.longitude}`, `${pinedInfo.destination.latitude},${pinedInfo.destination.longitude}`)
         // snapToIndex(1);
-        setActiveRoute({
-          coords: decodedCoords,
-        });
-        console.log("setActiveRoute", {
-          coords: decodedCoords,
-        })
-        setRouteInfo({
-          distance: respJson[0].legs[0].distance,
-          duration: respJson[0].legs[0].duration,
-        });
-
+        setActiveRoute({ coords: decodedCoords });
+        setRouteInfo({ distance: distance, duration: duration });
         setRideInfo({
           status: "pending",
           name: "Undefiend",
           client: profile!,
           origin: pinedInfo.origin,
           destination: pinedInfo.destination,
-          distance: respJson[0].legs[0].distance,
-          duration: respJson[0].legs[0].duration,
+          distance: distance,
+          duration: duration,
           price: 3000,
-          overview_polyline: respJson[0].overview_polyline,
-          // navigationInfo: respJson[0].legs[0],
-        })
-        console.log('Ride Info:', {
-          client: profile!,
-          origin: pinedInfo.origin,
-          destination: pinedInfo.destination,
-          distance: respJson[0].legs[0].distance,
-          duration: respJson[0].legs[0].duration,
-          price: 3000,
-          overview_polyline: respJson[0].overview_polyline,
+          overview_polyline: overview_polyline,
           // navigationInfo: respJson[0].legs[0],
         })
         // setCurrentStep(ClientSteps.TAXI)
+      } catch (error) {
+        if (error instanceof Error) {
+          console.error(error.message);
+        }
+      } finally {
+        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+        setRouteLoading(false)
       }
     }
-    tokio()
-  }, [pinedInfo])
+  }, [pinedInfo, profile])
 
   const pickMarkerImage = useCallback(async () => {
     // No permissions request is necessary for launching the image library
@@ -225,11 +222,7 @@ export const BottomSheetContent = ({
       quality: 1,
     });
 
-    console.log(result);
-
-    if (!result.canceled) {
-      setMarkerImage(result);
-    }
+    if (!result.canceled) setMarkerImage(result);
   }, []);
 
   const getCurrentPositionAsync = useCallback(async () => {
@@ -251,16 +244,25 @@ export const BottomSheetContent = ({
   }, []);
 
   const fetchOrigin = useCallback(async () => {
-    const currentPosition = await getCurrentPositionAsync();
+    try {
+      setOriginLoading(true)
+      const currentPosition = await getCurrentPositionAsync();
 
-    if (currentPosition) {
-      originInputViewRef.current?.setAddressText(currentPosition.address);
-      setPinedInfo({
-        origin: currentPosition,
-        destination: pinedInfo?.destination ?? null,
-      });
-    } else {
-      console.log('No street address found in the response.');
+      if (currentPosition) {
+        originInputViewRef.current?.setAddressText(currentPosition.address);
+        setPinedInfo({
+          origin: currentPosition,
+          destination: pinedInfo?.destination ?? null,
+        });
+      } else {
+        console.log('No street address found in the response.');
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error(error.message);
+      }
+    } finally {
+      setOriginLoading(false)
     }
   }, [getCurrentPositionAsync, originInputViewRef, pinedInfo]);
 
@@ -269,23 +271,30 @@ export const BottomSheetContent = ({
     // collapse();
     startPiningLocation();
     setCurrentStep(ClientSteps.PINNING);
+    setViewPinOnMap(false);
+    // setPiningInput(null);
     Keyboard.dismiss();
-    originInputViewRef.current?.blur();
-    destinationInputViewRef.current?.blur();
+    // originInputViewRef.current?.blur();
+    // destinationInputViewRef.current?.blur();
   }, [startPiningLocation, originInputViewRef, destinationInputViewRef]);
   const cancelPiningLocationHandler = useCallback(() => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    cancelPiningLocation();
+    endPiningLocation();
     setSelectedTaxiType(null)
     setPiningInput(null)
     setPiningMarker(null)
     setMarkerName(null)
     setCurrentStep(ClientSteps.SEARCH);
-  }, [cancelPiningLocation]);
+  }, [endPiningLocation]);
   const confirmPiningLocationHandler = useCallback(async () => {
-    console.log("confirmPiningLocationHandler")
+    if (piningInput === "origin") {
+      setOriginLoading(true)
+    } else {
+      setDestinationLoading(true)
+    }
+    setCurrentStep(ClientSteps.PINNING - 1)
     try {
-      const location = await confirmPiningLocation();
+      const location = await getMiddlePoint();
       const streetInfo = await getCoordinateAddress(location.latitude, location.longitude);
 
       if (streetInfo) {
@@ -295,9 +304,6 @@ export const BottomSheetContent = ({
             origin: { ...location, address: streetInfo },
             destination: pinedInfo?.destination ?? null,
           });
-          if (pinedInfo?.destination) {
-            setCurrentStep(ClientSteps.PINNING + 1)
-          }
         } else if (piningInput === 'destination') {
           destinationInputViewRef.current?.setAddressText(streetInfo);
           let originDestination = pinedInfo?.origin;
@@ -305,15 +311,10 @@ export const BottomSheetContent = ({
             originDestination = await getCurrentPositionAsync()
             originDestination && originInputViewRef.current?.setAddressText(originDestination.address);
           }
-          console.log("setPinedInfo", {
-            origin: originDestination ?? null,
-            destination: { ...location, address: streetInfo },
-          })
           setPinedInfo({
             origin: originDestination ?? null,
             destination: { ...location, address: streetInfo },
           });
-          setCurrentStep(ClientSteps.PINNING + 1)
         } else {
           if (piningMarker?.icon === "house") {
 
@@ -322,7 +323,6 @@ export const BottomSheetContent = ({
           } else {
 
           }
-          setCurrentStep(ClientSteps.PINNING + 1)
         }
       } else {
         throw new Error('No street address found in the response.');
@@ -332,10 +332,21 @@ export const BottomSheetContent = ({
         console.error(error.message);
       }
     } finally {
+      if (piningInput === "origin") {
+        setOriginLoading(false)
+      } else {
+        setDestinationLoading(false)
+      }
+      if (piningInput !== 'origin' || !pinedInfo?.destination) {
+        setCurrentStep(ClientSteps.PINNING + 1)
+      } else {
+        setCurrentStep(ClientSteps.PINNING - 1)
+      }
+      endPiningLocation()
       setPiningInput(null)
       setPiningMarker(null)
     }
-  }, [confirmPiningLocation, piningInput, pinedInfo, piningMarker, originInputViewRef, destinationInputViewRef]);
+  }, [getMiddlePoint, endPiningLocation, piningInput, pinedInfo, piningMarker, originInputViewRef, destinationInputViewRef]);
   const cancelRideInnerHandler = useCallback(() => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     // setPinedInfo({
@@ -358,7 +369,7 @@ export const BottomSheetContent = ({
     setPiningInput(null)
     setPiningMarker(null)
     setMarkerName(null)
-    cancelPiningLocation()
+    endPiningLocation()
     setCurrentStep(ClientSteps.SEARCH);
     /* if (pinedInfo?.origin) {
       originInputViewRef.current?.setAddressText(pinedInfo.origin.address);
@@ -416,12 +427,12 @@ export const BottomSheetContent = ({
   const addMarkerHandler = useCallback(async () => {
     if (piningMarker) {
       const iconDefaultMarker = selectableMarkerIcons.find(marker => marker.icon === piningMarker.icon)
-      const existentMarker = userMarkers.find(marker => ((marker.icon.name === piningMarker.icon) && (marker.name === piningMarker.name || !piningMarker.name)));
+      const existentMarker = userMarkers.find(marker => (/* (marker.icon.name === piningMarker.icon) &&  */(marker.name === piningMarker.name || !piningMarker.name)));
       if (existentMarker) {
         Alert.alert("Marcador Repetido", "Ya tienes un markador con el ícono y nombre seleccionado")
         return;
       }
-      const location = await confirmPiningLocation();
+      const location = await getMiddlePoint();
       const streetInfo = await getCoordinateAddress(location.latitude, location.longitude);
       LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
       streetInfo && await setUserMarkers([...userMarkers, {
@@ -440,7 +451,7 @@ export const BottomSheetContent = ({
     } else {
       emptyMarkerShake()
     }
-  }, [confirmPiningLocation, markerName, piningMarker, userMarkers, goBackToSearch, emptyMarkerShake]);
+  }, [getMiddlePoint, markerName, piningMarker, userMarkers, goBackToSearch, emptyMarkerShake]);
   const deleteMarkerHandler = useCallback(async (deletingMarker: UserMarkerIconType) => {
     const newUserMarkers = userMarkers.filter(marker => marker.id !== deletingMarker.id);
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -450,6 +461,33 @@ export const BottomSheetContent = ({
       endEditingMarkers()
     }
   }, [userMarkers, endEditingMarkers]);
+
+  const handleOriginMarkerTarget = useCallback(async (
+    data: GooglePlaceData,
+    _details: GooglePlaceDetail | null
+  ) => {
+    const targetMarker = userMarkers.find(marker => marker.name === data.description)
+    if (targetMarker) {
+      originInputViewRef.current?.setAddressText(targetMarker?.coords.address);
+      setPinedInfo({
+        origin: targetMarker.coords,
+        destination: pinedInfo?.destination ?? null,
+      });
+    }
+  }, [userMarkers, originInputViewRef, pinedInfo]);
+  const handleDestinationMarkerTarget = useCallback(async (
+    data: GooglePlaceData,
+    _details: GooglePlaceDetail | null
+  ) => {
+    const targetMarker = userMarkers.find(marker => marker.name === data.description)
+    if (targetMarker) {
+      destinationInputViewRef.current?.setAddressText(targetMarker?.coords.address);
+      setPinedInfo({
+        origin: pinedInfo?.origin ?? null,
+        destination: targetMarker.coords,
+      });
+    }
+  }, [userMarkers, destinationInputViewRef, pinedInfo]);
 
   return (
     <BottomSheetView className="flex-1 bg-[#F8F8F8] dark:bg-[#1b1b1b]">
@@ -696,251 +734,244 @@ export const BottomSheetContent = ({
 
                 {!viewPinOnMap && !piningLocation && <>
                   {
-                    currentStep === ClientSteps.SEARCH && pinedInfo?.origin && pinedInfo.destination &&
-                    <ScaleBtn onPress={goToPinnedRouteTaxi}>
+                    currentStep === ClientSteps.SEARCH && (pinedInfo?.origin && pinedInfo.destination || routeLoading) &&
+                    <ScaleBtn onPress={goToPinnedRouteTaxi} disabled={routeLoading} >
                       <View style={{ borderColor: Colors[colorScheme ?? "light"].icons_link }} className="flex-row items-center justify-center p-1 border rounded-lg">
-                        <MaterialCommunityIcons name="car-multiple" size={24} color={Colors[colorScheme ?? "light"].icons_link} />
+                        {
+                          routeLoading ? <ActivityIndicator color={Colors[colorScheme ?? "light"].icons_link} size={24} /> : <MaterialCommunityIcons name="car-multiple" size={24} color={Colors[colorScheme ?? "light"].icons_link} />
+                        }
+
                         <MaterialCommunityIcons name="chevron-right" size={24} color={Colors[colorScheme ?? "light"].icons_link} />
                       </View>
                     </ScaleBtn>
                   }
                 </>}
-
               </View>
 
-              <View className="relative z-[1000] w-full h-12 px-0 mt-3 items-start flex-row">
-                <MaterialCommunityIcons className='mt-1' name="map-marker-account" size={32} color={Colors[colorScheme ?? "light"].border} />
-                <Animated.View style={{
-                  transform: [{
-                    translateX: originShakeAnimatedValue.interpolate({
-                      inputRange: [0, 0.25, 0.50, 0.75, 1],
-                      outputRange: [0, 5, -5, 5, 0]
-                    })
-                  }]
-                }}>
-                  <GooglePlacesAutocomplete
-                    ref={originInputViewRef}
-                    /* predefinedPlaces={userMarkers.map((marker) => ({
-                      description: marker.name,
-                      geometry: {
-                        location: {
-                          lat: marker.coords.latitude,
-                          lng: marker.coords.longitude,
+              {currentStep === ClientSteps.SEARCH && <View className='relative z-[1000]'>
+                <View className="relative z-[1000] w-full h-12 px-0 mt-3 items-start flex-row">
+                  {
+                    originLoading ? <ActivityIndicator color={Colors[colorScheme ?? "light"].border} size={32} /> : <MaterialCommunityIcons className='mt-1' name="map-marker-account" size={32} color={Colors[colorScheme ?? "light"].border} />
+                  }
+                  <Animated.View style={{
+                    transform: [{
+                      translateX: originShakeAnimatedValue.interpolate({
+                        inputRange: [0, 0.25, 0.50, 0.75, 1],
+                        outputRange: [0, 5, -5, 5, 0]
+                      })
+                    }]
+                  }}>
+                    <GooglePlacesAutocomplete
+                      ref={originInputViewRef}
+                      predefinedPlaces={userMarkers.map((marker) => ({
+                        description: marker.name,
+                        geometry: {
+                          location: {
+                            lat: marker.coords.latitude,
+                            lng: marker.coords.longitude,
+                          },
                         },
-                      },
-                    }))} */
-                    placeholder="Lugar de Origen"
-                    textInputProps={{
-                      placeholderTextColor: colorScheme === 'light' ? 'black' : '#6C6C6C',
-                      onFocus: () => {
-                        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-                        if (piningLocation) cancelPiningLocationHandler();
-                        if (editingMarkers) endEditingMarkers();
-                        setViewPinOnMap(true);
-                        setPiningInput('origin');
-                      },
-                      onBlur: () => {
-                        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-                        setViewPinOnMap(false);
-                        if (currentStep !== ClientSteps.PICKUP) setPiningInput(null);
-                      },
-                    }}
-                    enablePoweredByContainer={false}
-                    onPress={(data, details) => {
-                      const tokio = async (
-                        _data: GooglePlaceData,
-                        _details: GooglePlaceDetail | null
-                      ) => { };
-                      tokio(data, details);
-                    }}
-                    debounce={400}
-                    styles={{
-                      container: {
-                        position: 'relative',
-                        zIndex: 1000,
-                        overflow: 'visible',
-                      },
-                      textInputContainer: {
-                        position: 'relative',
-                        zIndex: 1000,
-                        overflow: 'hidden',
-                        marginLeft: 12,
-                        height: 46,
-                        borderRadius: 10,
-                        width: width * 0.95 - 48,
-                      },
-                      textInput: {
-                        position: 'relative',
-                        zIndex: 1000,
-
-                        height: '100%',
-                        fontWeight: '400',
-                        borderRadius: 10,
-                        fontSize: 16,
-                        textAlignVertical: 'center',
-                        color: Colors[colorScheme ?? 'light'].text_dark,
-                        backgroundColor: Colors[colorScheme ?? 'light'].background_light1,
-
-                        borderTopRightRadius: 10,
-                        borderBottomRightRadius: 10,
-                      },
-                      listView: {
-                        position: 'absolute',
-                        height: 150,
-                        zIndex: 1000,
-                        backgroundColor: Colors[colorScheme ?? 'light'].background_light,
-                        borderRadius: 5,
-                        flex: 1,
-                        elevation: 3,
-                        marginTop: 12,
-                        borderColor: Colors[colorScheme ?? 'light'].icons,
-                        borderWidth: 1
-                      },
-                      row: {
-                        backgroundColor: Colors[colorScheme ?? 'light'].background_light1,
-                      },
-                      description: {
-                        color: Colors[colorScheme ?? 'light'].text_dark
-                      },
-                      separator: {
-                        backgroundColor: Colors[colorScheme ?? 'light'].icons
-                      }
-                    }}
-                    fetchDetails
-                    query={{
-                      key: 'AIzaSyAtcwUbA0jjJ6ARXl5_FqIqYcGbTI_XZEE',
-                      language: 'es',
-                      components: 'country:cu',
-                      location: '23.11848,-82.38052',
-                      radius: 100,
-                    }}
-                  />
-                </Animated.View>
-              </View>
-
-              <View className="relative z-[999] w-full h-12 px-0 mt-5 items-end flex-row">
-                <DashedLine
-                  axis="vertical"
-                  style={{
-                    height: 30,
-                    left: 15,
-                    top: -38,
-                    backgroundColor: Colors[colorScheme ?? "light"].border,
-                  }}
-                />
-                <MaterialCommunityIcons
-                  className="mb-1 ml-[-1.5px]"
-                  name="map-marker-radius"
-                  size={32}
-                  color={Colors[colorScheme ?? "light"].border}
-                />
-                <Animated.View style={{
-                  transform: [{
-                    translateX: destinationShakeAnimatedValue.interpolate({
-                      inputRange: [0, 0.25, 0.50, 0.75, 1],
-                      outputRange: [0, 5, -5, 5, 0]
-                    })
-                  }]
-                }}>
-                  <GooglePlacesAutocomplete
-                    ref={destinationInputViewRef}
-                    /* predefinedPlaces={userMarkers.map((marker) => ({
-                      description: marker.name,
-                      geometry: {
-                        location: {
-                          lat: marker.coords.latitude,
-                          lng: marker.coords.longitude,
+                      }))}
+                      placeholder="Lugar de Origen"
+                      textInputProps={{
+                        id: "originInput",
+                        placeholderTextColor: colorScheme === 'light' ? 'black' : '#6C6C6C',
+                        onFocus: (e) => {
+                          LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                          if (piningLocation) cancelPiningLocationHandler();
+                          if (editingMarkers) endEditingMarkers();
+                          setViewPinOnMap(true);
+                          setPiningInput('origin');
+                          console.log(JSON.stringify(e.nativeEvent, null, 2))
                         },
-                      },
-                    }))} */
-                    placeholder="Lugar Destino"
-                    textInputProps={{
-                      placeholderTextColor: colorScheme === 'light' ? 'black' : '#6C6C6C',
-                      onFocus: () => {
-                        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-                        if (piningLocation) cancelPiningLocationHandler();
-                        if (editingMarkers) endEditingMarkers();
-                        setViewPinOnMap(true);
-                        setPiningInput('destination');
-                      },
-                      onBlur: () => {
-                        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-                        setViewPinOnMap(false);
-                        if (currentStep !== ClientSteps.PICKUP) setPiningInput(null);
-                      },
-                    }}
-                    enablePoweredByContainer={false}
-                    onPress={(data, details) => {
-                      const tokio = async (
-                        _data: GooglePlaceData,
-                        _details: GooglePlaceDetail | null
-                      ) => { };
-                      tokio(data, details);
-                    }}
-                    debounce={400}
-                    styles={{
-                      container: {
-                        position: 'relative',
-                        zIndex: 999,
-                        overflow: 'visible',
-                      },
-                      textInputContainer: {
-                        position: 'relative',
-                        zIndex: 999,
-                        overflow: 'hidden',
-                        marginLeft: 12,
-                        height: 46,
-                        borderRadius: 10,
-                        width: width * 0.95 - 48,
-                      },
-                      textInput: {
-                        position: 'relative',
-                        zIndex: 999,
+                        onBlur: () => {
+                          LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                          setViewPinOnMap(false);
+                          setPiningInput(null);
+                          // if (currentStep !== ClientSteps.PICKUP) setPiningInput(null);
+                        },
+                      }}
+                      enablePoweredByContainer={false}
+                      onPress={handleOriginMarkerTarget}
+                      debounce={400}
+                      styles={{
+                        container: {
+                          position: 'relative',
+                          zIndex: 1000,
+                          overflow: 'visible',
+                        },
+                        textInputContainer: {
+                          position: 'relative',
+                          zIndex: 1000,
+                          overflow: 'hidden',
+                          marginLeft: 12,
+                          height: 46,
+                          borderRadius: 10,
+                          width: width * 0.95 - 48,
+                        },
+                        textInput: {
+                          position: 'relative',
+                          zIndex: 1000,
 
-                        height: '100%',
-                        fontWeight: '400',
-                        borderRadius: 10,
-                        fontSize: 16,
-                        textAlignVertical: 'center',
-                        color: Colors[colorScheme ?? 'light'].text_dark,
-                        backgroundColor: Colors[colorScheme ?? 'light'].background_light1,
+                          height: '100%',
+                          fontWeight: '400',
+                          borderRadius: 10,
+                          fontSize: 16,
+                          textAlignVertical: 'center',
+                          color: Colors[colorScheme ?? 'light'].text_dark,
+                          backgroundColor: Colors[colorScheme ?? 'light'].background_light1,
 
-                        borderTopRightRadius: 10,
-                        borderBottomRightRadius: 10,
-                      },
-                      listView: {
-                        position: 'absolute',
-                        maxHeight: 150,
-                        zIndex: 1000,
-                        backgroundColor: Colors[colorScheme ?? 'light'].background_light,
-                        borderRadius: 5,
-                        flex: 1,
-                        elevation: 3,
-                        marginTop: 12,
-                        borderColor: Colors[colorScheme ?? 'light'].icons,
-                        borderWidth: 1
-                      },
-                      row: {
-                        backgroundColor: Colors[colorScheme ?? 'light'].background_light1,
-                      },
-                      description: {
-                        color: Colors[colorScheme ?? 'light'].text_dark
-                      },
-                      separator: {
-                        backgroundColor: Colors[colorScheme ?? 'light'].icons
-                      }
-                    }}
-                    fetchDetails
-                    query={{
-                      key: 'AIzaSyAtcwUbA0jjJ6ARXl5_FqIqYcGbTI_XZEE',
-                      language: 'es',
-                      components: 'country:cu',
-                      location: '23.11848,-82.38052',
-                      radius: 100,
-                    }}
-                  />
-                </Animated.View>
-              </View>
+                          borderTopRightRadius: 10,
+                          borderBottomRightRadius: 10,
+                        },
+                        listView: {
+                          position: 'absolute',
+                          maxHeight: 150,
+                          minHeight: 100,
+                          width: "100%",
+                          zIndex: 10000,
+                          backgroundColor: Colors[colorScheme ?? 'light'].background_light,
+                          borderRadius: 5,
+                          flex: 1,
+                          elevation: 3,
+                          marginTop: 8,
+                          borderColor: Colors[colorScheme ?? 'light'].icons,
+                          borderWidth: 1
+                        },
+                        row: {
+                          backgroundColor: Colors[colorScheme ?? 'light'].background_light1,
+                        },
+                        description: {
+                          color: Colors[colorScheme ?? 'light'].text_dark
+                        },
+                        separator: {
+                          backgroundColor: Colors[colorScheme ?? 'light'].icons
+                        }
+                      }}
+                      fetchDetails
+                      query={{
+                        key: 'AIzaSyAtcwUbA0jjJ6ARXl5_FqIqYcGbTI_XZEE',
+                        language: 'es',
+                        components: 'country:cu',
+                        location: '23.11848,-82.38052',
+                        radius: 100,
+                      }}
+                    />
+                  </Animated.View>
+                </View>
+
+                <View className="relative z-[999] w-full h-12 px-0 mt-5 items-end flex-row">
+                  <DashedLine axis="vertical" style={{ height: 30, left: 15, top: -38, backgroundColor: Colors[colorScheme ?? "light"].border, }} />
+                  {
+                    destinationLoading ? <ActivityIndicator color={Colors[colorScheme ?? "light"].border} size={32} /> : <MaterialCommunityIcons className="mb-1 ml-[-1.5px]" name="map-marker-radius" size={32} color={Colors[colorScheme ?? "light"].border} />
+                  }
+                  <Animated.View style={{
+                    transform: [{
+                      translateX: destinationShakeAnimatedValue.interpolate({
+                        inputRange: [0, 0.25, 0.50, 0.75, 1],
+                        outputRange: [0, 5, -5, 5, 0]
+                      })
+                    }]
+                  }}>
+                    <GooglePlacesAutocomplete
+                      ref={destinationInputViewRef}
+                      predefinedPlaces={userMarkers.map((marker) => ({
+                        description: marker.name,
+                        geometry: {
+                          location: {
+                            lat: marker.coords.latitude,
+                            lng: marker.coords.longitude,
+                          },
+                        },
+                      }))}
+                      placeholder="Lugar Destino"
+                      textInputProps={{
+                        id: "destinationInput",
+                        placeholderTextColor: colorScheme === 'light' ? 'black' : '#6C6C6C',
+                        onFocus: (e) => {
+                          LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                          if (piningLocation) cancelPiningLocationHandler();
+                          if (editingMarkers) endEditingMarkers();
+                          setViewPinOnMap(true);
+                          setPiningInput('destination');
+                          console.log(JSON.stringify(e.nativeEvent, null, 2))
+                        },
+                        onBlur: () => {
+                          LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                          setViewPinOnMap(false);
+                          setPiningInput(null);
+                          // if (currentStep !== ClientSteps.PICKUP) setPiningInput(null);
+                        },
+                      }}
+                      enablePoweredByContainer={false}
+                      onPress={handleDestinationMarkerTarget}
+                      debounce={400}
+                      styles={{
+                        container: {
+                          position: 'relative',
+                          zIndex: 999,
+                          overflow: 'visible',
+                        },
+                        textInputContainer: {
+                          position: 'relative',
+                          zIndex: 999,
+                          overflow: 'hidden',
+                          marginLeft: 12,
+                          height: 46,
+                          borderRadius: 10,
+                          width: width * 0.95 - 48,
+                        },
+                        textInput: {
+                          position: 'relative',
+                          zIndex: 999,
+
+                          height: '100%',
+                          fontWeight: '400',
+                          borderRadius: 10,
+                          fontSize: 16,
+                          textAlignVertical: 'center',
+                          color: Colors[colorScheme ?? 'light'].text_dark,
+                          backgroundColor: Colors[colorScheme ?? 'light'].background_light1,
+
+                          borderTopRightRadius: 10,
+                          borderBottomRightRadius: 10,
+                        },
+                        listView: {
+                          position: 'absolute',
+                          maxHeight: 150,
+                          minHeight: 100,
+                          width: "100%",
+                          zIndex: 10000,
+                          backgroundColor: Colors[colorScheme ?? 'light'].background_light,
+                          borderRadius: 5,
+                          flex: 1,
+                          elevation: 3,
+                          marginTop: 8,
+                          borderColor: Colors[colorScheme ?? 'light'].icons,
+                          borderWidth: 1
+                        },
+                        row: {
+                          backgroundColor: Colors[colorScheme ?? 'light'].background_light1,
+                        },
+                        description: {
+                          color: Colors[colorScheme ?? 'light'].text_dark
+                        },
+                        separator: {
+                          backgroundColor: Colors[colorScheme ?? 'light'].icons
+                        }
+                      }}
+                      fetchDetails
+                      query={{
+                        key: 'AIzaSyAtcwUbA0jjJ6ARXl5_FqIqYcGbTI_XZEE',
+                        language: 'es',
+                        components: 'country:cu',
+                        location: '23.11848,-82.38052',
+                        radius: 100,
+                      }}
+                    />
+                  </Animated.View>
+                </View>
+              </View>}
             </>
           }
 
@@ -1057,13 +1088,15 @@ export const BottomSheetContent = ({
           }
 
           {currentStep === ClientSteps.TAXI &&
-            <View className="mx-1.5 mt-7 overflow-visible">
-              <View className='flex-row justify-between'>
+            <View className="mx-1.5 mt-7- overflow-visible">
+              {/* <View className='flex-row justify-between'>
                 <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-bold text-xl">Taxis</Text>
-                {/* <Text className="text-[#21288a] dark:text-[#766acd] font-bold text-xl">mas</Text> */}
-              </View>
+                {
+                  // <Text className="text-[#21288a] dark:text-[#766acd] font-bold text-xl">mas</Text>
+                }
+              </View> */}
 
-              <View className='pl-[5%]- pr-[3%]- h-[18.5rem] mt-3 rounded-lg bg-[#E9E9E9] dark:bg-[#333333] overflow-hidden shadow'>
+              <View className='pl-[5%]- pr-[3%]- h-[24rem] mt-3 rounded-lg bg-[#E9E9E9] dark:bg-[#333333] overflow-hidden shadow'>
                 <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="always" className="w-100 px-3">
                   {taxiTypesInfo.map(({ slug, Icon, name, pricePerKm, timePerKm }) => {
                     if (selectedTaxiType === slug) {

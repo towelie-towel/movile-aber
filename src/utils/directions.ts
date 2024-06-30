@@ -39,7 +39,7 @@ export const getDirections = async (startLoc: string, destinationLoc: string) =>
       latitude: point[0]!,
       longitude: point[1]!,
     }));
-    return decodedCoords;
+    return { overview_polyline: respJson[0].overview_polyline, decodedCoords, distance: respJson[0].legs[0].distance, duration: respJson[0].legs[0].duration };
   } catch (error) {
     console.error(error);
     throw error;

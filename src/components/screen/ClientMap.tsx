@@ -104,12 +104,12 @@ export default function ClientMap() {
                 setSnapPoints([210, 390, 700])
                 break;
             case ClientSteps.PINNING:
-                if (piningLocation) setSnapPoints([270, 420])
+                if (piningLocation) setSnapPoints([160, 420])
                 else setSnapPoints([180, 365, 690])
                 bottomSheetModalRef.current?.collapse()
                 break;
             case ClientSteps.TAXI:
-                setSnapPoints([210, 520])
+                setSnapPoints([210, 450])
                 //bottomSheetModalRef.current?.expand();
                 break;
             case ClientSteps.RIDE:
@@ -200,17 +200,13 @@ export default function ClientMap() {
             />
         ), []);
 
+
     // TODO: see if LayoutAnimation works here
     const startPiningLocation = useCallback(() => {
         setPiningLocation(true);
     }, []);
-    const cancelPiningLocation = useCallback(() => {
+    const endPiningLocation = useCallback(() => {
         setPiningLocation(false);
-    }, []);
-    const confirmPiningLocation = useCallback(async () => {
-        setPiningLocation(false);
-        const coords = await getMiddlePoint();
-        return coords;
     }, []);
     const animateToRegion = useCallback(
         (region: {
@@ -521,7 +517,7 @@ export default function ClientMap() {
                                 </ScaleBtn> */}
                                 <View className='w-12'></View>
 
-                                {currentStep < ClientSteps.FINDING && currentStep !== ClientSteps.PINNING &&
+                                {currentStep <= ClientSteps.FINDING && currentStep !== ClientSteps.PINNING &&
                                     <ScaleBtn
                                         containerStyle={{}}
                                         disabled={findingRide || !selectedTaxiType}
@@ -640,8 +636,8 @@ export default function ClientMap() {
                             currentStep={currentStep}
                             setCurrentStep={setCurrentStep}
                             startPiningLocation={startPiningLocation}
-                            cancelPiningLocation={cancelPiningLocation}
-                            confirmPiningLocation={confirmPiningLocation}
+                            endPiningLocation={endPiningLocation}
+                            getMiddlePoint={getMiddlePoint}
                             piningLocation={piningLocation}
                             piningMarker={piningMarker}
                             setPiningMarker={setPiningMarker}
