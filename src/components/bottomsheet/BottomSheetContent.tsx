@@ -495,8 +495,8 @@ export const BottomSheetContent = ({
       {!piningLocation && !piningInput/*  && piningMarker */ && currentStep === ClientSteps.PINNING ?
         <View className="w-[95%] h-full self-center overflow-visible">
           <View className='flex-row justify-between mt-3'>
-            <View className='flex-row gap-3 justify-center items-center'>
-              <ScaleBtn className='justify-center items-center' onPress={cancelPiningLocationHandler}>
+            <View className='h-10 flex-row gap-3- justify-center items-center'>
+              <ScaleBtn className='h-full pr-3 justify-center items-center' onPress={cancelPiningLocationHandler}>
                 <FontAwesome6 name="chevron-left" size={18} color={Colors[colorScheme ?? "light"].icons_link} />
               </ScaleBtn>
               <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-bold text-xl">Añadiendo Marcador</Text>
@@ -697,11 +697,11 @@ export const BottomSheetContent = ({
             :
             <>
               <View className="h-10 flex-row justify-between items-center mx-1.5 mt-3">
-                <View className='flex-row gap-3 justify-center items-center'>
+                <View className='flex-row gap-3- justify-center items-center'>
                   {
                     currentStep === ClientSteps.TAXI &&
                     <>
-                      <ScaleBtn className='justify-center items-center' onPress={goBackToSearch}>
+                      <ScaleBtn className='h-full pr-3 justify-center items-center' onPress={goBackToSearch}>
                         <FontAwesome6 name="chevron-left" size={18} color={Colors[colorScheme ?? "light"].icons_link} />
                       </ScaleBtn>
                       <Text className="font-bold text-xl text-[#1b1b1b] dark:text-[#C1C0C9]">Cómo quieres ir?</Text>
@@ -714,7 +714,7 @@ export const BottomSheetContent = ({
 
                   {currentStep === ClientSteps.PINNING && piningLocation &&
                     <>
-                      <ScaleBtn className='justify-center items-center' onPress={goBackToSearch}>
+                      <ScaleBtn className='h-full pr-3 justify-center items-center' onPress={goBackToSearch}>
                         <FontAwesome6 name="chevron-left" size={18} color={Colors[colorScheme ?? "light"].icons_link} />
                       </ScaleBtn>
                       <Text className="font-bold text-xl text-[#1b1b1b] dark:text-[#C1C0C9]">Seleccione el lugar {piningInput === "destination" ? "destino" : "origen"}</Text>
@@ -991,7 +991,7 @@ export const BottomSheetContent = ({
           } */}
 
           {currentStep === ClientSteps.PINNING && piningLocation &&
-            <ScaleBtn containerStyle={{ flex: 1 }} className="mx-1.5 mt-5" onPress={confirmPiningLocationHandler}>
+            <ScaleBtn containerStyle={{ flex: 1 }} className="mx-1.5 mt-3" onPress={confirmPiningLocationHandler}>
               <View className="h-18 flex-row items-center justify-center bg-[#25D366] dark:bg-[#137136] rounded-xl p-3">
                 <Text className="text-white font-bold text-xl">Guardar</Text>
               </View>

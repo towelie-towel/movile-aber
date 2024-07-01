@@ -1,4 +1,4 @@
-import { useColorScheme, View } from 'react-native';
+import { useColorScheme, View, ViewProps } from 'react-native';
 import React from 'react';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
@@ -6,10 +6,10 @@ import { MapMarkerSVG2 } from '../svgs';
 import { AddMarker } from '../bottomsheet/BottomSheetContent';
 import Colors from '~/constants/Colors';
 
-export const UserMapMarker = ({ piningMarker }: { piningMarker: AddMarker | null }) => {
+export const UserMapMarker = ({ piningMarker, ...props }: { piningMarker: AddMarker | null } & ViewProps) => {
     const colorScheme = useColorScheme()
     return (
-        <>
+        <View {...props} >
             <View className='absolute top-3 z-10 w-[2.6rem] h-[2.6rem] self-center justify-center items-center'>
                 {/* <View 
                 // style={{ backgroundColor: Colors[colorScheme === "light" ? "dark" : "light"].border_light }}
@@ -30,6 +30,6 @@ export const UserMapMarker = ({ piningMarker }: { piningMarker: AddMarker | null
                     color={/* piningMarker?.color ??  */Colors[colorScheme ?? 'light'].border_light_i}
                 />
             </View>
-        </>
+        </View>
     )
 }

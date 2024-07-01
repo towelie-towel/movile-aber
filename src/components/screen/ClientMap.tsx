@@ -104,8 +104,8 @@ export default function ClientMap() {
                 setSnapPoints([210, 390, 700])
                 break;
             case ClientSteps.PINNING:
-                if (piningLocation) setSnapPoints([160, 420])
-                else setSnapPoints([180, 365, 690])
+                if (piningLocation) setSnapPoints([150, 420])
+                else setSnapPoints([180, 370, 690])
                 bottomSheetModalRef.current?.collapse()
                 break;
             case ClientSteps.TAXI:
@@ -148,7 +148,19 @@ export default function ClientMap() {
                 ),
             },
         ],
-    }), [snapPoints, /* sheetCurrentSnapRef, animatedPosition, animatedIndex, sheetCurrentSnap */]);
+    }),
+        // [snapPoints, animatedIndex, /* sheetCurrentSnapRef, animatedPosition, sheetCurrentSnap */]
+    );
+    const piningMarkerAnimStyle = useAnimatedStyle(() => ({
+        opacity: interpolate(
+            animatedIndex.value,
+            snapPoints.map((_, i) => i),
+            snapPoints.map((_, i) => (i === (snapPoints.length - 1) ? 0 : 1)),
+            Extrapolation.CLAMP
+        )
+    }),
+        // [width, height, snapPoints, animatedIndex, /* sheetCurrentSnapRef, animatedPosition, sheetCurrentSnap */]
+    );
 
     const animateToUserLocation = useCallback(async () => {
         const position = await ExpoLocation.getCurrentPositionAsync({
@@ -203,9 +215,11 @@ export default function ClientMap() {
 
     // TODO: see if LayoutAnimation works here
     const startPiningLocation = useCallback(() => {
+        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         setPiningLocation(true);
     }, []);
     const endPiningLocation = useCallback(() => {
+        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         setPiningLocation(false);
     }, []);
     const animateToRegion = useCallback(
@@ -477,27 +491,38 @@ export default function ClientMap() {
                     </MapView>
 
                     {currentStep === ClientSteps.PINNING && sheetCurrentSnap !== 2 && (
-                        <View
-                            style={{
+                        <Animated.View
+                            style={[{
                                 position: 'absolute',
-                                right: width / 2 - 41,
-                                top: height / 2 - 82,
+                                top: 0,
+                                right: 0,
+                                flex: 1,
                                 zIndex: 1000,
-                                alignItems: "flex-end",
-                                justifyContent: "flex-end"
-                            }}>
+                            }, piningMarkerAnimStyle]}
+                        >
                             {!piningLocation && /* piningMarker && */
-                                <UserMapMarker piningMarker={piningMarker} />
+                                <UserMapMarker style={{
+                                    position: 'absolute',
+                                    right: width / 2 - 41,
+                                    top: height / 2 - 82,
+                                    zIndex: 1001,
+                                }} piningMarker={piningMarker} />
                             }
-
                             {piningLocation && (
-                                <MaterialIcons
-                                    name="location-pin"
-                                    size={48}
-                                    color={Colors[colorScheme ?? 'light'].text}
-                                />
+                                <View style={{
+                                    position: 'absolute',
+                                    right: width / 2 - 24,
+                                    top: height / 2 - 48,
+                                    zIndex: 1001,
+                                }}>
+                                    <MaterialIcons
+                                        name="location-pin"
+                                        size={48}
+                                        color={Colors[colorScheme ?? 'light'].text}
+                                    />
+                                </View>
                             )}
-                        </View>
+                        </Animated.View>
                     )}
 
                     <Animated.View
@@ -584,8 +609,8 @@ export default function ClientMap() {
                             if (e < sheetCurrentSnapRef.current) {
                                 Keyboard.dismiss();
                             }
-                            LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
                             sheetCurrentSnapRef.current = e;
+                            LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
                             setSheetCurrentSnap(e)
                         }}
                         // enableDynamicSizing
