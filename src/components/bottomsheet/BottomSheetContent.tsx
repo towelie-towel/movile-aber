@@ -13,13 +13,11 @@ import {
   Pressable,
   ScrollView,
   ColorValue,
-  Animated,
-  Easing,
   Alert,
   ActivityIndicator
 } from 'react-native';
 import type { Address, LatLng } from 'react-native-maps';
-import { measure, runOnJS, useAnimatedRef, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, { Easing, measure, interpolate, runOnJS, useAnimatedRef, useAnimatedStyle, useSharedValue, withTiming, withRepeat } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { useAtom } from 'jotai/react';
 import * as ImagePicker from 'expo-image-picker';
@@ -44,6 +42,7 @@ import { userMarkersAtom } from '~/context/UserContext';
 import { selectableMarkerIcons, UserMarkerIconType } from '~/components/markers/AddUserMarker';
 import { BikeSVG, AutoSVG, ConfortSVG, ConfortPlusSVG, VipSVG } from '~/components/svgs/index';
 import TestRidesData from '~/constants/TestRidesData.json'
+import TestRideData from '~/constants/TestRideData.json'
 import TestTaxiTypesInfo from '~/constants/TestTaxiTypesInfo.json'
 // import ColorsPalettes from '~/constants/ColorsPalettes.json'
 
@@ -122,36 +121,30 @@ export const BottomSheetContent = ({
   const markerNameInputViewRef = useRef<ComponentRef<typeof FloatingLabelInput>>(null);
   const originInputViewRef = useRef<GooglePlacesAutocompleteRef>(null);
   const destinationInputViewRef = useRef<GooglePlacesAutocompleteRef>(null);
-  const markerShakeAnimatedValue = React.useRef(new Animated.Value(0)).current;
-  const originShakeAnimatedValue = React.useRef(new Animated.Value(0)).current;
-  const destinationShakeAnimatedValue = React.useRef(new Animated.Value(0)).current;
+  const markerShakeAnimatedValue = useSharedValue(0);
+  const originShakeAnimatedValue = useSharedValue(0);
+  const destinationShakeAnimatedValue = useSharedValue(0);
 
   const emptyMarkerShake = useCallback(() => {
-    markerShakeAnimatedValue.setValue(0);
-    Animated.timing(markerShakeAnimatedValue, {
-      toValue: 1,
+    // markerShakeAnimatedValue.value = 0;
+    markerShakeAnimatedValue.value = withTiming(1, {
       duration: 150,
       easing: Easing.linear,
-      useNativeDriver: true
-    }).start()
+    });
   }, [markerShakeAnimatedValue])
   const inputsShake = useCallback(() => {
     if (piningInput === "destination") {
-      destinationShakeAnimatedValue.setValue(0);
-      Animated.timing(destinationShakeAnimatedValue, {
-        toValue: 1,
+      // destinationShakeAnimatedValue.value = 0;
+      destinationShakeAnimatedValue.value = withTiming(1, {
         duration: 150,
         easing: Easing.linear,
-        useNativeDriver: true
-      }).start()
+      });
     } else if (piningInput === "origin") {
-      originShakeAnimatedValue.setValue(0);
-      Animated.timing(originShakeAnimatedValue, {
-        toValue: 1,
+      // originShakeAnimatedValue.value = 0;
+      originShakeAnimatedValue.value = withTiming(1, {
         duration: 150,
         easing: Easing.linear,
-        useNativeDriver: true
-      }).start()
+      });
     }
   }, [piningInput, originShakeAnimatedValue, destinationShakeAnimatedValue])
 
@@ -188,9 +181,17 @@ export const BottomSheetContent = ({
       try {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         setRouteLoading(true)
-        const { overview_polyline, decodedCoords, distance, duration } = await getDirections(`${pinedInfo.origin.latitude},${pinedInfo.origin.longitude}`, `${pinedInfo.destination.latitude},${pinedInfo.destination.longitude}`)
+        // const { overview_polyline, decodedCoords, distance, duration } = await getDirections(`${pinedInfo.origin.latitude},${pinedInfo.origin.longitude}`, `${pinedInfo.destination.latitude},${pinedInfo.destination.longitude}`)
+
+        const { overview_polyline, distance, duration } = TestRideData
+
         // snapToIndex(1);
-        setActiveRoute({ coords: decodedCoords });
+        setActiveRoute({
+          coords: polylineDecode(overview_polyline.points).map((point, _) => ({
+            latitude: point[0]!,
+            longitude: point[1]!,
+          }))
+        });
         setRouteInfo({ distance: distance, duration: duration });
         setRideInfo({
           status: "pending",
@@ -578,10 +579,11 @@ export const BottomSheetContent = ({
 
           <Animated.View style={{
             transform: [{
-              translateX: markerShakeAnimatedValue.interpolate({
-                inputRange: [0, 0.25, 0.50, 0.75, 1],
-                outputRange: [0, 5, -5, 5, 0]
-              })
+              translateX: interpolate(
+                markerShakeAnimatedValue.value,
+                [0, 0.25, 0.50, 0.75, 1],
+                [0, 5, -5, 5, 0]
+              )
             }]
           }} className='pl-[5%]- pr-[3%]- h-[10rem] mt-3 rounded-lg bg-[#E9E9E9] dark:bg-[#333333] overflow-hidden shadow'>
             <ScrollView contentContainerClassName='flex-wrap p-3 gap-5 flex-row self-center' showsHorizontalScrollIndicator={false}>
@@ -758,10 +760,12 @@ export const BottomSheetContent = ({
                   }
                   <Animated.View style={{
                     transform: [{
-                      translateX: originShakeAnimatedValue.interpolate({
-                        inputRange: [0, 0.25, 0.50, 0.75, 1],
-                        outputRange: [0, 5, -5, 5, 0]
-                      })
+                      translateX:
+                        interpolate(
+                          originShakeAnimatedValue.value,
+                          [0, 0.25, 0.50, 0.75, 1],
+                          [0, 5, -5, 5, 0]
+                        )
                     }]
                   }}>
                     <GooglePlacesAutocomplete
@@ -870,10 +874,12 @@ export const BottomSheetContent = ({
                   }
                   <Animated.View style={{
                     transform: [{
-                      translateX: destinationShakeAnimatedValue.interpolate({
-                        inputRange: [0, 0.25, 0.50, 0.75, 1],
-                        outputRange: [0, 5, -5, 5, 0]
-                      })
+                      translateX:
+                        interpolate(
+                          destinationShakeAnimatedValue.value,
+                          [0, 0.25, 0.50, 0.75, 1],
+                          [0, 5, -5, 5, 0]
+                        )
                     }]
                   }}>
                     <GooglePlacesAutocomplete
@@ -1270,7 +1276,7 @@ const RidesHistoryItem = ({ ride }: { ride: DBRide }) => {
 
 const UserMarkerRowItem = ({ userMarker, color, bgColor, pressHandler, editingMarkers, deleteHandler }: { userMarker: UserMarkerIconType, pressHandler: (addingMarker: UserMarkerIconType) => void, color?: string, bgColor?: string, editingMarkers: boolean, deleteHandler: (deletingMarker: UserMarkerIconType) => void }) => {
 
-  const shakeAnimatedValue = React.useRef(new Animated.Value(0)).current;
+  const shakeAnimatedValue = useSharedValue(0);
   const colorScheme = useColorScheme();
 
   const pressInnerHandler = useCallback(() => {
@@ -1289,21 +1295,20 @@ const UserMarkerRowItem = ({ userMarker, color, bgColor, pressHandler, editingMa
   }, [editingMarkers, userMarker, deleteHandler])
 
   const startShaking = () => {
-    Animated.loop(
-      Animated.timing(shakeAnimatedValue, {
-        toValue: 1,
+    shakeAnimatedValue.value = withRepeat(
+      withTiming(1, {
         duration: 300,
         easing: Easing.linear,
-        useNativeDriver: true,
-      })
-    ).start();
+      }),
+      - 1, // Repeat indefinitely
+      true // Reverse the animation
+    )
   };
   const stopShaking = () => {
-    shakeAnimatedValue.stopAnimation();
-    shakeAnimatedValue.setValue(0);
+    // shakeAnimatedValue.value = 0;
+    shakeAnimatedValue.value = withTiming(0);
   };
   useEffect(() => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     if (editingMarkers) {
       startShaking();
     } else {
@@ -1311,20 +1316,19 @@ const UserMarkerRowItem = ({ userMarker, color, bgColor, pressHandler, editingMa
     }
   }, [editingMarkers]);
 
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        {
+          rotate: `${shakeAnimatedValue.value * 5}deg`,
+        },
+      ],
+    };
+  });
 
   return (
     <View className='relative ml-5 items-center justify-center' key={userMarker.id}>
-      <Animated.View className={""}
-        style={{
-          transform: [
-            {
-              rotate: shakeAnimatedValue.interpolate({
-                inputRange: [0, 0.25, 0.5, 0.75, 1],
-                outputRange: ["0deg", "5deg", "-5deg", "5deg", "0deg"],
-              }),
-            },
-          ],
-        }}>
+      <Animated.View className={""} style={animatedStyle}>
         <ScaleBtn
           style={{ backgroundColor: bgColor ?? Colors[colorScheme ?? 'light'].border_light }}
           className="w-[64px] h-[64px] rounded-full bg-[#D8D8D8] dark:bg-[#444444]- items-center justify-center"
@@ -1350,18 +1354,14 @@ const UserMarkerRowItem = ({ userMarker, color, bgColor, pressHandler, editingMa
 const DefaultMarkerRowItem = ({ defaultMarker, color, bgColor, addHandler }: { defaultMarker: { name: string, icon: string }, addHandler: (addingMarker?: AddMarker) => void, color?: string, bgColor?: string }) => {
 
   const colorScheme = useColorScheme();
-  const shakeAnimatedValue = React.useRef(new Animated.Value(0)).current;
+  const shakeAnimatedValue = useSharedValue(0);
 
   const shortShake = () => {
-    shakeAnimatedValue.setValue(0);
-    Animated.timing(shakeAnimatedValue,
-      {
-        toValue: 1,
-        duration: 150,
-        easing: Easing.linear,
-        useNativeDriver: true
-      }
-    ).start()
+    shakeAnimatedValue.value = 0;
+    shakeAnimatedValue.value = withTiming(1, {
+      duration: 150,
+      easing: Easing.linear,
+    });
   }
   const addInnerHandler = useCallback(() => {
     addHandler(defaultMarker)
@@ -1386,10 +1386,12 @@ const DefaultMarkerRowItem = ({ defaultMarker, color, bgColor, addHandler }: { d
         <Text className="text-lg font-semibold text-center text-[#1b1b1b] dark:text-[#C1C0C9]">{defaultMarker.name}</Text>
         <Animated.View className={""} style={{
           transform: [{
-            translateX: shakeAnimatedValue.interpolate({
-              inputRange: [0, 0.25, 0.50, 0.75, 1],
-              outputRange: [0, 5, -5, 5, 0]
-            })
+            translateX:
+              interpolate(
+                shakeAnimatedValue.value,
+                [0, 0.25, 0.50, 0.75, 1],
+                [0, 5, -5, 5, 0]
+              )
           }]
         }}>
           <ScaleBtn
