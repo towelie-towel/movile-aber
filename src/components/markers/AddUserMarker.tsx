@@ -84,6 +84,23 @@ export interface UserMarkerIconType {
   };
 }
 
+export interface PlaceMarkerIconType {
+  id: string;
+  name: string;
+  description?: string;
+  icon: {
+    type: string;
+    name: string;
+    color?: string;
+    size?: number;
+  };
+  coords: {
+    latitude: number;
+    longitude: number;
+    address: string;
+  };
+}
+
 const AddUserMarker: React.FC<{
   onConfirmFn: (newMarker: UserMarkerIconType) => void;
 }> = ({ onConfirmFn }) => {

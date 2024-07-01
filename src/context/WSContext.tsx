@@ -1,12 +1,22 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
 import * as ExpoLocation from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
+import { atomWithStorage, createJSONStorage } from 'jotai/utils';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { LatLng } from 'react-native-maps';
 
-import { RideInfo } from '~/constants/Configs';
+import { PlaceMarkerIconType } from '~/components/markers/AddUserMarker';
+import { PlaceInfo } from '~/constants/Places';
+import { RideInfo } from '~/constants/RideFlow';
 import { TaxiProfile } from '~/constants/TaxiTypes';
+import { UserRole, UserRoles } from '~/constants/User';
 import { calculateDistance, calculateBearing, duplicateCoords, polylineDecode } from '~/utils/directions';
+
+const storedlastLocation = createJSONStorage<PlaceMarkerIconType[]>(() => AsyncStorage)
+export const lastLocationAtom = atomWithStorage<PlaceMarkerIconType[]>('last_location', [], storedlastLocation)
+const storedLocationPlaces = createJSONStorage<PlaceInfo[]>(() => AsyncStorage)
+export const locationPlacesAtom = atomWithStorage<PlaceInfo[]>('location_place', [], storedLocationPlaces)
 
 const WS_LOGS = false;
 const LOCATION_TASK_NAME = 'background-location-task';
@@ -24,9 +34,10 @@ interface WSStateContext {
     confirmedTaxi: TaxiProfile | null;
     position: ExpoLocation.LocationObject | undefined;
     heading: ExpoLocation.LocationHeadingObject | undefined;
+    userType: UserRole | undefined;
 }
 interface WSActionsContext {
-    // resetConnection: () => Promise<void>;
+    // resetWSConnection: () => Promise<void>;
     // trackPosition: () => Promise<void>;
     sendStringToServer: (message: string) => void;
     findTaxi: (ride: RideInfo, taxiid?: string) => Promise<void>;
@@ -41,9 +52,10 @@ const stateInitialValue: WSStateContext = {
     confirmedTaxi: null,
     position: undefined,
     heading: undefined,
+    userType: undefined,
 };
 const stateActionslValue: WSActionsContext = {
-    /* resetConnection: async () => {
+    /* resetWSConnection: async () => {
         throw new Error('Function not initizaliced yet');
     },
     trackPosition: async () => {
@@ -81,28 +93,34 @@ const requestPermissions = async () => {
 
     if (foregroundStatus === 'granted') {
         if (WS_LOGS) console.log('foregroundStatus permissions granted');
-        /* const { status: backgroundStatus } = await ExpoLocation.requestBackgroundPermissionsAsync();
+        const { status: backgroundStatus } = await ExpoLocation.requestBackgroundPermissionsAsync();
         if (backgroundStatus === 'granted') {
-          if (WS_LOGS) console.log('backgroundStatus permissions granted');
-          await ExpoLocation.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-            accuracy: ExpoLocation.Accuracy.Balanced,
-          });
-        } */
+            if (WS_LOGS) console.log('backgroundStatus permissions granted');
+            await ExpoLocation.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+                accuracy: ExpoLocation.Accuracy.Balanced,
+            });
+        }
     }
 };
 
-export const WSProvider = ({ children }: { children: React.ReactNode }) => {
+export const WSProvider = ({ children, userType }: { children: React.ReactNode, userType: UserRole }) => {
+    const { isConnected } = NetInfo.useNetInfo();
     const [wsTaxis, setWsTaxis] = useState<WSTaxi[]>([]);
     const [heading, setHeading] = useState<ExpoLocation.LocationHeadingObject>();
     const [position, setPosition] = useState<ExpoLocation.LocationObject>();
     const [confirmedTaxi, setConfirmedTaxi] = useState<TaxiProfile | null>(null);
+
+    const [currentUserType, setCurrentUserType] = useState(userType);
 
     const ws = useRef<WebSocket | null>(null);
     const positionSubscription = useRef<ExpoLocation.LocationSubscription | null>();
     const headingSubscription = useRef<ExpoLocation.LocationSubscription | null>();
     const simulationSubscription = useRef<NodeJS.Timeout | null>();
 
-    const { isConnected } = NetInfo.useNetInfo();
+
+    useEffect(() => {
+        setCurrentUserType(userType);
+    }, [userType]);
 
     const sendStringToServer = useCallback((message: string) => {
         if (ws.current?.readyState === WebSocket.OPEN) {
@@ -194,7 +212,7 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
 
         if (WS_LOGS) console.log('new Web Socket initializing', protocol);
         const suckItToMeBBy = new WebSocket(
-            `ws://172.20.10.12:6942/subscribe?id=03563972-fab9-4744-b9a7-15f8d35d38c9&lat=51.5073509&lon=-0.1277581999999997&head=51`,
+            `ws://192.168.1.103:6942/subscribe?id=03563972-fab9-4744-b9a7-15f8d35d38c9&lat=51.5073509&lon=-0.1277581999999997&head=51`,
             protocol
         );
 
@@ -218,6 +236,29 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
 
         return suckItToMeBBy;
     }, [handleWebSocketMessage]);
+
+    const resetWSConnection = useCallback(async () => {
+        if (!isConnected) {
+            console.warn('💣 ==> No internet connection ==> ');
+            return;
+        }
+        try {
+            if (!ws.current) {
+                if (WS_LOGS) console.log('initializasing web socket');
+                ws.current = await asyncNewWebSocket();
+            } else if (ws.current.readyState === WebSocket.OPEN) {
+                console.warn('a ws connection is already open');
+            } else if (ws.current.readyState === WebSocket.CLOSED) {
+                if (WS_LOGS) console.log('🚿 resetWSConnection ==> reseting connection');
+                ws.current = await asyncNewWebSocket();
+            } else {
+                console.error("ws connection is not OPEN or CLOSED");
+                // TODO: handle CONNECTING and CLOSING cases
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    }, [isConnected, ws, asyncNewWebSocket]);
 
     const trackPosition = useCallback(async () => {
         await requestPermissions();
@@ -248,28 +289,6 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
         if (WS_LOGS) console.log('Setted heading subscriptions');
         headingSubscription.current = headSubscrition;
     }, [headingSubscription]);
-    const resetConnection = useCallback(async () => {
-        if (!isConnected) {
-            console.warn('💣 ==> No internet connection ==> ');
-            return;
-        }
-        try {
-            if (!ws.current) {
-                if (WS_LOGS) console.log('initializasing web socket');
-                ws.current = await asyncNewWebSocket();
-            } else if (ws.current.readyState === WebSocket.OPEN) {
-                console.warn('a ws connection is already open');
-            } else if (ws.current.readyState === WebSocket.CLOSED) {
-                if (WS_LOGS) console.log('🚿 resetConnection ==> reseting connection');
-                ws.current = await asyncNewWebSocket();
-            } else {
-                console.error("ws connection is not OPEN or CLOSED");
-                // TODO: handle CONNECTING and CLOSING cases
-            }
-        } catch (error) {
-            console.error(error);
-        }
-    }, [isConnected, ws, asyncNewWebSocket]);
 
     const simulateRoutePosition = useCallback(async (coords: LatLng[]) => {
         if (positionSubscription.current) {
@@ -346,7 +365,7 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
     }, []);
     useEffect(() => {
         if (WS_LOGS) console.log('WSContext.tsx -> useEffect [isConnected]', isConnected);
-        void resetConnection();
+        void resetWSConnection();
         return () => {
             if (WS_LOGS) console.log('removing ws subscription', ws);
             if (ws.current?.readyState === WebSocket.OPEN)
@@ -360,12 +379,12 @@ export const WSProvider = ({ children }: { children: React.ReactNode }) => {
         cancelTaxi,
         simulateRoutePosition,
         stopRouteSimulation,
-        // resetConnection,
+        // resetWSConnection,
         // trackPosition,
     }), [sendStringToServer, findTaxi, cancelTaxi]);
 
     return (
-        <WSStateContext.Provider value={{ ws: ws.current, wsTaxis, heading, position, confirmedTaxi }}>
+        <WSStateContext.Provider value={{ ws: ws.current, wsTaxis, heading, position, confirmedTaxi, userType: currentUserType }}>
             <WSActionsContext.Provider value={actions}>
                 {children}
             </WSActionsContext.Provider>

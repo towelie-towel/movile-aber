@@ -46,7 +46,8 @@ import TaxisMarkers from '~/components/markers/TaxiMarkers';
 import { ColorInstagram, ColorFacebook, ColorTwitter, MapMarkerSVG } from '~/components/svgs';
 import Colors from '~/constants/Colors';
 import { NightMap } from '~/constants/NightMap';
-import { drawerItems, ClientSteps, RideInfo } from '~/constants/Configs';
+import { drawerItems } from '~/constants/Configs';
+import { ClientSteps, RideInfo } from '~/constants/RideFlow';
 import { userMarkersAtom, useUser } from '~/context/UserContext';
 import { useWSActions } from '~/context/WSContext';
 import { calculateMiddlePointAndDelta } from '~/utils/directions';
@@ -500,7 +501,7 @@ export default function ClientMap() {
                                 zIndex: 1000,
                             }, piningMarkerAnimStyle]}
                         >
-                            {!piningLocation && /* piningMarker && */
+                            {!piningLocation && piningMarker &&
                                 <UserMapMarker style={{
                                     position: 'absolute',
                                     right: width / 2 - 41,

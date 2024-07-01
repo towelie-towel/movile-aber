@@ -49,3 +49,18 @@ export interface TaxiProfile {
     car: string;
     plate: string;
 }
+
+export interface TaxiTypesInfo {
+    slug: string;
+    name: string;
+    pricePerKm: number;
+    timePerKm: number;
+    distance: {
+        value: number;
+        text: string;
+    };
+    duration: {
+        value: number;
+        text: string;
+    };
+}

@@ -1,0 +1,32 @@
+[
+    {
+        "slug": "bike",
+        "name": "Bike",
+        "pricePerKm": 0.5,
+        "timePerKm": 0.5
+    },
+    {
+        "slug": "auto",
+        "name": "Auto",
+        "pricePerKm": 1,
+        "timePerKm": 0.45
+    },
+    {
+        "slug": "confort",
+        "name": "Confort",
+        "pricePerKm": 1.5,
+        "timePerKm": 0.4
+    },
+    {
+        "slug": "confort_plus",
+        "name": "Confort Plus",
+        "pricePerKm": 2,
+        "timePerKm": 0.42
+    },
+    {
+        "slug": "vip",
+        "name": "Vip",
+        "pricePerKm": 3,
+        "timePerKm": 0.38
+    }
+]

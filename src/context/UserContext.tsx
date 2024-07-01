@@ -6,13 +6,16 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 
 import { supabase } from '~/lib/supabase';
 import { UserMarkerIconType } from '~/components/markers/AddUserMarker';
-import { getData } from '~/lib/storage';
-import { RideInfo, UserRoles } from '~/constants/Configs';
+import { getData } from '~/lib/storage'; UserRoles
+import { RideInfo } from '~/constants/RideFlow';
+import { UserRoles } from '~/constants/User';
+import { PlaceInfo } from '~/constants/Places';
+import { Profile } from '~/constants/User';
 
 const storedUserMarkers = createJSONStorage<UserMarkerIconType[]>(() => AsyncStorage)
-export const userMarkersAtom = atomWithStorage<UserMarkerIconType[]>('userMarkers', [], storedUserMarkers)
+export const userMarkersAtom = atomWithStorage<UserMarkerIconType[]>('user_markers', [], storedUserMarkers)
 const storedRidesHistoryMarkers = createJSONStorage<RideInfo[]>(() => AsyncStorage)
-export const ridesHistoryAtom = atomWithStorage<RideInfo[]>('userMarkers', [], storedRidesHistoryMarkers)
+export const ridesHistoryAtom = atomWithStorage<RideInfo[]>('ride_history', [], storedRidesHistoryMarkers)
 
 const AUTH_LOGS = false;
 
@@ -100,16 +103,6 @@ type UserContext = {
   }) => Promise<void>;
   toggleUserRole: () => Promise<void>;
 } & State
-
-export type Profile = {
-  id?: string | null;
-  username?: string | null;
-  role?: UserRoles;
-  email?: string | null;
-  phone?: string | null;
-  slug?: string | null;
-  avatar_url?: string | null;
-}
 
 const initialValue: UserContext = {
   session: null,

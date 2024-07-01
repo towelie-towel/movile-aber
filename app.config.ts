@@ -53,6 +53,12 @@ const defineConfig = (): ExpoConfig => ({
   },
   plugins: [
     [
+      "expo-location",
+      {
+        "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location."
+      }
+    ],
+    [
       "expo-image-picker",
       {
         "photosPermission": "Allow $(PRODUCT_NAME) to access your photos.",

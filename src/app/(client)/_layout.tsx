@@ -21,7 +21,7 @@ const ClientLayout = () => {
     }
 
     return (
-        <WSProvider>
+        <WSProvider userType={'client'}>
             <Stack screenOptions={{
                 headerShown: false,
             }} />

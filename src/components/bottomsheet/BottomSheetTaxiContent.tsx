@@ -6,7 +6,7 @@ import { View, Text, ScrollView, useColorScheme } from 'react-native';
 
 import { ConfortSVG } from '../svgs';
 import ScaleBtn from '~/components/common/ScaleBtn';
-import { NavigationInfo, RideInfo, TaxiSteps } from '~/constants/Configs';
+import { NavigationInfo, RideInfo, TaxiSteps } from '~/constants/RideFlow';
 import DashedLine from './DashedLine';
 import TaximeterRide from './TaximeterRide';
 import ProfileScreen from '~/app/(taxi)/profile';
