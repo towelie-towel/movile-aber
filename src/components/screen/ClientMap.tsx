@@ -320,7 +320,7 @@ export default function ClientMap() {
                                     </Text>
                                     {!isSignedIn ? (
                                         <ScaleBtn className="mt-4" onPress={() => router.push('sign')}>
-                                            <View className="bg-[#F8F8F8] dark:bg-[#222222] rounded-lg p-3 chevron-right">
+                                            <View className="bg-[#F8F8F8] dark:bg-[#222222] rounded-lg p-3 chevron-right-">
                                                 <Text className="text-center font-semibold w-auto dark:text-[#fff]">
                                                     Sign In
                                                 </Text>

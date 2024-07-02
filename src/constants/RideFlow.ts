@@ -68,4 +68,4 @@ export interface RideInfo {
 
 export type NavigationInfo = {
     coords: LatLng[];
-} & google.maps.DirectionsLeg
+} & google.maps.DirectionsLeg;

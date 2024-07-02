@@ -41,7 +41,8 @@ import DriverMarker from '~/components/markers/DriverMarker';
 import { ColorInstagram, ColorFacebook, ColorTwitter } from '~/components/svgs';
 import Colors from '~/constants/Colors';
 import { NightMap } from '~/constants/NightMap';
-import { drawerItems, NavigationInfo, RideInfo, TaxiSteps } from '~/constants/Configs';
+import { drawerItems } from '~/constants/Configs';
+import { NavigationInfo, RideInfo, TaxiSteps } from '~/constants/RideFlow';
 import TestRideData from '~/constants/TestRideData.json'
 import { useUser } from '~/context/UserContext';
 import { calculateBearing, calculateMiddlePointAndDelta, polylineDecode, CardinalDirections } from '~/utils/directions';
@@ -222,7 +223,7 @@ export default function ClientMap() {
         try {
             console.log(`fetching route from ${startLatitude},${startLongitude} to ${destination.latitude},${destination.longitude}`)
             const resp = await fetch(
-                `http://192.168.1.103:6942/route?from=${startLatitude},${startLongitude}&to=${destination.latitude},${destination.longitude}`
+                `http://172.20.10.12:6942/route?from=${startLatitude},${startLongitude}&to=${destination.latitude},${destination.longitude}`
             );
             const respJson = await resp.json();
             const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map(
@@ -369,7 +370,7 @@ export default function ClientMap() {
                                     </Text>
                                     {!isSignedIn ? (
                                         <ScaleBtn className="mt-4" onPress={() => router.push('sign')}>
-                                            <View className="bg-[#F8F8F8] dark:bg-[#222222] rounded-lg p-3 chevron-right">
+                                            <View className="bg-[#F8F8F8] dark:bg-[#222222] rounded-lg p-3 chevron-right-">
                                                 <Text className="text-center font-semibold w-auto dark:text-[#fff]">
                                                     Sign In
                                                 </Text>

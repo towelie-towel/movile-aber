@@ -85,10 +85,10 @@ const Ripple: React.FC<RippleProps> = ({ onTap, children, ...restProps }) => {
   return (
     <View ref={aRef} collapsable={false}>
       <GestureDetector gesture={tapGesture}>
-        <Animated.View className="overflow-hidden">
+        <View className="overflow-hidden">
           <View {...restProps}>{children}</View>
           <Animated.View style={rStyle} />
-        </Animated.View>
+        </View>
       </GestureDetector>
     </View>
   );

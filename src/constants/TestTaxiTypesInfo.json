@@ -3,30 +3,70 @@
         "slug": "bike",
         "name": "Bike",
         "pricePerKm": 0.5,
-        "timePerKm": 0.5
+        "timePerKm": 0.5,
+        "duration": {
+            "value": 20000,
+            "text": "200mins"
+        },
+        "distance": {
+            "value": 20000,
+            "text": "200km"
+        }
     },
     {
         "slug": "auto",
         "name": "Auto",
         "pricePerKm": 1,
-        "timePerKm": 0.45
+        "timePerKm": 0.45,
+        "duration": {
+            "value": 20000,
+            "text": "200mins"
+        },
+        "distance": {
+            "value": 20000,
+            "text": "200km"
+        }
     },
     {
         "slug": "confort",
         "name": "Confort",
         "pricePerKm": 1.5,
-        "timePerKm": 0.4
+        "timePerKm": 0.4,
+        "duration": {
+            "value": 20000,
+            "text": "200mins"
+        },
+        "distance": {
+            "value": 20000,
+            "text": "200km"
+        }
     },
     {
         "slug": "confort_plus",
         "name": "Confort Plus",
         "pricePerKm": 2,
-        "timePerKm": 0.42
+        "timePerKm": 0.42,
+        "duration": {
+            "value": 20000,
+            "text": "200mins"
+        },
+        "distance": {
+            "value": 20000,
+            "text": "200km"
+        }
     },
     {
         "slug": "vip",
         "name": "Vip",
         "pricePerKm": 3,
-        "timePerKm": 0.38
+        "timePerKm": 0.38,
+        "duration": {
+            "value": 20000,
+            "text": "200mins"
+        },
+        "distance": {
+            "value": 20000,
+            "text": "200km"
+        }
     }
 ]

@@ -14,6 +14,7 @@
     },
     "jsx": "react-native",
     "moduleResolution": "node",
+    "types": ["react-native-reanimated"],
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
