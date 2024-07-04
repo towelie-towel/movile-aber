@@ -51,7 +51,7 @@ export interface TaxiProfile {
 }
 
 export interface TaxiTypesInfo {
-    slug: string;
+    slug: TaxiType;
     name: string;
     pricePerKm: number;
     timePerKm: number;

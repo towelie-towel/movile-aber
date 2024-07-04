@@ -100,6 +100,7 @@ export default function ClientMap() {
 
     useEffect(() => {
         console.log(currentStep)
+        console.log(selectedTaxiType)
         switch (currentStep) {
             case ClientSteps.SEARCH:
                 setSnapPoints([210, 390, 700])
@@ -113,8 +114,8 @@ export default function ClientMap() {
                 setSnapPoints([210, 450])
                 //bottomSheetModalRef.current?.expand();
                 break;
-            case ClientSteps.RIDE:
-                setSnapPoints([360, 500])
+            case ClientSteps.PICKUP:
+                setSnapPoints([300, 370])
                 break;
 
             default:
@@ -546,8 +547,9 @@ export default function ClientMap() {
                                 {currentStep <= ClientSteps.FINDING && currentStep !== ClientSteps.PINNING &&
                                     <ScaleBtn
                                         containerStyle={{}}
-                                        disabled={findingRide || !selectedTaxiType}
-                                        onPress={findRideHandler}>
+                                        disabled={(findingRide || !selectedTaxiType)}
+                                        onPress={findRideHandler}
+                                    >
                                         <View className="bg-[#FCCB6F] w-40 h-14 rounded-lg p-3">
                                             <Text className="text-center text-lg font-bold w-auto text-[#fff]">
                                                 {findingRide ? 'Finding Ride' : 'Request Ride'}

@@ -45,6 +45,7 @@ import { selectableMarkerIcons, UserMarkerIconType } from '~/components/markers/
 import { BikeSVG, AutoSVG, ConfortSVG, ConfortPlusSVG, VipSVG } from '~/components/svgs/index';
 import TaxiTypeRideRowItem from '~/components/elements/TaxiTypeRideRowItem';
 import TestRidesData from '~/constants/TestRidesData.json'
+import TestRideData from '~/constants/TestRideData.json'
 import TestTaxiTypesInfo from '~/constants/TestTaxiTypesInfo.json'
 // import ColorsPalettes from '~/constants/ColorsPalettes.json'
 
@@ -189,9 +190,16 @@ export const BottomSheetContent = ({
       try {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         setRouteLoading(true)
-        const { overview_polyline, decodedCoords, distance, duration } = await getDirections(`${pinedInfo.origin.latitude},${pinedInfo.origin.longitude}`, `${pinedInfo.destination.latitude},${pinedInfo.destination.longitude}`)
+        // const { overview_polyline, decodedCoords, distance, duration } = await getDirections(`${pinedInfo.origin.latitude},${pinedInfo.origin.longitude}`, `${pinedInfo.destination.latitude},${pinedInfo.destination.longitude}`)
         // snapToIndex(1);
-        setActiveRoute({ coords: decodedCoords });
+        const { overview_polyline, distance, duration } = TestRideData
+
+        setActiveRoute({
+          coords: polylineDecode(overview_polyline.points).map((point, _) => ({
+            latitude: point[0]!,
+            longitude: point[1]!,
+          }))
+        });
         setRouteInfo({ distance: distance, duration: duration });
         setRideInfo({
           status: "pending",
@@ -228,6 +236,11 @@ export const BottomSheetContent = ({
 
     if (!result.canceled) setMarkerImage(result);
   }, []);
+
+  const selectTaxiTypeHandler = useCallback(async (value: TaxiType) => {
+    console.log("selectTaxiTypeHandler: ", value)
+    setSelectedTaxiType(value)
+  }, [setSelectedTaxiType]);
 
   const getCurrentPositionAsync = useCallback(async () => {
     const currentPosition = await ExpoLocation.getCurrentPositionAsync({
@@ -621,7 +634,7 @@ export const BottomSheetContent = ({
         <View className="w-[95%] h-full self-center overflow-visible">
 
           {currentStep >= ClientSteps.PICKUP ?
-            <View className="px-[5%]- h-full self-center">
+            <View className="mt-3 px-[5%]- h-full self-center">
               <View className="h-20 flex-row justify-between items-center">
                 <View className="flex-row gap-3 items-center">
                   <Image
@@ -1101,10 +1114,10 @@ export const BottomSheetContent = ({
               </View> */}
 
               <View className='pl-[5%]- pr-[3%]- h-[24rem] mt-3 rounded-lg bg-[#E9E9E9] dark:bg-[#333333] overflow-hidden shadow'>
-                <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="always" className="w-100 px-3">
+                <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="always" className="w-100 px-3-">
                   {
                     // @ts-ignore
-                    TestTaxiTypesInfo.map((taxiType: TaxiTypesInfo) => <TaxiTypeRideRowItem key={taxiType.slug} taxiType={taxiType} />)
+                    TestTaxiTypesInfo.map((taxiType: TaxiTypesInfo) => <TaxiTypeRideRowItem selectedTaxiType={selectedTaxiType} selectTaxiType={selectTaxiTypeHandler} key={taxiType.slug} taxiType={taxiType} />)
                   }
                 </ScrollView>
               </View>
