@@ -111,7 +111,7 @@ export default function ClientMap() {
                 bottomSheetModalRef.current?.collapse()
                 break;
             case ClientSteps.TAXI:
-                setSnapPoints([210, 450])
+                setSnapPoints([210, 360])
                 //bottomSheetModalRef.current?.expand();
                 break;
             case ClientSteps.PICKUP:

@@ -158,32 +158,81 @@ export const BottomSheetContent = ({
   }, [piningInput, originShakeAnimatedValue, destinationShakeAnimatedValue])
 
   useEffect(() => {
-    if (sheetCurrentSnap === 2) {
-      markerNameInputViewRef.current?.focus()
-    }
+    if (sheetCurrentSnap === 2) handleBottomSheetExpand()
     if (editingMarkers) endEditingMarkers()
   }, [sheetCurrentSnap]);
   useEffect(() => {
-    if (confirmedTaxi) {
-      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-      setCurrentStep(ClientSteps.PICKUP)
-      setFindingRide(false);
-    }
+    if (confirmedTaxi) handleTaxiConfirmation()
   }, [confirmedTaxi]);
   useEffect(() => {
-    if (currentStep === ClientSteps.SEARCH) {
-      fetchOrigin();
-      if (pinedInfo?.destination) {
-        destinationInputViewRef.current?.setAddressText(pinedInfo.destination.address);
-      }
+    if (currentStep === ClientSteps.SEARCH) restoreInputFromPinedInfo()
+  }, [currentStep]);
+  useEffect(() => {
+    console.log(JSON.stringify(pinedInfo, null, 2))
+    handleActiveRouteTokio()
+  }, [pinedInfo])
+
+  const handleBottomSheetExpand = useCallback(() => {
+    if (currentStep === ClientSteps.PINNING) {
+      markerNameInputViewRef.current?.focus()
     }
+  }, [currentStep, markerNameInputViewRef])
+
+  const handleTaxiConfirmation = useCallback(() => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setCurrentStep(ClientSteps.PICKUP)
+    setFindingRide(false);
+  }, [])
+
+  const getCurrentPositionAsync = useCallback(async () => {
+    const currentPosition = await ExpoLocation.getCurrentPositionAsync({
+      accuracy: ExpoLocation.Accuracy.Highest,
+    });
+    const resp = await fetch(
+      `https://revgeocode.search.hereapi.com/v1/revgeocode?at=${currentPosition.coords.latitude},${currentPosition.coords.longitude}&types=street&limit=5&apiKey=mRASkFtnRqYimoHBzud5-kSsj0y_FvqR-1jwJHrfUvQ&showMapReferences=pointAddress&show=streetInfo`
+    );
+    const respJson = await resp.json();
+
+    if (respJson.items.length > 0) {
+      const streetInfo = `${respJson.items[0].address.street.replace('Calle ', '')} e/ ${respJson.items[1].address.street.replace('Calle ', '')} y ${respJson.items[2].address.street.replace('Calle ', '')}, ${respJson.items[2].address.district}, Habana, Cuba`;
+      return { address: streetInfo, latitude: currentPosition.coords.latitude, longitude: currentPosition.coords.longitude }
+    } else {
+      console.log('No street address found in the response.');
+      return null
+    }
+  }, []);
+  const fetchOrigin = useCallback(async () => {
+    try {
+      setOriginLoading(true)
+      const currentPosition = await getCurrentPositionAsync();
+
+      if (currentPosition) {
+        originInputViewRef.current?.setAddressText(currentPosition.address);
+        setPinedInfo({
+          origin: currentPosition,
+          destination: pinedInfo?.destination ?? null,
+        });
+      } else {
+        console.log('No street address found in the response.');
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error(error.message);
+      }
+    } finally {
+      setOriginLoading(false)
+    }
+  }, [getCurrentPositionAsync, originInputViewRef, pinedInfo]);
+  const restoreInputFromPinedInfo = useCallback(() => {
+    fetchOrigin();
+    if (pinedInfo?.destination) destinationInputViewRef.current?.setAddressText(pinedInfo.destination.address);
+    stopAllLoadings()
+  }, [pinedInfo, destinationInputViewRef, fetchOrigin])
+  const stopAllLoadings = useCallback(() => {
     setOriginLoading(false)
     setDestinationLoading(false)
     setRouteLoading(false)
-  }, [currentStep]);
-  useEffect(() => {
-    handleActiveRouteTokio()
-  }, [pinedInfo])
+  }, [])
 
   const handleActiveRouteTokio = useCallback(async () => {
     if (pinedInfo?.destination && pinedInfo?.origin) {
@@ -241,47 +290,6 @@ export const BottomSheetContent = ({
     console.log("selectTaxiTypeHandler: ", value)
     setSelectedTaxiType(value)
   }, [setSelectedTaxiType]);
-
-  const getCurrentPositionAsync = useCallback(async () => {
-    const currentPosition = await ExpoLocation.getCurrentPositionAsync({
-      accuracy: ExpoLocation.Accuracy.Highest,
-    });
-    const resp = await fetch(
-      `https://revgeocode.search.hereapi.com/v1/revgeocode?at=${currentPosition.coords.latitude},${currentPosition.coords.longitude}&types=street&limit=5&apiKey=mRASkFtnRqYimoHBzud5-kSsj0y_FvqR-1jwJHrfUvQ&showMapReferences=pointAddress&show=streetInfo`
-    );
-    const respJson = await resp.json();
-
-    if (respJson.items.length > 0) {
-      const streetInfo = `${respJson.items[0].address.street.replace('Calle ', '')} e/ ${respJson.items[1].address.street.replace('Calle ', '')} y ${respJson.items[2].address.street.replace('Calle ', '')}, ${respJson.items[2].address.district}, Habana, Cuba`;
-      return { address: streetInfo, latitude: currentPosition.coords.latitude, longitude: currentPosition.coords.longitude }
-    } else {
-      console.log('No street address found in the response.');
-      return null
-    }
-  }, []);
-
-  const fetchOrigin = useCallback(async () => {
-    try {
-      setOriginLoading(true)
-      const currentPosition = await getCurrentPositionAsync();
-
-      if (currentPosition) {
-        originInputViewRef.current?.setAddressText(currentPosition.address);
-        setPinedInfo({
-          origin: currentPosition,
-          destination: pinedInfo?.destination ?? null,
-        });
-      } else {
-        console.log('No street address found in the response.');
-      }
-    } catch (error) {
-      if (error instanceof Error) {
-        console.error(error.message);
-      }
-    } finally {
-      setOriginLoading(false)
-    }
-  }, [getCurrentPositionAsync, originInputViewRef, pinedInfo]);
 
   const startPiningLocationHandler = useCallback(() => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -1113,7 +1121,7 @@ export const BottomSheetContent = ({
                 }
               </View> */}
 
-              <View className='pl-[5%]- pr-[3%]- h-[24rem] mt-3 rounded-lg bg-[#E9E9E9] dark:bg-[#333333] overflow-hidden shadow'>
+              <View className='pl-[5%]- pr-[3%]- h-[18rem] mt-3 rounded-lg bg-[#E9E9E9] dark:bg-[#333333] overflow-hidden shadow'>
                 <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="always" className="w-100 px-3-">
                   {
                     // @ts-ignore
