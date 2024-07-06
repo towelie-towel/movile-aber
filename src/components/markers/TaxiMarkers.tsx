@@ -6,7 +6,7 @@ import { View } from 'react-native';
 import { MotiView } from '@motify/components';
 import { LatLng } from 'react-native-maps';
 
-import { IMarker } from '~/constants/Markers';
+import { IMarker } from '~/types/Marker';
 import { useWSState } from '~/context/WSContext';
 import { TaxiSVG } from '../svgs';
 import AnimatedMarker from './AnimatedMarker';

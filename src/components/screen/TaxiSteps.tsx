@@ -1,18 +1,15 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useRef } from 'react';
-import {
-    Text,
-    View,
-} from 'react-native';
+import { Text, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 import PagerView from 'react-native-pager-view';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
-import { NavigationInfo } from '~/constants/Configs';
-import { useWSState, useWSActions } from '~/context/WSContext';
-import { calculateBearing, calculateDistance, CardinalDirections, formatDistance } from '~/utils/directions';
-import MagnometerArrow from '../common/MagnometerArrow';
 import { Camera } from 'react-native-maps';
+
+import { useWSState, useWSActions } from '~/context/WSContext';
+import MagnometerArrow from '~/components/common/MagnometerArrow';
+import { calculateDistance, CardinalDirections, formatDistance } from '~/utils/directions';
+import type { NavigationInfo } from '~/types/RideFlow';
 
 interface NavigationStepsProps {
     navigationInfo: NavigationInfo;
@@ -130,6 +127,7 @@ export default function TaxiSteps({
                     />
                 </View>
                 {
+                    // @ts-ignore
                     navigationInfo.steps.slice(1).map((step, i) => (
                         <View className='flex-1 flex-row items-center' key={i + 1}>
                             <View className='flex-row items-center justify-around w-28 gap-2 px-1'>

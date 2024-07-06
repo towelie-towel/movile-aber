@@ -1,54 +1,34 @@
 import { MaterialIcons, MaterialCommunityIcons, FontAwesome6 } from '@expo/vector-icons';
-import {
-    BottomSheetBackdrop,
-    BottomSheetBackdropProps,
-    BottomSheetModal,
-    BottomSheetModalProvider,
-    BottomSheetHandleProps,
-} from '@gorhom/bottom-sheet';
+import { BottomSheetBackdrop, BottomSheetBackdropProps, BottomSheetModal, BottomSheetModalProvider, BottomSheetHandleProps } from '@gorhom/bottom-sheet';
 import { Image } from 'expo-image';
 import { useKeepAwake } from 'expo-keep-awake';
 import * as ExpoLocation from 'expo-location';
 import * as NavigationBar from 'expo-navigation-bar';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import {
-    StatusBar,
-    useColorScheme,
-    Text,
-    View,
-    Platform,
-    Keyboard,
-    LayoutAnimation,
-    Switch,
-} from 'react-native';
+import { StatusBar, useColorScheme, Text, View, Platform, Keyboard, LayoutAnimation, Switch } from 'react-native';
 import { Drawer } from 'react-native-drawer-layout';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import MapView, { type LatLng, PROVIDER_GOOGLE, PROVIDER_DEFAULT, Polyline, Marker, Camera } from 'react-native-maps';
-import Animated, {
-    Extrapolation,
-    interpolate,
-    useAnimatedStyle,
-    useSharedValue,
-} from 'react-native-reanimated';
+import Animated, { Extrapolation, interpolate, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useUser } from '~/context/UserContext';
 import BottomSheetTaxiContent from '~/components/bottomsheet/BottomSheetTaxiContent';
 import { CustomHandle } from '~/components/bottomsheet/hooks/CustomHandle';
 import { Ripple, ScaleBtn } from '~/components/common';
 import AnimatedRouteMarker from '~/components/markers/AnimatedRouteMarker';
 import DriverMarker from '~/components/markers/DriverMarker';
+import MagnometerArrow from '~/components/common/MagnometerArrow';
 import { ColorInstagram, ColorFacebook, ColorTwitter } from '~/components/svgs';
 import Colors from '~/constants/Colors';
 import { NightMap } from '~/constants/NightMap';
-import { drawerItems } from '~/constants/Configs';
-import { NavigationInfo, RideInfo, TaxiSteps } from '~/constants/RideFlow';
+import { drawerItems } from '~/constants/Drawer';
+import { TaxiSteps } from '~/constants/RideFlow';
 import TestRideData from '~/constants/TestRideData.json'
-import { useUser } from '~/context/UserContext';
 import { calculateBearing, calculateMiddlePointAndDelta, polylineDecode, CardinalDirections } from '~/utils/directions';
-import TaxiStepsCarousel from './TaxiSteps';
-import bottomSheet from '@gorhom/bottom-sheet/lib/typescript/components/bottomSheet';
-import MagnometerArrow from '../common/MagnometerArrow';
+import TaxiStepsCarousel from '~/components/screen/TaxiSteps';
+import { NavigationInfo, RideInfo } from '~/types/RideFlow';
 
 const DEV_SIMULATING = true
 
@@ -223,7 +203,7 @@ export default function ClientMap() {
         try {
             console.log(`fetching route from ${startLatitude},${startLongitude} to ${destination.latitude},${destination.longitude}`)
             const resp = await fetch(
-                `http://172.20.10.12:6942/route?from=${startLatitude},${startLongitude}&to=${destination.latitude},${destination.longitude}`
+                `http://192.168.1.104:6942/route?from=${startLatitude},${startLongitude}&to=${destination.latitude},${destination.longitude}`
             );
             const respJson = await resp.json();
             const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map(

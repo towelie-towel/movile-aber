@@ -5,12 +5,11 @@ import { atomWithStorage, createJSONStorage, } from 'jotai/utils';
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
 import { supabase } from '~/lib/supabase';
+import { getData } from '~/lib/storage';
 import { UserMarkerIconType } from '~/components/markers/AddUserMarker';
-import { getData } from '~/lib/storage'; UserRoles
-import { RideInfo } from '~/constants/RideFlow';
 import { UserRoles } from '~/constants/User';
-import { PlaceInfo } from '~/constants/Places';
-import { Profile } from '~/constants/User';
+import type { Profile } from '~/types/User';
+import type { RideInfo } from '~/types/RideFlow';
 
 const storedUserMarkers = createJSONStorage<UserMarkerIconType[]>(() => AsyncStorage)
 export const userMarkersAtom = atomWithStorage<UserMarkerIconType[]>('user_markers', [], storedUserMarkers)

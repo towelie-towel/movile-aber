@@ -2,7 +2,7 @@ import { memo, useEffect, useRef } from 'react';
 import { Animated, Dimensions, Easing, Platform } from 'react-native';
 import { AnimatedRegion, MapMarker, Marker } from 'react-native-maps';
 
-import { IMarker } from '~/constants/Markers';
+import { IMarker } from '~/types/Marker';
 
 type AnimatedMarkerParams = {
   id: string;

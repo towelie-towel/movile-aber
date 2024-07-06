@@ -11,7 +11,7 @@ import {
 import ScaleBtn from '~/components/common/ScaleBtn';
 import { View, Text } from '~/components/common/Themed';
 import Colors from '~/constants/Colors';
-import { IMarker } from '~/constants/Markers';
+import { IMarker } from '~/types/Marker';
 import { getData } from '~/lib/storage';
 
 export const selectableMarkerIcons = [

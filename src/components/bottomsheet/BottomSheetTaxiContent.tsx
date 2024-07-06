@@ -4,14 +4,13 @@ import { Image } from 'expo-image';
 import React, { useCallback } from 'react';
 import { View, Text, ScrollView, useColorScheme } from 'react-native';
 
-import { ConfortSVG } from '../svgs';
-import ScaleBtn from '~/components/common/ScaleBtn';
-import { NavigationInfo, RideInfo, TaxiSteps } from '~/constants/RideFlow';
-import DashedLine from './DashedLine';
-import TaximeterRide from './TaximeterRide';
-import ProfileScreen from '~/app/(taxi)/profile';
-import Colors from '~/constants/Colors';
 import { useUser } from '~/context/UserContext';
+import ScaleBtn from '~/components/common/ScaleBtn';
+import DashedLine from '~/components/bottomsheet/DashedLine';
+import TaximeterRide from '~/components/bottomsheet/TaximeterRide';
+import { TaxiSteps } from '~/constants/RideFlow';
+import Colors from '~/constants/Colors';
+import type { RideInfo } from '~/types/RideFlow';
 
 interface BottomSheetTaxiContentProps {
     currentStep: TaxiSteps;

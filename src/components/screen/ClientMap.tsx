@@ -1,14 +1,4 @@
-import {
-    StatusBar,
-    useColorScheme,
-    Text,
-    View,
-    Platform,
-    Keyboard,
-    useWindowDimensions,
-    LayoutAnimation,
-    Switch
-} from 'react-native';
+import { StatusBar, useColorScheme, Text, View, Platform, Keyboard, useWindowDimensions, LayoutAnimation, Switch } from 'react-native';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Image } from 'expo-image';
 import { useKeepAwake } from 'expo-keep-awake';
@@ -17,46 +7,33 @@ import * as NavigationBar from 'expo-navigation-bar';
 import { useRouter } from 'expo-router';
 import { BlurView } from 'expo-blur';
 import { MaterialIcons, MaterialCommunityIcons, FontAwesome6 } from '@expo/vector-icons';
-import {
-    BottomSheetBackdrop,
-    BottomSheetBackdropProps,
-    BottomSheetModal,
-    BottomSheetModalProvider,
-    BottomSheetHandleProps,
-} from '@gorhom/bottom-sheet';
+import { BottomSheetBackdrop, BottomSheetBackdropProps, BottomSheetModal, BottomSheetModalProvider, BottomSheetHandleProps } from '@gorhom/bottom-sheet';
 import { Drawer } from 'react-native-drawer-layout';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import MapView, { type LatLng, PROVIDER_GOOGLE, PROVIDER_DEFAULT, Polyline, Marker } from 'react-native-maps';
-import Animated, {
-    Easing,
-    Extrapolation,
-    interpolate,
-    useAnimatedStyle,
-    useSharedValue,
-} from 'react-native-reanimated';
+import Animated, { Extrapolation, interpolate, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAtom } from 'jotai/react';
 
-import { AddMarker, BottomSheetContent } from '~/components/bottomsheet/BottomSheetContent';
+import { userMarkersAtom, useUser } from '~/context/UserContext';
+import { useWSActions } from '~/context/WSContext';
+import { BottomSheetContent } from '~/components/bottomsheet/BottomSheetContent';
 import { CustomHandle } from '~/components/bottomsheet/hooks/CustomHandle';
 import Ripple from '~/components/common/RippleBtn';
 import ScaleBtn from '~/components/common/ScaleBtn';
 import AnimatedRouteMarker from '~/components/markers/AnimatedRouteMarker';
 import TaxisMarkers from '~/components/markers/TaxiMarkers';
-// import UserMarker from '~/components/markers/UserMarker';
-import { ColorInstagram, ColorFacebook, ColorTwitter, MapMarkerSVG } from '~/components/svgs';
+import UserWavesMarker from '~/components/markers/UserWavesMarker';
+import { UserMapMarker } from '~/components/markers/UserMapMarker';
+import { ColorInstagram, ColorFacebook, ColorTwitter } from '~/components/svgs';
 import Colors from '~/constants/Colors';
 import { NightMap } from '~/constants/NightMap';
-import { drawerItems } from '~/constants/Configs';
-import { ClientSteps, RideInfo } from '~/constants/RideFlow';
-import { userMarkersAtom, useUser } from '~/context/UserContext';
-import { useWSActions } from '~/context/WSContext';
+import { drawerItems } from '~/constants/Drawer';
+import { ClientSteps } from '~/constants/RideFlow';
 import { calculateMiddlePointAndDelta } from '~/utils/directions';
-import type { TaxiType } from '~/constants/TaxiTypes';
-import UserWavesMarker from '../markers/UserWavesMarker';
-import MagnometerArrow from '../common/MagnometerArrow';
-import { CardinalDirections } from '~/utils/directions';
-import { UserMapMarker } from '../markers/UserMapMarker';
-import { useAtom } from 'jotai/react';
+import type { TaxiType } from '~/types/Taxi';
+import type { RideInfo } from '~/types/RideFlow';
+import type { AddMarker } from '~/types/Marker';
 
 export default function ClientMap() {
     useKeepAwake();

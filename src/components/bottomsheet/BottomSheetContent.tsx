@@ -3,64 +3,33 @@ import { BottomSheetView, useBottomSheet } from '@gorhom/bottom-sheet';
 import { Image } from 'expo-image';
 import * as ExpoLocation from 'expo-location';
 import React, { useCallback, useEffect, useMemo, useRef, useState, ComponentRef } from 'react';
-import {
-  View,
-  Text,
-  useColorScheme,
-  useWindowDimensions,
-  LayoutAnimation,
-  Keyboard,
-  Pressable,
-  ScrollView,
-  ColorValue,
-  Animated,
-  Easing,
-  Alert,
-  ActivityIndicator
-} from 'react-native';
-import type { Address, LatLng } from 'react-native-maps';
-import { measure, runOnJS, useAnimatedRef, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { View, Text, useColorScheme, useWindowDimensions, LayoutAnimation, Keyboard, ScrollView, Animated, Easing, Alert, ActivityIndicator } from 'react-native';
+import type { LatLng } from 'react-native-maps';
 import { useAtom } from 'jotai/react';
-import * as ImagePicker from 'expo-image-picker';
+// import * as ImagePicker from 'expo-image-picker';
 
 import FloatingLabelInput from '~/lib/floating-label-input';
-import {
-  GooglePlacesAutocomplete,
-  GooglePlaceData,
-  GooglePlaceDetail,
-  GooglePlacesAutocompleteRef,
-} from '~/lib/google-places-autocomplete/GooglePlacesAutocomplete';
-import { ScaleBtn } from '~/components/common';
-import Colors from '~/constants/Colors';
-import { TaxiTypesInfo, type TaxiType } from '~/constants/TaxiTypes';
-import { ClientSteps, DBRide, RideInfo } from '~/constants/RideFlow';
-import { generateUniqueId } from '~/utils';
-import { getCoordinateAddress, getDirections, polylineDecode } from '~/utils/directions';
-import { useUser } from '~/context/UserContext';
-import DashedLine from './DashedLine';
+import { GooglePlacesAutocomplete, GooglePlaceData, GooglePlaceDetail, GooglePlacesAutocompleteRef } from '~/lib/google-places-autocomplete/GooglePlacesAutocomplete';
 import { useWSActions, useWSState } from '~/context/WSContext';
-import { userMarkersAtom } from '~/context/UserContext';
+import { userMarkersAtom, useUser } from '~/context/UserContext';
+import { ScaleBtn } from '~/components/common';
 import { selectableMarkerIcons, UserMarkerIconType } from '~/components/markers/AddUserMarker';
-import { BikeSVG, AutoSVG, ConfortSVG, ConfortPlusSVG, VipSVG } from '~/components/svgs/index';
+import { ConfortSVG } from '~/components/svgs/index';
 import TaxiTypeRideRowItem from '~/components/elements/TaxiTypeRideRowItem';
+import DashedLine from '~/components/bottomsheet/DashedLine';
+import Colors from '~/constants/Colors';
+import { ClientSteps } from '~/constants/RideFlow';
+import { defaultMarkers } from '~/constants/Markers';
+// import ColorsPalettes from '~/constants/ColorsPalettes.json'
+import { generateUniqueId } from '~/utils';
+import { getCoordinateAddress/* , getDirections */, polylineDecode } from '~/utils/directions';
+import type { TaxiTypesInfo, TaxiType } from '~/types/Taxi';
+import type { DBRide, RideInfo } from '~/types/RideFlow';
+import type { AddMarker } from '~/types/Marker';
+
 import TestRidesData from '~/constants/TestRidesData.json'
 import TestRideData from '~/constants/TestRideData.json'
 import TestTaxiTypesInfo from '~/constants/TestTaxiTypesInfo.json'
-// import ColorsPalettes from '~/constants/ColorsPalettes.json'
-
-const DEFAULT_MARKERS = [{ name: "Trabajo", icon: "folder-marker" }, { name: "Casa", icon: "home-map-marker" }]
-
-export type AddMarker = {
-  name?: string;
-  icon?: string;
-  color?: string;
-}
-
-/* 
-  endPiningLocation={endPiningLocation}
-  getMiddlePoint={getMiddlePoint}
-*/
 
 interface BottomSheetContentProps {
   sheetCurrentSnap: number;
@@ -96,9 +65,9 @@ export const BottomSheetContent = ({
   setSelectedTaxiType,
 }: BottomSheetContentProps) => {
   const colorScheme = useColorScheme();
-  const { width, height } = useWindowDimensions();
+  const { width } = useWindowDimensions();
   const { profile } = useUser()
-  const { snapToPosition, snapToIndex, collapse, expand } = useBottomSheet();
+  const { snapToIndex } = useBottomSheet();
   const { confirmedTaxi } = useWSState()
   const { cancelTaxi } = useWSActions()
   const [userMarkers, setUserMarkers] = useAtom(userMarkersAtom)
@@ -114,8 +83,8 @@ export const BottomSheetContent = ({
     distance: { value: number; text: string };
     duration: { value: number; text: string };
   } | null>(null);
-  const [markerImage, setMarkerImage] = useState<ImagePicker.ImagePickerResult | null>(null);
   const [markerName, setMarkerName] = useState<string | null>(null);
+  // const [markerImage, setMarkerImage] = useState<ImagePicker.ImagePickerResult | null>(null);
 
   const [routeLoading, setRouteLoading] = useState(false);
   const [originLoading, setOriginLoading] = useState(false);
@@ -127,6 +96,20 @@ export const BottomSheetContent = ({
   const markerShakeAnimatedValue = React.useRef(new Animated.Value(0)).current;
   const originShakeAnimatedValue = React.useRef(new Animated.Value(0)).current;
   const destinationShakeAnimatedValue = React.useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (sheetCurrentSnap === 2) handleBottomSheetExpand()
+    if (editingMarkers) endEditingMarkers()
+  }, [sheetCurrentSnap]);
+  useEffect(() => {
+    if (confirmedTaxi) handleTaxiConfirmation()
+  }, [confirmedTaxi]);
+  useEffect(() => {
+    if (currentStep === ClientSteps.SEARCH) restoreInputFromPinedInfo()
+  }, [currentStep]);
+  useEffect(() => {
+    handleActiveRouteTokio()
+  }, [pinedInfo])
 
   const emptyMarkerShake = useCallback(() => {
     markerShakeAnimatedValue.setValue(0);
@@ -157,21 +140,6 @@ export const BottomSheetContent = ({
     }
   }, [piningInput, originShakeAnimatedValue, destinationShakeAnimatedValue])
 
-  useEffect(() => {
-    if (sheetCurrentSnap === 2) handleBottomSheetExpand()
-    if (editingMarkers) endEditingMarkers()
-  }, [sheetCurrentSnap]);
-  useEffect(() => {
-    if (confirmedTaxi) handleTaxiConfirmation()
-  }, [confirmedTaxi]);
-  useEffect(() => {
-    if (currentStep === ClientSteps.SEARCH) restoreInputFromPinedInfo()
-  }, [currentStep]);
-  useEffect(() => {
-    console.log(JSON.stringify(pinedInfo, null, 2))
-    handleActiveRouteTokio()
-  }, [pinedInfo])
-
   const handleBottomSheetExpand = useCallback(() => {
     if (currentStep === ClientSteps.PINNING) {
       markerNameInputViewRef.current?.focus()
@@ -184,13 +152,11 @@ export const BottomSheetContent = ({
     setFindingRide(false);
   }, [])
 
-  const getCurrentPositionAsync = useCallback(async () => {
+  const getCurrentPositionWithAddressAsync = useCallback(async () => {
     const currentPosition = await ExpoLocation.getCurrentPositionAsync({
       accuracy: ExpoLocation.Accuracy.Highest,
     });
-    const resp = await fetch(
-      `https://revgeocode.search.hereapi.com/v1/revgeocode?at=${currentPosition.coords.latitude},${currentPosition.coords.longitude}&types=street&limit=5&apiKey=mRASkFtnRqYimoHBzud5-kSsj0y_FvqR-1jwJHrfUvQ&showMapReferences=pointAddress&show=streetInfo`
-    );
+    const resp = await fetch(`https://revgeocode.search.hereapi.com/v1/revgeocode?at=${currentPosition.coords.latitude},${currentPosition.coords.longitude}&types=street&limit=5&apiKey=mRASkFtnRqYimoHBzud5-kSsj0y_FvqR-1jwJHrfUvQ&showMapReferences=pointAddress&show=streetInfo`);
     const respJson = await resp.json();
 
     if (respJson.items.length > 0) {
@@ -204,7 +170,7 @@ export const BottomSheetContent = ({
   const fetchOrigin = useCallback(async () => {
     try {
       setOriginLoading(true)
-      const currentPosition = await getCurrentPositionAsync();
+      const currentPosition = await getCurrentPositionWithAddressAsync();
 
       if (currentPosition) {
         originInputViewRef.current?.setAddressText(currentPosition.address);
@@ -222,7 +188,7 @@ export const BottomSheetContent = ({
     } finally {
       setOriginLoading(false)
     }
-  }, [getCurrentPositionAsync, originInputViewRef, pinedInfo]);
+  }, [getCurrentPositionWithAddressAsync, originInputViewRef, pinedInfo]);
   const restoreInputFromPinedInfo = useCallback(() => {
     fetchOrigin();
     if (pinedInfo?.destination) destinationInputViewRef.current?.setAddressText(pinedInfo.destination.address);
@@ -274,7 +240,7 @@ export const BottomSheetContent = ({
     }
   }, [pinedInfo, profile])
 
-  const pickMarkerImage = useCallback(async () => {
+  /* const pickMarkerImage = useCallback(async () => {
     // No permissions request is necessary for launching the image library
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.All,
@@ -284,7 +250,7 @@ export const BottomSheetContent = ({
     });
 
     if (!result.canceled) setMarkerImage(result);
-  }, []);
+  }, []); */
 
   const selectTaxiTypeHandler = useCallback(async (value: TaxiType) => {
     console.log("selectTaxiTypeHandler: ", value)
@@ -333,7 +299,7 @@ export const BottomSheetContent = ({
           destinationInputViewRef.current?.setAddressText(streetInfo);
           let originDestination = pinedInfo?.origin;
           if (!originDestination) {
-            originDestination = await getCurrentPositionAsync()
+            originDestination = await getCurrentPositionWithAddressAsync()
             originDestination && originInputViewRef.current?.setAddressText(originDestination.address);
           }
           setPinedInfo({
@@ -1036,7 +1002,7 @@ export const BottomSheetContent = ({
                 <View className='py-3 pl-[5%]- pr-[3%]- mt-3 rounded-lg bg-[#E9E9E9] dark:bg-[#333333] overflow-hidden shadow'>
                   <ScrollView keyboardShouldPersistTaps="always" showsHorizontalScrollIndicator={false} horizontal className="w-100 overflow-visible">
                     {
-                      DEFAULT_MARKERS.map((defaultMarker) => {
+                      defaultMarkers.map((defaultMarker) => {
                         const userMarker = userMarkers.find(item => item.name === defaultMarker.name)
 
                         if (userMarkers.length === 0 || !userMarker) {
@@ -1054,7 +1020,7 @@ export const BottomSheetContent = ({
                       })
                     }
                     {
-                      userMarkers.filter(marker => !DEFAULT_MARKERS.find(m => m.icon === marker.icon.name)).map((userMarker) => {
+                      userMarkers.filter(marker => !defaultMarkers.find(m => m.icon === marker.icon.name)).map((userMarker) => {
                         return (
                           <UserMarkerRowItem key={userMarker.id} userMarker={userMarker} pressHandler={selectMarkerHandler} editingMarkers={editingMarkers} deleteHandler={deleteMarkerHandler} />
                         )

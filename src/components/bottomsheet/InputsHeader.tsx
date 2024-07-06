@@ -1,35 +1,19 @@
-import { MaterialCommunityIcons, FontAwesome6, AntDesign } from '@expo/vector-icons';
-import { BottomSheetView, useBottomSheet } from '@gorhom/bottom-sheet';
-import { Image } from 'expo-image';
-import * as ExpoLocation from 'expo-location';
 import React, { useEffect, useRef, useState } from 'react';
-import {
-    View,
-    Text,
-    useColorScheme,
-    useWindowDimensions,
-    LayoutAnimation,
-    Keyboard,
-    Pressable,
-    ScrollView,
-} from 'react-native';
+import { View, Text, useColorScheme, useWindowDimensions, LayoutAnimation, Keyboard } from 'react-native';
 import type { Address, LatLng } from 'react-native-maps';
-
-import { ConfortSVG } from '../svgs';
-import { ScaleBtn } from '~/components/common';
-import Colors from '~/constants/Colors';
-import {
-    GooglePlacesAutocomplete,
-    GooglePlaceData,
-    GooglePlaceDetail,
-    GooglePlacesAutocompleteRef,
-} from '~/lib/google-places-autocomplete/GooglePlacesAutocomplete';
-import type { TaxiProfile, TaxiType } from '~/constants/TaxiTypes';
-import { polylineDecode } from '~/utils/directions';
-import { ClientSteps } from '~/constants/RideFlow';
-import { userMarkersAtom, useUser } from '~/context/UserContext';
-import DashedLine from './DashedLine';
 import { useAtom } from 'jotai/react';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { BottomSheetView, useBottomSheet } from '@gorhom/bottom-sheet';
+import * as ExpoLocation from 'expo-location';
+
+import { GooglePlacesAutocomplete, GooglePlaceData, GooglePlaceDetail, GooglePlacesAutocompleteRef } from '~/lib/google-places-autocomplete/GooglePlacesAutocomplete';
+import { userMarkersAtom } from '~/context/UserContext';
+import { ScaleBtn } from '~/components/common';
+import DashedLine from '~/components/bottomsheet/DashedLine';
+import Colors from '~/constants/Colors';
+import { ClientSteps } from '~/constants/RideFlow';
+import { polylineDecode } from '~/utils/directions';
+import type { TaxiProfile, TaxiType } from '~/types/Taxi';
 
 interface InputHeaderContentProps {
     currentStep: ClientSteps;
@@ -57,14 +41,14 @@ export const InputHeaderContent = ({
     const { width } = useWindowDimensions();
     const { collapse, snapToIndex, snapToPosition } = useBottomSheet();
 
-    const [userMarkers, setUserMarkers] = useAtom(userMarkersAtom)
+    const [userMarkers, _setUserMarkers] = useAtom(userMarkersAtom)
     const [viewPinOnMap, setViewPinOnMap] = useState(false);
     const [piningInput, setPiningInput] = useState<'origin' | 'destination'>('destination');
     const [piningInfo, setPiningInfo] = useState<{
         origin: { latitude: number, longitude: number, address: string } | null,
         destination: { latitude: number, longitude: number, address: string } | null,
     } | null>(null);
-    const [routeInfo, setRouteInfo] = useState<{
+    const [_routeInfo, setRouteInfo] = useState<{
         distance: { value: number; text: string };
         duration: { value: number; text: string };
     } | null>(null);
@@ -80,7 +64,7 @@ export const InputHeaderContent = ({
         const tokio = async () => {
             if (piningInfo?.destination && piningInfo?.origin) {
                 const resp = await fetch(
-                    `http://172.20.10.12:6942/route?from=${piningInfo.origin.latitude},${piningInfo.origin.longitude}&to=${piningInfo.destination.latitude},${piningInfo.destination.longitude}`
+                    `http://192.168.1.104:6942/route?from=${piningInfo.origin.latitude},${piningInfo.origin.longitude}&to=${piningInfo.destination.latitude},${piningInfo.destination.longitude}`
                 );
                 const respJson = await resp.json();
                 const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map(

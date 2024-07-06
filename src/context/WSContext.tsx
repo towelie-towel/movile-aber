@@ -7,11 +7,11 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useR
 import { LatLng } from 'react-native-maps';
 
 import { PlaceMarkerIconType } from '~/components/markers/AddUserMarker';
-import { PlaceInfo } from '~/constants/Places';
-import { RideInfo } from '~/constants/RideFlow';
-import { TaxiProfile } from '~/constants/TaxiTypes';
-import { UserRole, UserRoles } from '~/constants/User';
-import { calculateDistance, calculateBearing, duplicateCoords, polylineDecode } from '~/utils/directions';
+import { calculateDistance, calculateBearing, duplicateCoords } from '~/utils/directions';
+import type { TaxiProfile } from '~/types/Taxi';
+import type { PlaceInfo } from '~/types/Places';
+import type { RideInfo } from '~/types/RideFlow';
+import type { UserRole } from '~/types/User';
 
 const storedlastLocation = createJSONStorage<PlaceMarkerIconType[]>(() => AsyncStorage)
 export const lastLocationAtom = atomWithStorage<PlaceMarkerIconType[]>('last_location', [], storedlastLocation)
@@ -212,7 +212,7 @@ export const WSProvider = ({ children, userType }: { children: React.ReactNode, 
 
         if (WS_LOGS) console.log('new Web Socket initializing', protocol);
         const suckItToMeBBy = new WebSocket(
-            `ws://172.20.10.12:6942/subscribe?id=03563972-fab9-4744-b9a7-15f8d35d38c9&lat=51.5073509&lon=-0.1277581999999997&head=51`,
+            `ws://192.168.1.104:6942/subscribe?id=03563972-fab9-4744-b9a7-15f8d35d38c9&lat=51.5073509&lon=-0.1277581999999997&head=51`,
             protocol
         );
 

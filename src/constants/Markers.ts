@@ -1,22 +1,6 @@
-export interface IMarker {
-  coordinate: {
-    latitude: number;
-    longitude: number;
-    heading?: number | null;
-    accuracy?: number | null;
-    altitude?: number | null;
-    speed?: number | null;
-    altitudeAccuracy?: number | null;
-  };
-  title?: string;
-  description?: string;
-  imageURL?: string;
-  userId?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  id?: string;
-  icon?: string;
-}
+import type { IMarker } from "~/types/Marker";
+
+export const defaultMarkers = [{ name: "Trabajo", icon: "folder-marker" }, { name: "Casa", icon: "home-map-marker" }]
 
 export const initialMarkers: IMarker[] = [
   {
