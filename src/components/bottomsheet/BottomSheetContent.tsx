@@ -618,7 +618,7 @@ export const BottomSheetContent = ({
                   <View className="justify-center">
                     <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-bold text-xl">{confirmedTaxi?.name ?? "Anonymous"}</Text>
                     <View className="flex-row items-center">
-                      <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] text-lg">★ </Text>
+                      <Text className="text-[#FED141] text-[#1b1b1b]- dark:text-[#C1C0C9]- text-lg">★ </Text>
                       <Text className="text-[#1b1b1b] dark:text-[#C1C0C9]">4.9</Text>
                     </View>
                   </View>
@@ -638,25 +638,27 @@ export const BottomSheetContent = ({
                 </View>
               </View>
 
-              <View className="flex-row gap-7 items-center py-2">
+              <View
+                className='flex-row items-center bg-[#E9E9E9] dark:bg-[#333333] py-3 px-3 mt-3 rounded-lg overflow-hidden shadow'
+              >
                 <ConfortSVG color={Colors[colorScheme ?? "light"].border} />
-                <View className="flex-row items-center justify-between flex-1 mx-1">
-                  <View className="gap-2">
-                    <Text className="text-xl font-medium text-[#1b1b1b] dark:text-[#C1C0C9] text-center">Distance</Text>
+                <View className="flex-row items-center justify-around flex-1 ml-1">
+                  <View className="gap-1">
+                    <Text className="text-lg font-medium text-[#1b1b1b] dark:text-[#C1C0C9] text-center">Distance</Text>
                     <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] text-xl font-bold">{routeInfo?.distance.text}</Text>
                   </View>
-                  <View className="gap-2">
-                    <Text className="text-xl font-medium text-[#1b1b1b] dark:text-[#C1C0C9] text-center">Time</Text>
+                  <View className="gap-1">
+                    <Text className="text-lg font-medium text-[#1b1b1b] dark:text-[#C1C0C9] text-center">Time</Text>
                     <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] text-xl font-bold">{routeInfo?.duration.text}</Text>
                   </View>
-                  <View className="gap-2">
+                  <View className="gap-1">
                     <Text className="text-lg font-medium text-[#1b1b1b] dark:text-[#C1C0C9] text-center">Price</Text>
                     <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] text-xl font-bold">3000 CUP</Text>
                   </View>
                 </View>
               </View>
 
-              <View className="relative z-[1000] w-full pr-[2.5%] items-center- flex-row py-1">
+              <View className="relative z-[1000] w-full mt-3 py-1 pr-[2.5%] flex-row items-center-">
                 <MaterialCommunityIcons className='mt-1' name="map-marker-account" size={32} color={Colors[colorScheme ?? "light"].border} />
                 <Text className="ml-2 font-bold text-lg text-[#1b1b1b] dark:text-[#C1C0C9] ">{pinedInfo?.origin?.address}</Text>
               </View>

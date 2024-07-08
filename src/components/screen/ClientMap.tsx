@@ -92,9 +92,8 @@ export default function ClientMap() {
                 //bottomSheetModalRef.current?.expand();
                 break;
             case ClientSteps.PICKUP:
-                setSnapPoints([300, 370])
+                setSnapPoints([330, 400])
                 break;
-
             default:
                 break;
         }
@@ -142,27 +141,17 @@ export default function ClientMap() {
     );
 
     const animateToUserLocation = useCallback(async () => {
-        const position = await ExpoLocation.getCurrentPositionAsync({
-            accuracy: ExpoLocation.Accuracy.Highest,
-        });
-        mapViewRef.current?.animateToRegion({
-            latitude: position?.coords.latitude - 0.0025 * sheetCurrentSnapRef.current,
-            longitude: position?.coords.longitude,
-            latitudeDelta: 0.00922,
-            longitudeDelta: 0.009121,
-        });
+        const position = await ExpoLocation.getCurrentPositionAsync({ accuracy: ExpoLocation.Accuracy.Highest });
+        mapViewRef.current?.animateToRegion({ latitude: position?.coords.latitude - 0.0025 * sheetCurrentSnapRef.current, longitude: position?.coords.longitude, latitudeDelta: 0.00922, longitudeDelta: 0.009121, });
     }, [sheetCurrentSnapRef]);
     const animateToActiveRoute = useCallback(() => {
-        activeRoute &&
-            animateToRegion(
-                calculateMiddlePointAndDelta(
-                    { latitude: activeRoute.coords[0].latitude, longitude: activeRoute.coords[0].longitude },
-                    {
-                        latitude: activeRoute.coords[activeRoute.coords.length - 1].latitude,
-                        longitude: activeRoute.coords[activeRoute.coords.length - 1].longitude,
-                    }
-                )
-            );
+        activeRoute && animateToRegion(calculateMiddlePointAndDelta(
+            { latitude: activeRoute.coords[0].latitude, longitude: activeRoute.coords[0].longitude },
+            {
+                latitude: activeRoute.coords[activeRoute.coords.length - 1].latitude,
+                longitude: activeRoute.coords[activeRoute.coords.length - 1].longitude,
+            }
+        ));
     }, [activeRoute]);
     const animateToRoute = useCallback(
         (
@@ -176,19 +165,7 @@ export default function ClientMap() {
     const renderCustomHandle = useCallback((props: BottomSheetHandleProps) => <CustomHandle title="Custom Handle Example" {...props} />, []);
     const renderBackdrop = useCallback(
         (props: BottomSheetBackdropProps) => (
-            <BottomSheetBackdrop
-                {...props}
-                appearsOnIndex={2}
-                disappearsOnIndex={1}
-                opacity={1}
-                pressBehavior="collapse"
-                style={[
-                    {
-                        backgroundColor: 'transparent',
-                    },
-                    props.style,
-                ]}
-            />
+            <BottomSheetBackdrop {...props} appearsOnIndex={2} disappearsOnIndex={1} opacity={1} pressBehavior="collapse" style={[{ backgroundColor: 'transparent', }, props.style]} />
         ), []);
 
 
@@ -233,22 +210,13 @@ export default function ClientMap() {
     }, [rideInfo, findTaxi]);
 
     const getMiddlePoint = useCallback(async () => {
-        const pointCoords = await mapViewRef.current?.coordinateForPoint({
-            x: width / 2,
-            y: height / 2,
-        });
-
-        if (!pointCoords) {
-            throw new Error('Trouble colecting the coordinates');
-        }
-
+        const pointCoords = await mapViewRef.current?.coordinateForPoint({ x: width / 2, y: height / 2 });
+        if (!pointCoords) throw new Error('Trouble colecting the coordinates');
         return { latitude: pointCoords.latitude, longitude: pointCoords.longitude };
     }, [mapViewRef]);
 
     return (
-        <GestureHandlerRootView
-            onLayout={() => { }}
-            className="flex-1">
+        <GestureHandlerRootView onLayout={() => { }} className="flex-1">
             <Drawer
                 drawerType='slide'
                 open={drawerOpen}
@@ -262,54 +230,17 @@ export default function ClientMap() {
                                 <View className="absolute w-[350px] h-[350px] top-[-50px] left-[-175px] rounded-full opacity-5 bg-black" />
 
                                 <View className="w-4/5 shadow" style={{ marginTop: insets.top }}>
-                                    <View>
-                                        <Switch
-                                            trackColor={{ false: '#767577', true: '#81b0ff' }}
-                                            thumbColor={profile?.role === "taxi" ? '#f5dd4b' : '#f4f3f4'}
-                                            ios_backgroundColor="#3e3e3e"
-                                            onValueChange={() => {
-                                                toggleUserRole();
-                                            }}
-                                            value={profile?.role === "taxi"}
-                                        />
-                                    </View>
-                                    <View
-                                        className=""
-                                        style={{
-                                            borderRadius: 1000,
-                                            overflow: 'hidden',
-                                            width: 80,
-                                            height: 80,
-                                            borderWidth: 1,
-                                            borderColor: 'white',
-                                        }}>
-                                        <Image
-                                            style={{ flex: 1 }}
-                                            source={{
-                                                uri: isSignedIn
-                                                    ? 'https://lh3.googleusercontent.com/a/AAcHTtfPgVic8qF8hDw_WPE80JpGOkKASohxkUA8y272Ow=s1000-c'
-                                                    : 'https://avatars.githubusercontent.com/u/100803609?v=4',
-                                            }}
-                                            alt="Profile Image"
-                                        />
-                                    </View>
-                                    <Text className="text-[#FFFFFF] text-xl font-semibold mt-2.5">
-                                        {profile?.username ?? 'Not signed'}
-                                    </Text>
+                                    <Switch trackColor={{ false: '#767577', true: '#81b0ff' }} thumbColor={profile?.role === "taxi" ? '#f5dd4b' : '#f4f3f4'} ios_backgroundColor="#3e3e3e" onValueChange={toggleUserRole} value={profile?.role === "taxi"} />
+                                    <View className="rounded-full overflow-hidden w-20 h-20 border border-white" ><Image style={{ flex: 1 }} source={{ uri: isSignedIn ? 'https://lh3.googleusercontent.com/a/AAcHTtfPgVic8qF8hDw_WPE80JpGOkKASohxkUA8y272Ow=s1000-c' : 'https://avatars.githubusercontent.com/u/100803609?v=4', }} alt="Profile Image" /></View>
+                                    <Text className="text-[#FFFFFF] text-xl font-semibold mt-2.5">{profile?.username ?? 'Not signed'}</Text>
                                     {!isSignedIn ? (
                                         <ScaleBtn className="mt-4" onPress={() => router.push('sign')}>
-                                            <View className="bg-[#F8F8F8] dark:bg-[#222222] rounded-lg p-3 chevron-right-">
-                                                <Text className="text-center font-semibold w-auto dark:text-[#fff]">
-                                                    Sign In
-                                                </Text>
-                                            </View>
+                                            <View className="bg-[#F8F8F8] dark:bg-[#222222] rounded-lg p-3 chevron-right-"><Text className="text-center font-semibold w-auto dark:text-[#fff]">Sign In</Text></View>
                                         </ScaleBtn>
                                     ) : (
                                         <ScaleBtn className="mt-4 w-40 gap-3" onPress={() => router.push('profile')}>
                                             <View className="flex-row items-center justify-center bg-[#F8F8F8] dark:bg-[#222222] rounded-lg p-3">
-                                                <Text className="text-center font-semibold w-auto dark:text-[#fff]">
-                                                    User Profile
-                                                </Text>
+                                                <Text className="text-center font-semibold w-auto dark:text-[#fff]">User Profile</Text>
                                                 <MaterialCommunityIcons name="chevron-right" size={24} color="black" />
                                             </View>
                                         </ScaleBtn>
@@ -321,48 +252,19 @@ export default function ClientMap() {
                                 <View className="ml-[-4px] flex-1 bg-[#F8F8F8] dark:bg-[#222222]">
                                     {drawerItems.map((item, index) => {
                                         return (
-                                            <Ripple
-                                                key={index}
-                                                onTap={() => {
-                                                    console.log(item);
-                                                }}>
+                                            <Ripple key={index} onTap={() => { console.log(item); }}>
                                                 <View className="w-full h-16 flex-row items-center justify-start px-[10%] gap-4">
-                                                    <MaterialIcons
-                                                        // @ts-ignore
-                                                        name={item.icon}
-                                                        size={30}
-                                                        color={Colors[colorScheme ?? 'light'].icons}
-                                                    />
-                                                    <Text
-                                                        style={{
-                                                            color: Colors[colorScheme ?? 'light'].text_dark,
-                                                            fontSize: 18,
-                                                            fontWeight: '600',
-                                                        }}>
-                                                        {item.label}
-                                                    </Text>
+                                                    <MaterialIcons // @ts-ignore
+                                                        name={item.icon} size={30} color={Colors[colorScheme ?? 'light'].icons} />
+                                                    <Text style={{ color: Colors[colorScheme ?? 'light'].text_dark, fontSize: 18, fontWeight: '600' }}>{item.label}</Text>
                                                 </View>
                                             </Ripple>
                                         );
                                     })}
-                                    <Ripple
-                                        onTap={() => {
-                                            signOut();
-                                        }}>
+                                    <Ripple onTap={signOut}>
                                         <View className="w-full h-16 flex-row items-center justify-start px-[10%] gap-4">
-                                            <MaterialIcons
-                                                name="logout"
-                                                size={30}
-                                                color={Colors[colorScheme ?? 'light'].icons}
-                                            />
-                                            <Text
-                                                style={{
-                                                    color: Colors[colorScheme ?? 'light'].text_dark,
-                                                    fontSize: 18,
-                                                    fontWeight: '600',
-                                                }}>
-                                                Sign Out
-                                            </Text>
+                                            <MaterialIcons name="logout" size={30} color={Colors[colorScheme ?? 'light'].icons} />
+                                            <Text style={{ color: Colors[colorScheme ?? 'light'].text_dark, fontSize: 18, fontWeight: '600' }}>Sign Out</Text>
                                         </View>
                                     </Ripple>
                                 </View>
@@ -375,34 +277,16 @@ export default function ClientMap() {
                             )}
 
                             {/* Social Links  */}
-                            <View
-                                className="w-4/5 self-center flex-row justify-between mt-auto"
-                                style={{ marginBottom: insets.bottom }}>
-                                <ScaleBtn className="items-center">
-                                    <ColorInstagram />
-                                </ScaleBtn>
-                                <ScaleBtn className="items-center">
-                                    <ColorFacebook />
-                                </ScaleBtn>
-                                <ScaleBtn className="items-center">
-                                    <ColorTwitter />
-                                </ScaleBtn>
+                            <View className="w-4/5 self-center flex-row justify-between mt-auto" style={{ marginBottom: insets.bottom }}>
+                                <ScaleBtn className="items-center"><ColorInstagram /></ScaleBtn>
+                                <ScaleBtn className="items-center"><ColorFacebook /></ScaleBtn>
+                                <ScaleBtn className="items-center"><ColorTwitter /></ScaleBtn>
                             </View>
                         </View>
                     );
                 }}>
                 <BottomSheetModalProvider>
-                    {Platform.OS === 'ios' && <BlurView
-                        style={{
-                            position: 'absolute',
-                            zIndex: 1000,
-                            height: insets.top,
-                            width,
-                            top: 0,
-                        }}
-                        tint="light"
-                        intensity={20}
-                    />}
+                    {Platform.OS === 'ios' && <BlurView style={{ position: 'absolute', zIndex: 1000, height: insets.top, width, top: 0 }} tint="light" intensity={20} />}
                     <MapView
                         showsUserLocation
                         style={{ flex: 1 }}
@@ -421,7 +305,8 @@ export default function ClientMap() {
                         }}
                         ref={mapViewRef}
                         provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : PROVIDER_DEFAULT}
-                        customMapStyle={colorScheme === 'dark' ? NightMap : undefined}>
+                        customMapStyle={colorScheme === 'dark' ? NightMap : undefined}
+                    >
                         {activeRoute && <Polyline coordinates={activeRoute.coords} strokeWidth={5} strokeColor="#000" />}
                         <TaxisMarkers onPressTaxi={() => { }} />
                         <UserWavesMarker findingRide={findingRide} />
@@ -430,40 +315,24 @@ export default function ClientMap() {
 
                         {userMarkers.map((marker) => (
                             <Marker key={marker.id} coordinate={{ ...marker.coords }}>
-                                <MaterialIcons
-                                    name="location-on"
-                                    size={24}
-                                    color={Colors[colorScheme ?? 'light'].text}
-                                />
+                                <MaterialIcons name="location-on" size={24} color={Colors[colorScheme ?? 'light'].text} />
                             </Marker>
                         ))}
 
                         {activeRoute && activeRoute.coords.length > 0 && (
                             <>
                                 <Marker coordinate={activeRoute.coords[0]}>
-                                    <MaterialCommunityIcons
-                                        name="map-marker-account"
-                                        size={24}
-                                        color={Colors[colorScheme ?? 'light'].text}
-                                    />
+                                    <MaterialCommunityIcons name="map-marker-account" size={24} color={Colors[colorScheme ?? 'light'].text} />
                                 </Marker>
                                 <Marker coordinate={activeRoute.coords[activeRoute.coords.length - 1]}>
-                                    <MaterialCommunityIcons
-                                        name="map-marker-radius"
-                                        size={24}
-                                        color={Colors[colorScheme ?? 'light'].text}
-                                    />
+                                    <MaterialCommunityIcons name="map-marker-radius" size={24} color={Colors[colorScheme ?? 'light'].text} />
                                 </Marker>
                             </>
                         )}
 
                         {[{ latitude: 23.127778, longitude: -82.361833 }, { latitude: 23.127778, longitude: -82.423028 }, { latitude: 23.088667, longitude: -82.361833 }, { latitude: 23.088667, longitude: -82.423028 }].map((item, i) => (
                             <Marker key={i} coordinate={{ latitude: item.latitude, longitude: item.longitude }}>
-                                <MaterialIcons
-                                    name="location-on"
-                                    size={24}
-                                    color={Colors[colorScheme ?? 'light'].text}
-                                />
+                                <MaterialIcons name="location-on" size={24} color={Colors[colorScheme ?? 'light'].text} />
                             </Marker>
                         ))}
 
@@ -471,43 +340,20 @@ export default function ClientMap() {
 
                     {currentStep === ClientSteps.PINNING && sheetCurrentSnap !== 2 && (
                         <Animated.View
-                            style={[{
-                                position: 'absolute',
-                                top: 0,
-                                right: 0,
-                                flex: 1,
-                                zIndex: 1000,
-                            }, piningMarkerAnimStyle]}
+                            style={[{ position: 'absolute', top: 0, right: 0, flex: 1, zIndex: 1000 }, piningMarkerAnimStyle]}
                         >
                             {!piningLocation && piningMarker &&
-                                <UserMapMarker style={{
-                                    position: 'absolute',
-                                    right: width / 2 - 41,
-                                    top: height / 2 - 82,
-                                    zIndex: 1001,
-                                }} piningMarker={piningMarker} />
+                                <UserMapMarker style={{ position: 'absolute', right: width / 2 - 41, top: height / 2 - 82, zIndex: 1001, }} piningMarker={piningMarker} />
                             }
                             {piningLocation && (
-                                <View style={{
-                                    position: 'absolute',
-                                    right: width / 2 - 24,
-                                    top: height / 2 - 48,
-                                    zIndex: 1001,
-                                }}>
-                                    <MaterialIcons
-                                        name="location-pin"
-                                        size={48}
-                                        color={Colors[colorScheme ?? 'light'].text}
-                                    />
+                                <View style={{ position: 'absolute', right: width / 2 - 24, top: height / 2 - 48, zIndex: 1001 }}>
+                                    <MaterialIcons name="location-pin" size={48} color={Colors[colorScheme ?? 'light'].text} />
                                 </View>
                             )}
                         </Animated.View>
                     )}
 
-                    <Animated.View
-                        pointerEvents={"box-none"}
-                        style={topSheetBtnsAnimStyle}
-                        className="absolute bottom-[750px] w-[95%] self-center flex-row items-end justify-between border-">
+                    <Animated.View pointerEvents={"box-none"} style={topSheetBtnsAnimStyle} className="absolute bottom-[750px] w-[95%] self-center flex-row items-end justify-between border-">
                         {activeRoute && activeRoute.coords.length > 0 && (
                             <>
                                 {/* <ScaleBtn
@@ -519,14 +365,10 @@ export default function ClientMap() {
                                         <FontAwesome6 name="route" size={24} color={Colors[colorScheme ?? 'light'].text_dark} />
                                     </View>
                                 </ScaleBtn> */}
-                                <View className='w-12'></View>
+                                <View className='w-12' />
 
                                 {currentStep <= ClientSteps.FINDING && currentStep !== ClientSteps.PINNING &&
-                                    <ScaleBtn
-                                        containerStyle={{}}
-                                        disabled={(findingRide || !selectedTaxiType)}
-                                        onPress={findRideHandler}
-                                    >
+                                    <ScaleBtn containerStyle={{}} disabled={(findingRide || !selectedTaxiType)} onPress={findRideHandler}>
                                         <View className="bg-[#FCCB6F] w-40 h-14 rounded-lg p-3">
                                             <Text className="text-center text-lg font-bold w-auto text-[#fff]">
                                                 {findingRide ? 'Finding Ride' : 'Request Ride'}
@@ -536,36 +378,23 @@ export default function ClientMap() {
                                 }
                             </>
                         )}
-                        <View className='w-12'></View>
-                        <View
-                            className="rounded-xl bg-[#f8f8f8] shadow dark:bg-[#1b1a1e] !self-end justify-center items-center absolute right-0">
-                            <ScaleBtn
-                                containerStyle={{}}
-                                onPress={() => setDrawerOpen(true)}>
+                        <View className='w-12' />
+                        <View className="rounded-xl bg-[#f8f8f8] shadow dark:bg-[#1b1a1e] !self-end justify-center items-center absolute right-0">
+                            <ScaleBtn containerStyle={{}} onPress={() => setDrawerOpen(true)} >
                                 <View className="p-2 bg-transparent">
-                                    <MaterialIcons
-                                        name="menu"
-                                        size={30}
-                                        color={Colors[colorScheme ?? 'light'].text_dark}
-                                    />
+                                    <MaterialIcons name="menu" size={30} color={Colors[colorScheme ?? 'light'].text_dark} />
                                 </View>
                             </ScaleBtn>
 
                             {activeRoute && activeRoute.coords.length > 0 && (
-                                <ScaleBtn
-                                    onPress={() => {
-                                        animateToActiveRoute();
-                                    }}>
+                                <ScaleBtn onPress={animateToActiveRoute}>
                                     <View className="bg-transparent rounded-lg p-3 ">
                                         <FontAwesome6 name="route" size={24} color={Colors[colorScheme ?? 'light'].text_dark} />
                                     </View>
                                 </ScaleBtn>
                             )}
 
-                            <ScaleBtn
-                                onPress={() => {
-                                    animateToUserLocation();
-                                }}>
+                            <ScaleBtn onPress={animateToUserLocation}>
                                 <View className="bg-transparent rounded-lg p-3 shadow">
                                     {/* <MagnometerArrow cardinalDirection={CardinalDirections.NORTH} /> */}
                                     <FontAwesome6 /* FontAwesome location-arrow-up */ name="location-arrow" size={24} color={Colors[colorScheme ?? 'light'].text_dark} />
@@ -653,10 +482,7 @@ export default function ClientMap() {
                             setFindingRide={setFindingRide} />
                     </BottomSheetModal>
 
-                    <StatusBar
-                        backgroundColor="transparent"
-                        barStyle={colorScheme === 'dark' ? 'light-content' : 'dark-content'}
-                    />
+                    <StatusBar backgroundColor="transparent" barStyle={colorScheme === 'dark' ? 'light-content' : 'dark-content'} />
                 </BottomSheetModalProvider>
             </Drawer>
         </GestureHandlerRootView>
