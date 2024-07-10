@@ -1,0 +1,222 @@
+{
+    "status": "pending",
+    "origin": {
+        "latitude": 23.118674980568073,
+        "longitude": -82.38069327555816,
+        "address": "Pedro Pérez e/ Mariano y General E. Núñez, Cerro, Habana, Cuba"
+    },
+    "destination": {
+        "latitude": 23.134868793665653,
+        "longitude": -82.37683734202062,
+        "address": "24 e/ 19 y 21, Plaza de la Revolución, Habana, Cuba"
+    },
+    "client": {
+        "id": "e117adcb-f429-42f7-95d9-07f1c92a1c8b",
+        "phone": "5352953930",
+        "username": "username",
+        "slug": "username37",
+        "role": "client"
+    },
+    "price": 3000,
+    "distance": {
+        "text": "4 km",
+        "value": 4095.97
+    },
+    "duration": {
+        "text": "12 mins",
+        "value": 682.328
+    },
+    "overview_polyline": {
+        "points": "gjblC~}xuNEJo@lBq@bBw@nB_A|CCBvAp@|Ar@r@ZdCbAj@XXJrAj@pAn@hAf@NHj@TLDtAn@nChAHDpCnAi@lCo@nDc@bCc@~BGXGZEZWlACLETYvAi@vCg@jCEPYzAKj@IXm@bDq@lDq@rDQx@UnAEROv@Qx@I`@Ix@BX@FFZLXDFX^j@x@z@rAjCrDsBdBeAz@KHQN{CnC_BtAML_Av@[Vo@j@uE`EkA`AcCvBkBfB]VMLgA`AqAfAWRKRc@^y@t@gBzA}CnCmCzBUR_CoD|CmCZW"
+    },
+    "navigationInfo": {
+        "distance": {
+            "text": "4 km",
+            "value": 4095.97
+        },
+        "duration": {
+            "text": "7 min",
+            "value": 682.328
+        },
+        "end_address": "Calle 24, Cerro, La Habana, Cuba",
+        "end_location": {
+            "lat": 23.124899,
+            "lng": -82.406418
+        },
+        "start_address": "Pedro Pérez, La Habana, Cuba",
+        "start_location": {
+            "lat": 23.118597,
+            "lng": -82.380639
+        },
+        "steps": [
+            {
+                "distance": {
+                    "text": "0,28 km",
+                    "value": 284.45
+                },
+                "duration": {
+                    "text": "0.9 min",
+                    "value": 52.296
+                },
+                "end_location": {
+                    "lat": 23.1333489,
+                    "lng": -82.3938699
+                },
+                "html_instructions": "Conduzca hacia el <b>noroeste</b> por Pedro Pérez.",
+                "polyline": {
+                    "points": ""
+                },
+                "start_location": {
+                    "lat": 23.119735,
+                    "lng": -82.383125
+                },
+                "travel_mode": "DRIVING"
+            },
+            {
+                "distance": {
+                    "text": "0,7 km",
+                    "value": 706.89
+                },
+                "duration": {
+                    "text": "1.6 min",
+                    "value": 99.518
+                },
+                "end_location": {
+                    "lat": 23.1344076,
+                    "lng": -82.3865768
+                },
+                "html_instructions": "Gire a la <b>izquierda</b> hacia Ayestarán.",
+                "maneuver": "turn-left",
+                "polyline": {
+                    "points": ""
+                },
+                "start_location": {
+                    "lat": 23.1333489,
+                    "lng": -82.3938699
+                },
+                "travel_mode": "DRIVING"
+            },
+            {
+                "distance": {
+                    "text": "1,47 km",
+                    "value": 1476.211
+                },
+                "duration": {
+                    "text": "4.2 min",
+                    "value": 253.68
+                },
+                "end_location": {
+                    "lat": 23.1346263,
+                    "lng": -82.38351039999999
+                },
+                "html_instructions": "Gire a la <b>derecha</b> hacia Tulipán.",
+                "maneuver": "turn-right",
+                "polyline": {
+                    "points": ""
+                },
+                "start_location": {
+                    "lat": 23.114047,
+                    "lng": -82.386192
+                },
+                "travel_mode": "DRIVING"
+            },
+            {
+                "distance": {
+                    "text": "0,2 km",
+                    "value": 239
+                },
+                "duration": {
+                    "text": "1 min",
+                    "value": 42
+                },
+                "end_location": {
+                    "lat": 23.1355088,
+                    "lng": -82.38147549999999
+                },
+                "html_instructions": "Continúa por <b>Calle Rda.</b>",
+                "polyline": {
+                    "points": "mnelC|oyuN?UAIAGGKEEACe@c@]g@O_@AG?AE[Gm@?AMiAKe@EOGKOI"
+                },
+                "start_location": {
+                    "lat": 23.1346263,
+                    "lng": -82.38351039999999
+                },
+                "travel_mode": "DRIVING"
+            },
+            {
+                "distance": {
+                    "text": "1,38 km",
+                    "value": 1379.543
+                },
+                "duration": {
+                    "text": "3.8 min",
+                    "value": 229.516
+                },
+                "end_location": {
+                    "lat": 23.115657,
+                    "lng": -82.399524
+                },
+                "html_instructions": "Gira a la <b>derecha</b> hacia Avenida 26.",
+                "maneuver": "turn-right",
+                "polyline": {
+                    "points": ""
+                },
+                "start_location": {
+                    "lat": 23.1355088,
+                    "lng": -82.38147549999999
+                },
+                "travel_mode": "DRIVING"
+            },
+            {
+                "distance": {
+                    "text": "0.11 m",
+                    "value": 114.605
+                },
+                "duration": {
+                    "text": "0.32 min",
+                    "value": 21.752
+                },
+                "end_location": {
+                    "lat": 23.125188,
+                    "lng": -82.408129
+                },
+                "html_instructions": "Gira a la <b>derecha</b> hacia Calle 17.",
+                "maneuver": "turn-right",
+                "polyline": {
+                    "points": ""
+                },
+                "start_location": {
+                    "lat": 23.115657,
+                    "lng": -82.399524
+                },
+                "travel_mode": "DRIVING"
+            },
+            {
+                "distance": {
+                    "text": "0,13 km",
+                    "value": 134.271
+                },
+                "duration": {
+                    "text": "0.38 min",
+                    "value": 25.567
+                },
+                "end_location": {
+                    "lat": 23.124899,
+                    "lng": -82.406418
+                },
+                "html_instructions": "Gire a la <b>derecha</b> hacia Calle 24. Su destino está a la izquierda.",
+                "maneuver": "turn-right",
+                "polyline": {
+                    "points": ""
+                },
+                "start_location": {
+                    "lat": 23.125188,
+                    "lng": -82.408129
+                },
+                "travel_mode": "DRIVING"
+            }
+        ],
+        "traffic_speed_entry": [],
+        "via_waypoint": []
+    }
+}

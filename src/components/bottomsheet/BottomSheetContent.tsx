@@ -28,7 +28,7 @@ import type { DBRide, RideInfo } from '~/types/RideFlow';
 import type { AddMarker } from '~/types/Marker';
 
 import TestRidesData from '~/constants/TestRidesData.json'
-import TestRideData from '~/constants/TestRideData.json'
+import TestRideSimulation from '~/constants/TestRideSimulation.json'
 import TestTaxiTypesInfo from '~/constants/TestTaxiTypesInfo.json'
 
 interface BottomSheetContentProps {
@@ -207,7 +207,7 @@ export const BottomSheetContent = ({
         setRouteLoading(true)
         // const { overview_polyline, decodedCoords, distance, duration } = await getDirections(`${pinedInfo.origin.latitude},${pinedInfo.origin.longitude}`, `${pinedInfo.destination.latitude},${pinedInfo.destination.longitude}`)
         // snapToIndex(1);
-        const { overview_polyline, distance, duration } = TestRideData
+        const { overview_polyline, distance, duration } = TestRideSimulation
 
         setActiveRoute({
           coords: polylineDecode(overview_polyline.points).map((point, _) => ({

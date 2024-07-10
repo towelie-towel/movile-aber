@@ -21,6 +21,7 @@ export const getCoordinateAddress = async (latitude: number, longitude: number) 
     `https://revgeocode.search.hereapi.com/v1/revgeocode?at=${latitude},${longitude}&types=street&limit=5&apiKey=mRASkFtnRqYimoHBzud5-kSsj0y_FvqR-1jwJHrfUvQ&showMapReferences=pointAddress&show=streetInfo`
   );
   const addressRes = await resp.json();
+  console.log(JSON.stringify(addressRes, null, 2))
   if (addressRes.items.length > 0) {
     const streetInfo = `${addressRes.items[0].address.street.replace('Calle ', '')} e/ ${addressRes.items[1].address.street.replace('Calle ', '')} y ${addressRes.items[2].address.street.replace('Calle ', '')}, ${addressRes.items[2].address.district}, Habana, Cuba`;
     return streetInfo;
@@ -32,7 +33,7 @@ export const getCoordinateAddress = async (latitude: number, longitude: number) 
 export const getDirections = async (startLoc: string, destinationLoc: string) => {
   try {
     const resp = await fetch(
-      `http://192.168.1.100:6942/route?from=${startLoc}&to=${destinationLoc}`
+      `http://192.168.1.101:6942/route?from=${startLoc}&to=${destinationLoc}`
     );
     const respJson = await resp.json();
     const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map((point, _) => ({
