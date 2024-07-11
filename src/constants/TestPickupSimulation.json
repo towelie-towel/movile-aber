@@ -1,4 +1,14 @@
 {
+    "origin": {
+        "latitude": 23.115923,
+        "longitude": -82.381597,
+        "address": "Domínguez e/ Vista Hermosa y Mariano, Cerro, Habana, Cuba"
+    },
+    "destination": {
+        "latitude": 23.11867,
+        "longitude": -82.380682,
+        "address": "Pedro Pérez e/ Mariano y General E. Núñez, Cerro, Habana, Cuba"
+    },
     "distance": {
         "text": "0.42 km",
         "value": 421.22
@@ -7,112 +17,125 @@
         "text": "2.2 min",
         "value": 132.697
     },
-    "end_address": "Pedro Pérez, Cerro, La Habana, Cuba",
-    "end_location": {
-        "lat": 23.11867,
-        "lng": -82.380682
+    "overview_polyline": {
+        "points": "ujblCf~xuNFBo@lBq@bBw@nB_A|CCBvAp@|Ar@r@ZdCbAj@XXJrAj@pAn@hAf@NHj@TLDtAn@nChAHDpCnAi@lCo@nDc@bCc@~BGXGZEZWlACLETYvAi@vCg@jCEPYzAKj@IXm@bDq@lDq@rDQx@UnAEROv@Qx@I`@Ix@BX@FFZLXDFX^j@x@z@rAjCrDsBdBeAz@KHQN{CnC_BtAML_Av@[Vo@j@uE`EkA`AcCvBkBfB]VMLgA`AqAfAWRKRc@^y@t@gBzA}CnCmCzBUR_CoD|CmCZW"
     },
-    "start_address": "Domínguez, La Habana, Cuba",
-    "start_location": {
-        "lat": 23.119735,
-        "lng": -82.381597
-    },
-    "steps": [
-        {
-            "distance": {
-                "text": "0,28 km",
-                "value": 284.45
-            },
-            "duration": {
-                "text": "0.9 min",
-                "value": 52.296
-            },
-            "end_location": {
-                "lat": 23.115923,
-                "lng": -82.381597
-            },
-            "html_instructions": "Conduzca hacia el <b>noroeste</b> por Domínguez.",
-            "polyline": {
-                "points": ""
-            },
-            "start_location": {
-                "lat": 23.119735,
-                "lng": -82.381597
-            },
-            "travel_mode": "DRIVING"
+    "navigationInfo": {
+        "distance": {
+            "text": "0.42 km",
+            "value": 421.22
         },
-        {
-            "distance": {
-                "text": "0,3 km",
-                "value": 300.433
-            },
-            "duration": {
-                "text": "0.1 min",
-                "value": 103.11
-            },
-            "end_location": {
-                "lat": 23.116346,
-                "lng": -82.38213
-            },
-            "html_instructions": "Gire a la <b>derecha</b> hacia Mariano.",
-            "maneuver": "turn-right",
-            "polyline": {
-                "points": ""
-            },
-            "start_location": {
-                "lat": 23.115923,
-                "lng": -82.381597
-            },
-            "travel_mode": "DRIVING"
+        "duration": {
+            "text": "2.2 min",
+            "value": 132.697
         },
-        {
-            "distance": {
-                "text": "0,04 km",
-                "value": 43.317
-            },
-            "duration": {
-                "text": "0.21 min",
-                "value": 12.519
-            },
-            "end_location": {
-                "lat": 23.118461,
-                "lng": -82.38032
-            },
-            "html_instructions": "Gire a la <b>derecha</b> hacia Pedro Pérez.",
-            "maneuver": "turn-right",
-            "polyline": {
-                "points": ""
-            },
-            "start_location": {
-                "lat": 23.116346,
-                "lng": -82.38213
-            },
-            "travel_mode": "DRIVING"
+        "end_address": "Pedro Pérez, Cerro, La Habana, Cuba",
+        "end_location": {
+            "lat": 23.11867,
+            "lng": -82.380682
         },
-        {
-            "distance": {
-                "text": "0,05 km",
-                "value": 5.392
+        "start_address": "Domínguez, La Habana, Cuba",
+        "start_location": {
+            "lat": 23.115923,
+            "lng": -82.381597
+        },
+        "steps": [
+            {
+                "distance": {
+                    "text": "0,072 km",
+                    "value": 72.077
+                },
+                "duration": {
+                    "text": "0.24 min",
+                    "value": 14.415
+                },
+                "end_location": {
+                    "lat": 23.116346,
+                    "lng": -82.38213
+                },
+                "html_instructions": "Conduzca hacia el <b>noroeste</b> por Domínguez.",
+                "polyline": {
+                    "points": ""
+                },
+                "start_location": {
+                    "lat": 23.115923,
+                    "lng": -82.381597
+                },
+                "travel_mode": "DRIVING"
             },
-            "duration": {
-                "text": "0.05 min",
-                "value": 2.652
+            {
+                "distance": {
+                    "text": "0,3 km",
+                    "value": 300.433
+                },
+                "duration": {
+                    "text": "1.67 min",
+                    "value": 103.11
+                },
+                "end_location": {
+                    "lat": 23.118461,
+                    "lng": -82.38032
+                },
+                "html_instructions": "Gire a la <b>derecha</b> hacia Mariano.",
+                "maneuver": "turn-right",
+                "polyline": {
+                    "points": ""
+                },
+                "start_location": {
+                    "lat": 23.116346,
+                    "lng": -82.38213
+                },
+                "travel_mode": "DRIVING"
             },
-            "end_location": {
-                "lat": 23.118626,
-                "lng": -82.380703
+            {
+                "distance": {
+                    "text": "0,04 km",
+                    "value": 43.317
+                },
+                "duration": {
+                    "text": "0.21 min",
+                    "value": 12.519
+                },
+                "end_location": {
+                    "lat": 23.118626,
+                    "lng": -82.380703
+                },
+                "html_instructions": "Gire a la <b>derecha</b> hacia Pedro Pérez.",
+                "maneuver": "turn-right",
+                "polyline": {
+                    "points": ""
+                },
+                "start_location": {
+                    "lat": 23.118461,
+                    "lng": -82.38032
+                },
+                "travel_mode": "DRIVING"
             },
-            "html_instructions": "Gire a la <b>derecha</b> hacia Marta Abreu. Su destino está a la izquierda.",
-            "polyline": {
-                "points": ""
-            },
-            "start_location": {
-                "lat": 23.118461,
-                "lng": -82.38032
-            },
-            "travel_mode": "DRIVING"
-        }
-    ],
-    "traffic_speed_entry": [],
-    "via_waypoint": []
+            {
+                "distance": {
+                    "text": "0,05 km",
+                    "value": 5.392
+                },
+                "duration": {
+                    "text": "0.05 min",
+                    "value": 2.652
+                },
+                "end_location": {
+                    "lat": 23.118626,
+                    "lng": -82.380703
+                },
+                "html_instructions": "Gire a la <b>derecha</b> hacia Marta Abreu. Su destino está a la izquierda.",
+                "polyline": {
+                    "points": ""
+                },
+                "start_location": {
+                    "lat": 23.11867,
+                    "lng": -82.380682
+                },
+                "travel_mode": "DRIVING"
+            }
+        ],
+        "traffic_speed_entry": [],
+        "via_waypoint": []
+    }
 }

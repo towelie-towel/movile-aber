@@ -31,6 +31,11 @@ import TestRidesData from '~/constants/TestRidesData.json'
 import TestRideSimulation from '~/constants/TestRideSimulation.json'
 import TestTaxiTypesInfo from '~/constants/TestTaxiTypesInfo.json'
 
+/* 
+-82.381419,23.116101
+-82.38069327555816,23.118674980568073
+*/
+
 interface BottomSheetContentProps {
   sheetCurrentSnap: number;
   currentStep: ClientSteps;
