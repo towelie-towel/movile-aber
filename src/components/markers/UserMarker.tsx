@@ -1,37 +1,30 @@
-import { Easing } from "react-native-reanimated";
 import { MotiView, View } from "@motify/components";
+import { Easing } from "react-native-reanimated";
 
 import { useWSState } from "~/context/WSContext";
-import AnimatedMarker from "~/components/markers/AnimatedMarker";
+import AnimatedMarker from "./AnimatedMarker";
 
-type WavesMarkerProps = {
-    location?: {
-        position: {
-            latitude: number;
-            longitude: number;
-        },
-        heading: number;
-    };
+type UserMarkerProps = {
     findingRide?: boolean;
 }
 
-const UserWavesMarker = ({ findingRide = false, location }: WavesMarkerProps) => {
+const UserMarker = ({ findingRide = false }: UserMarkerProps) => {
     const { position, heading } = useWSState();
 
-    if (!position || !location) {
+    if (!position || !heading) {
         return null
     }
 
     return (
         <AnimatedMarker
-            heading={location?.heading ?? heading?.magHeading ?? position?.coords.heading ?? 0}
+            heading={heading?.magHeading ?? position?.coords.heading ?? 0}
             headingAnimated={true}
-            latitude={location?.position.latitude ?? position?.coords.latitude}
-            longitude={location?.position.longitude ?? position?.coords.longitude}
+            latitude={position?.coords.latitude}
+            longitude={position?.coords.longitude}
             anchor={{ x: 0.5, y: 0.6 }}
             flat
         >
-            <View className='h-10 w-5'></View>
+            <View className='h-10 w-5 border bg-red-500'></View>
             {
                 findingRide && [...Array(3).keys()].map((index) => (
                     <View key={index} className='flex-1 absolute top-[-13px] left-[-13px]'>
@@ -63,4 +56,4 @@ const UserWavesMarker = ({ findingRide = false, location }: WavesMarkerProps) =>
     )
 }
 
-export default UserWavesMarker;
+export default UserMarker;

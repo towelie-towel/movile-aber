@@ -23,7 +23,7 @@ import Ripple from '~/components/common/RippleBtn';
 import ScaleBtn from '~/components/common/ScaleBtn';
 import AnimatedRouteMarker from '~/components/markers/AnimatedRouteMarker';
 import TaxisMarkers from '~/components/markers/TaxiMarkers';
-import UserWavesMarker from '~/components/markers/UserWavesMarker';
+import UserMarker from '~/components/markers/UserMarker';
 import { UserMapMarker } from '~/components/markers/UserMapMarker';
 import { ColorInstagram, ColorFacebook, ColorTwitter } from '~/components/svgs';
 import Colors from '~/constants/Colors';
@@ -288,7 +288,7 @@ export default function ClientMap() {
                 <BottomSheetModalProvider>
                     {Platform.OS === 'ios' && <BlurView style={{ position: 'absolute', zIndex: 1000, height: insets.top, width, top: 0 }} tint="light" intensity={20} />}
                     <MapView
-                        showsUserLocation
+                        // showsUserLocation
                         style={{ flex: 1 }}
                         onTouchMove={() => { }}
                         onTouchStart={() => { }}
@@ -308,8 +308,8 @@ export default function ClientMap() {
                         customMapStyle={colorScheme === 'dark' ? NightMap : undefined}
                     >
                         {activeRoute && <Polyline coordinates={activeRoute.coords} strokeWidth={5} strokeColor="#000" />}
-                        <TaxisMarkers onPressTaxi={() => { }} />
-                        <UserWavesMarker findingRide={findingRide} />
+                        <TaxisMarkers /* onPressTaxi={() => { }} */ />
+                        <UserMarker findingRide={findingRide} />
 
                         <AnimatedRouteMarker key={2} />
 

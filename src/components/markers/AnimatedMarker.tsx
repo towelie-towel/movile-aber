@@ -13,6 +13,7 @@ type AnimatedMarkerParams = {
 const AnimatedMarker: React.FC<AnimatedMarkerParams> = ({
   latitude,
   longitude,
+  heading,
   headingAnimated,
   children,
   ...restProps
@@ -22,7 +23,6 @@ const AnimatedMarker: React.FC<AnimatedMarkerParams> = ({
   const LATITUDE_DELTA = 0.003;
   const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO;
 
-  const previousPosition = useRef<LatLng>({ latitude: 0, longitude: 0 })
   const animatedHeading = useRef(new Animated.Value(0)).current;
 
   const anim_marker_ref = useRef<MapMarker | null>(null);
@@ -56,12 +56,13 @@ const AnimatedMarker: React.FC<AnimatedMarkerParams> = ({
         })
         .start();
     }
+  }, [latitude, longitude]);
+  useEffect(() => {
     Animated.timing(animatedHeading, {
-      toValue: calculateBearing(previousPosition.current.latitude, previousPosition.current.longitude, latitude, longitude),
+      toValue: heading,
       useNativeDriver: true,
     }).start();
-    previousPosition.current = { latitude, longitude }
-  }, [latitude, longitude]);
+  }, [heading]);
 
   return (
     <MarkerAnimated

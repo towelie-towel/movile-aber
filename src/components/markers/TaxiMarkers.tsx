@@ -1,17 +1,10 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 // import { useColorScheme } from 'react-native';
 
-import TaxiMarker from './TaxiMarker';
-import { View } from 'react-native';
-import { MotiView } from '@motify/components';
-import { LatLng } from 'react-native-maps';
-
-import { IMarker } from '~/types/Marker';
 import { useWSState } from '~/context/WSContext';
-import { TaxiSVG } from '../svgs';
-import AnimatedMarker from './AnimatedMarker';
 import { WSTaxi } from '~/context/WSContext';
-import { calculateBearing } from '~/utils/directions';
+import AnimatedPosHeadingMarker from '~/components/markers/AnimatedPosHeadingMarker';
+import { TaxiSVG } from '~/components/svgs';
 
 /* 
 <TaxiMarker
@@ -28,14 +21,14 @@ import { calculateBearing } from '~/utils/directions';
 />
 */
 
-interface props {
+/* interface props {
   onPressTaxi: (taxiId: string) => void;
-}
+} */
 
-const TaxisMarkers = ({ onPressTaxi }: props) => {
+const TaxisMarkers = (/* { onPressTaxi }: props */) => {
   // const colorScheme = useColorScheme();
   const [taxis, setTaxis] = useState<WSTaxi[]>([]);
-  const { wsTaxis } = useWSState();
+  const { wsTaxis, confirmedTaxi } = useWSState();
 
   useEffect(() => {
     setTaxis(wsTaxis ?? []);
@@ -45,7 +38,7 @@ const TaxisMarkers = ({ onPressTaxi }: props) => {
     <>
       {taxis?.map((taxi) => {
         return (
-          <AnimatedMarker
+          <AnimatedPosHeadingMarker
             key={taxi.userId}
             heading={0}
             headingAnimated={true}
@@ -54,8 +47,8 @@ const TaxisMarkers = ({ onPressTaxi }: props) => {
             anchor={{ x: 0.5, y: 0.6 }}
             flat
           >
-            <TaxiSVG />
-          </AnimatedMarker>
+            <TaxiSVG isOnRide={!!confirmedTaxi} />
+          </AnimatedPosHeadingMarker>
         );
       })}
     </>

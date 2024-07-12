@@ -2,9 +2,9 @@ import { useColorScheme, View, ViewProps } from 'react-native';
 import React from 'react';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
-import { MapMarkerSVG2 } from '../svgs';
-import { AddMarker } from '../bottomsheet/BottomSheetContent';
+import { MapMarkerSVG2 } from '~/components/svgs';
 import Colors from '~/constants/Colors';
+import { AddMarker } from '~/types/Marker';
 
 export const UserMapMarker = ({ piningMarker, ...props }: { piningMarker: AddMarker | null } & ViewProps) => {
     const colorScheme = useColorScheme()

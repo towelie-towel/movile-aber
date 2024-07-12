@@ -18,7 +18,7 @@ export const lastLocationAtom = atomWithStorage<PlaceMarkerIconType[]>('last_loc
 const storedLocationPlaces = createJSONStorage<PlaceInfo[]>(() => AsyncStorage)
 export const locationPlacesAtom = atomWithStorage<PlaceInfo[]>('location_place', [], storedLocationPlaces)
 
-const WS_LOGS = false;
+const WS_LOGS = true;
 const LOCATION_TASK_NAME = 'background-location-task';
 
 export interface WSTaxi {
@@ -93,13 +93,14 @@ const requestPermissions = async () => {
 
     if (foregroundStatus === 'granted') {
         if (WS_LOGS) console.log('foregroundStatus permissions granted');
-        const { status: backgroundStatus } = await ExpoLocation.requestBackgroundPermissionsAsync();
+
+        /* const { status: backgroundStatus } = await ExpoLocation.requestBackgroundPermissionsAsync();
         if (backgroundStatus === 'granted') {
             if (WS_LOGS) console.log('backgroundStatus permissions granted');
             await ExpoLocation.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
                 accuracy: ExpoLocation.Accuracy.Balanced,
             });
-        }
+        } */
     }
 };
 
@@ -263,9 +264,10 @@ export const WSProvider = ({ children, userType }: { children: React.ReactNode, 
     const trackPosition = useCallback(async () => {
         await requestPermissions();
         if (positionSubscription.current) {
+            console.warn("Position subscription already setted")
             return;
         }
-        await ExpoLocation.enableNetworkProviderAsync();
+        // await ExpoLocation.enableNetworkProviderAsync();
         const posSubscrition = await ExpoLocation.watchPositionAsync(
             {
                 accuracy: ExpoLocation.Accuracy.BestForNavigation,
@@ -280,6 +282,7 @@ export const WSProvider = ({ children, userType }: { children: React.ReactNode, 
     }, [positionSubscription]);
     const trackHeading = useCallback(async () => {
         if (headingSubscription.current) {
+            console.warn("Heading subscription already setted")
             return;
         }
         const headSubscrition = await ExpoLocation.watchHeadingAsync((newHeading) => {
@@ -339,7 +342,7 @@ export const WSProvider = ({ children, userType }: { children: React.ReactNode, 
         }
 
         if (WS_LOGS) console.log('Stopping route simulation');
-    }, [positionSubscription, headingSubscription, simulationSubscription]);
+    }, [/* positionSubscription, headingSubscription,  */simulationSubscription]);
 
     useEffect(() => {
         if (!positionSubscription.current) {

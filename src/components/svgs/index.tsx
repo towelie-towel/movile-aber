@@ -428,13 +428,13 @@ export const VipSVG = ({ color = "#242E42" }) => {
   );
 };
 
-export const TaxiSVG = () => {
+export const TaxiSVG = ({ isOnRide = false }) => {
   return (
     <Svg height="40" width="20" stroke-miterlimit="10" fillRule='nonzero' clipRule="evenodd" strokeLinecap='round' strokeLinejoin='round' viewBox="0 0 100 200">
       <Defs>
         <LinearGradient gradientTransform="matrix(1 0 0 1 -61.821 -256.391)" gradientUnits="userSpaceOnUse" id="LinearGradient" x1="132.131" x2="102.196" y1="285.525" y2="311.534">
           <Stop offset="0" stop-color="#ffffff" />
-          <Stop offset="1" stop-color="#f0b631" />
+          <Stop offset="1" stop-color={isOnRide ? "#f0b631" : "#068e8a"} />
         </LinearGradient>
         <LinearGradient gradientTransform="matrix(1 0 0 1 -61.821 -256.391)" gradientUnits="userSpaceOnUse" id="LinearGradient_2" x1="94.0367" x2="127.147" y1="407.317" y2="407.317">
           <Stop offset="0" stop-color="#ffffff" />
@@ -453,7 +453,7 @@ export const TaxiSVG = () => {
         </LinearGradient>
         <LinearGradient gradientTransform="matrix(1 0 0 1 -61.821 -256.391)" gradientUnits="userSpaceOnUse" id="LinearGradient_3" x1="121.994" x2="107.78" y1="354.417" y2="376.143">
           <Stop offset="0" stop-color="#ffffff" />
-          <Stop offset="1" stop-color="#f0b631" />
+          <Stop offset="1" stop-color={isOnRide ? "#f0b631" : "#068e8a"} />
         </LinearGradient>
         <LinearGradient gradientTransform="matrix(1 0 0 1 -61.821 -256.391)" gradientUnits="userSpaceOnUse" id="LinearGradient_4" x1="102.428" x2="128.273" y1="334.467" y2="334.467">
           <Stop offset="0" stop-color="#ffffff" />
@@ -472,11 +472,11 @@ export const TaxiSVG = () => {
         </LinearGradient>
         <LinearGradient gradientTransform="matrix(1 0 0 1 -61.821 -256.391)" gradientUnits="userSpaceOnUse" id="LinearGradient_5" x1="79.6071" x2="79.1141" y1="279.285" y2="313.212">
           <Stop offset="0" stop-color="#ffffff" />
-          <Stop offset="1" stop-color="#f0b631" />
+          <Stop offset="1" stop-color={isOnRide ? "#f0b631" : "#068e8a"} />
         </LinearGradient>
         <LinearGradient gradientTransform="matrix(1 0 0 1 -61.821 -256.391)" gradientUnits="userSpaceOnUse" id="LinearGradient_6" x1="144.23" x2="143.737" y1="279.285" y2="313.212">
           <Stop offset="0" stop-color="#ffffff" />
-          <Stop offset="1" stop-color="#f0b631" />
+          <Stop offset="1" stop-color={isOnRide ? "#f0b631" : "#068e8a"} />
         </LinearGradient>
       </Defs>
       <G id="Layer-1">
@@ -484,30 +484,30 @@ export const TaxiSVG = () => {
           <Path d="M69.537 187.191L69.537 187.191C81.103 185.433 85.207 182.575 85.207 180.661L87.475 173.342C87.475 173.342 89.743 178.63 89.743 180.661L89.743 180.661C89.743 185.091 84.731 188.372 74.828 190.437C72.372 190.95 69.954 189.446 69.537 187.191Z" fill="#484d51" fill-rule="nonzero" opacity="1" stroke="none" />
           <Path d="M32.215 187.432C31.843 189.71 29.429 191.226 26.941 190.762C16.072 188.736 10.365 185.275 10.365 180.661L10.365 180.661C10.365 178.63 12.633 173.029 12.633 173.029L14.901 180.661C14.901 182.872 20.255 185.822 32.216 187.426L32.215 187.432Z" fill="#484d51" fill-rule="nonzero" opacity="1" stroke="none" />
           <Path d="M89.118 30.0336L11.058 30.2906L11.034 23.1076C10.973 4.67659 89.033 4.41859 89.094 22.8506L89.118 30.0336Z" fill="#484d51" fill-rule="nonzero" opacity="1" stroke="none" />
-          <Path d="M12.633 34.8776L87.475 34.8776L87.475 34.8776L87.475 168.181L87.475 168.181L12.633 168.181L12.633 168.181L12.633 34.8776L12.633 34.8776Z" fill="#f0b631" fill-rule="nonzero" opacity="1" stroke="none" />
+          <Path d="M12.633 34.8776L87.475 34.8776L87.475 34.8776L87.475 168.181L87.475 168.181L12.633 168.181L12.633 168.181L12.633 34.8776L12.633 34.8776Z" fill={isOnRide ? "#f0b631" : "#068e8a"} fill-rule="nonzero" opacity="1" stroke="none" />
           <Path d="M87.475 29.7616L12.633 29.7616L12.633 23.3886C12.633 7.03559 87.475 7.03559 87.475 23.3886L87.475 29.7616Z" fill="#f7af2f" fill-rule="nonzero" opacity="1" stroke="none" />
           <Path d="M85.331 24.2766L85.331 29.7566L14.781 29.7566L14.781 24.2766C14.781 21.8566 16.861 19.8566 20.321 18.2666L20.801 18.0566C22.081 17.4966 23.541 16.9966 25.141 16.5466C38.581 12.7666 61.891 12.7866 75.211 16.6166L75.221 16.6166C75.971 16.8366 76.681 17.0566 77.371 17.3066L77.431 17.3266C82.281 19.0266 85.331 21.3466 85.331 24.2766Z" fill="#f28f00" fill-rule="nonzero" opacity="1" stroke="none" />
           <Path d="M33.005 16.7906L28.451 19.6256L28.451 13.1596C28.451 12.5356 28.861 12.0296 29.367 12.0296L32.089 11.1226C32.595 11.1226 33.005 11.6286 33.005 12.2526L33.005 16.7906Z" fill="#fbfbfb" fill-rule="nonzero" opacity="1" stroke="none" />
           <Path d="M66.988 16.7906L71.542 19.6256L71.542 13.1596C71.542 12.5356 71.132 12.0296 70.626 12.0296L67.904 11.1226C67.398 11.1226 66.988 11.6286 66.988 12.2526L66.988 16.7906Z" fill="#fbfbfb" fill-rule="nonzero" opacity="1" stroke="none" />
-          <Path d="M87.475 35.2056L12.633 35.2056L12.633 29.7156C12.633 15.6286 87.475 15.6286 87.475 29.7156L87.475 35.2056Z" fill="#f0b631" fill-rule="nonzero" opacity="1" stroke="none" />
-          <Path d="M79.47 71.2036L20.64 71.2036L26.101 22.9516C26.246 21.0736 27.444 19.4776 29.376 18.1706C38.13 12.2196 61.962 12.2196 70.725 18.1616C72.657 19.4676 73.864 21.0646 74.009 22.9516L79.47 71.2036Z" fill="#eaa10f" fill-rule="nonzero" opacity="1" stroke="none" />
-          <Path d="M75.442 71.2036L24.668 71.2036L29.376 18.1706C38.13 12.2196 61.962 12.2196 70.725 18.1616L75.442 71.2036Z" fill="#f0b631" fill-rule="nonzero" opacity="1" stroke="none" />
+          <Path d="M87.475 35.2056L12.633 35.2056L12.633 29.7156C12.633 15.6286 87.475 15.6286 87.475 29.7156L87.475 35.2056Z" fill={isOnRide ? "#f0b631" : "#068e8a"} fill-rule="nonzero" opacity="1" stroke="none" />
+          <Path d="M79.47 71.2036L20.64 71.2036L26.101 22.9516C26.246 21.0736 27.444 19.4776 29.376 18.1706C38.13 12.2196 61.962 12.2196 70.725 18.1616C72.657 19.4676 73.864 21.0646 74.009 22.9516L79.47 71.2036Z" fill={isOnRide ? "#eaa10f" : "#242E42"} fill-rule="nonzero" opacity="1" stroke="none" />
+          <Path d="M75.442 71.2036L24.668 71.2036L29.376 18.1706C38.13 12.2196 61.962 12.2196 70.725 18.1616L75.442 71.2036Z" fill={isOnRide ? "#f0b631" : "#068e8a"} fill-rule="nonzero" opacity="1" stroke="none" />
           <Path d="M75.442 71.2036L24.668 71.2036L29.376 18.1706C38.13 12.2196 61.962 12.2196 70.725 18.1616L75.442 71.2036Z" fill="url(#LinearGradient)" fill-rule="nonzero" opacity="0.3" stroke="none" />
           <Path d="M68.737 19.1506L31.373 19.1506L31.631 18.9836C31.461 13.7386 68.312 13.7926 68.474 18.9806L68.737 19.1506Z" fill="#484d51" fill-rule="nonzero" opacity="1" stroke="none" />
           <Path d="M82.029 75.6306L82.029 158.139C82.029 168.018 18.073 168.018 18.073 158.139L18.073 75.6306C18.073 73.8796 19.007 72.3466 20.64 71.0136C24.849 67.6026 33.703 65.5796 43.419 64.9536C49.769 64.5456 56.482 64.7356 62.506 65.5156C69.827 66.4586 76.114 68.2916 79.452 71.0036C81.094 72.3376 82.029 73.8796 82.029 75.6306Z" fill="#1b3338" fill-rule="nonzero" opacity="1" stroke="none" />
           <Path d="M82.029 158.139C82.029 168.018 18.073 168.018 18.073 158.139L82.029 158.139Z" fill="#232323" fill-rule="nonzero" opacity="1" stroke="none" />
-          <Path d="M87.471 167.857L87.471 178.437C87.471 188.327 53.071 191.517 30.921 187.997C20.391 186.317 12.631 183.137 12.631 178.437L12.631 167.857L87.471 167.857Z" fill="#f0b631" fill-rule="nonzero" opacity="1" stroke="none" />
-          <Path d="M27.502 89.6346L20.642 71.0196C18.832 70.3146 16.867 72.7346 18.076 75.6286L24.667 92.4686L27.502 89.6346Z" fill="#f0b631" fill-rule="nonzero" opacity="1" stroke="none" />
-          <Path d="M15.517 109.89C14.315 109.89 14.315 114.539 15.517 114.539L25.956 113.502L25.956 109.55L15.517 109.89Z" fill="#f0b631" fill-rule="nonzero" opacity="1" stroke="none" />
-          <Path d="M84.937 109.89C86.139 109.89 86.139 114.539 84.937 114.539L74.499 113.502L74.499 109.55L84.937 109.89Z" fill="#f0b631" fill-rule="nonzero" opacity="1" stroke="none" />
-          <Path d="M72.234 89.6346L79.094 71.0196C80.904 70.3146 82.869 72.7346 81.66 75.6286L75.069 92.4686L72.234 89.6346Z" fill="#f0b631" fill-rule="nonzero" opacity="1" stroke="none" />
-          <Path d="M27.542 135.968L21.04 164.101C19.269 165.153 17.281 161.538 18.417 157.197L24.667 131.625L27.542 135.968Z" fill="#f0b631" fill-rule="nonzero" opacity="1" stroke="none" />
+          <Path d="M87.471 167.857L87.471 178.437C87.471 188.327 53.071 191.517 30.921 187.997C20.391 186.317 12.631 183.137 12.631 178.437L12.631 167.857L87.471 167.857Z" fill={isOnRide ? "#f0b631" : "#068e8a"} fill-rule="nonzero" opacity="1" stroke="none" />
+          <Path d="M27.502 89.6346L20.642 71.0196C18.832 70.3146 16.867 72.7346 18.076 75.6286L24.667 92.4686L27.502 89.6346Z" fill={isOnRide ? "#f0b631" : "#068e8a"} fill-rule="nonzero" opacity="1" stroke="none" />
+          <Path d="M15.517 109.89C14.315 109.89 14.315 114.539 15.517 114.539L25.956 113.502L25.956 109.55L15.517 109.89Z" fill={isOnRide ? "#f0b631" : "#068e8a"} fill-rule="nonzero" opacity="1" stroke="none" />
+          <Path d="M84.937 109.89C86.139 109.89 86.139 114.539 84.937 114.539L74.499 113.502L74.499 109.55L84.937 109.89Z" fill={isOnRide ? "#f0b631" : "#068e8a"} fill-rule="nonzero" opacity="1" stroke="none" />
+          <Path d="M72.234 89.6346L79.094 71.0196C80.904 70.3146 82.869 72.7346 81.66 75.6286L75.069 92.4686L72.234 89.6346Z" fill={isOnRide ? "#f0b631" : "#068e8a"} fill-rule="nonzero" opacity="1" stroke="none" />
+          <Path d="M27.542 135.968L21.04 164.101C19.269 165.153 17.281 161.538 18.417 157.197L24.667 131.625L27.542 135.968Z" fill={isOnRide ? "#f0b631" : "#068e8a"} fill-rule="nonzero" opacity="1" stroke="none" />
           <Path d="M65.326 164.739C56.561 165.69 47.516 165.802 38.192 165.075L32.216 137.776C38.566 137.368 54.636 135.733 60.659 136.513L65.326 164.739Z" fill="url(#LinearGradient_2)" fill-rule="nonzero" opacity="0.2" stroke="none" />
-          <Path d="M72.193 135.968L78.695 164.101C80.466 165.153 82.454 161.538 81.318 157.197L75.068 131.625L72.193 135.968Z" fill="#f0b631" fill-rule="nonzero" opacity="1" stroke="none" />
+          <Path d="M72.193 135.968L78.695 164.101C80.466 165.153 82.454 161.538 81.318 157.197L75.068 131.625L72.193 135.968Z" fill={isOnRide ? "#f0b631" : "#068e8a"} fill-rule="nonzero" opacity="1" stroke="none" />
           <Path d="M72.783 137.371C56.943 138.619 41.722 138.744 27.325 137.371C25.857 137.371 24.667 136.181 24.667 134.713L24.667 92.2926C24.667 90.8246 25.857 89.6346 27.325 89.6346C41.722 87.9916 56.944 88.1416 72.783 89.6346C74.251 89.6346 75.441 90.8246 75.441 92.2926L75.441 134.713C75.441 136.181 74.251 137.371 72.783 137.371Z" fill="#f7af2f" fill-rule="nonzero" opacity="1" stroke="none" />
           <Path d="M67.833 134.862C55.443 135.979 43.537 136.091 32.276 134.862C31.128 134.862 30.197 133.797 30.197 132.482L30.197 94.5026C30.197 93.1886 31.128 92.1226 32.276 92.1226C43.537 90.6516 55.444 90.7856 67.833 92.1226C68.981 92.1226 69.912 93.1876 69.912 94.5026L69.912 132.482C69.912 133.796 68.981 134.862 67.833 134.862Z" fill="url(#LinearGradient_3)" fill-rule="nonzero" opacity="0.3" stroke="none" />
-          <Path d="M12.955 29.7156L12.955 175.576C12.955 175.576 5.778 78.8856 12.955 29.7156Z" fill="#eaa10f" fill-rule="nonzero" opacity="1" stroke="none" />
-          <Path d="M87.153 29.7156L87.153 175.576C87.153 175.576 94.33 78.8856 87.153 29.7156Z" fill="#eaa10f" fill-rule="nonzero" opacity="1" stroke="none" />
+          <Path d="M12.955 29.7156L12.955 175.576C12.955 175.576 5.778 78.8856 12.955 29.7156Z" fill={isOnRide ? "#eaa10f" : "#242E42"} fill-rule="nonzero" opacity="1" stroke="none" />
+          <Path d="M87.153 29.7156L87.153 175.576C87.153 175.576 94.33 78.8856 87.153 29.7156Z" fill={isOnRide ? "#eaa10f" : "#242E42"} fill-rule="nonzero" opacity="1" stroke="none" />
           <G opacity="1" >
             <G opacity="1" >
               <G opacity="1" >
@@ -535,7 +535,7 @@ export const TaxiSVG = () => {
           <Path d="M84.705 109.55L84.705 109.55C84.07 109.55 83.556 109.036 83.556 108.401L83.556 102.08C83.556 101.446 84.07 100.931 84.705 100.931L84.705 100.931C85.339 100.931 85.854 101.445 85.854 102.08L85.854 108.401C85.854 109.036 85.339 109.55 84.705 109.55Z" fill="#e5e5e5" fill-rule="nonzero" opacity="1" stroke="none" />
           <Path d="M15.581 155.188L15.581 155.188C14.947 155.188 14.432 154.674 14.432 154.039L14.432 147.718C14.432 147.084 14.946 146.569 15.581 146.569L15.581 146.569C16.215 146.569 16.73 147.083 16.73 147.718L16.73 154.039C16.73 154.673 16.216 155.188 15.581 155.188Z" fill="#e5e5e5" fill-rule="nonzero" opacity="1" stroke="none" />
           <Path d="M84.705 155.188L84.705 155.188C84.07 155.188 83.556 154.674 83.556 154.039L83.556 147.718C83.556 147.084 84.07 146.569 84.705 146.569L84.705 146.569C85.339 146.569 85.854 147.083 85.854 147.718L85.854 154.039C85.854 154.673 85.339 155.188 84.705 155.188Z" fill="#e5e5e5" fill-rule="nonzero" opacity="1" stroke="none" />
-          <Path d="M48.416 167.142L50.938 167.142L50.938 167.142L50.938 180.762L50.938 180.762L48.416 180.762L48.416 180.762L48.416 167.142L48.416 167.142Z" fill="#f0b631" fill-rule="nonzero" opacity="1" stroke="none" />
+          <Path d="M48.416 167.142L50.938 167.142L50.938 167.142L50.938 180.762L50.938 180.762L48.416 180.762L48.416 180.762L48.416 167.142L48.416 167.142Z" fill={isOnRide ? "#f0b631" : "#068e8a"} fill-rule="nonzero" opacity="1" stroke="none" />
           <G opacity="1" >
             <Path d="M15.871 177.227C15.491 177.137 15.111 177.087 14.741 177.087C14.001 177.087 13.281 177.267 12.631 177.587L12.631 178.437C12.631 182.21 17.638 185.001 25.059 186.826C25.385 184.561 25.829 182.275 26.571 179.845L15.871 177.227Z" fill="#d11207" fill-rule="nonzero" opacity="1" stroke="none" />
             <Path d="M28.381 180.287L26.572 179.844C25.829 182.274 25.386 184.56 25.06 186.825C26.883 187.273 28.845 187.665 30.922 187.996C31.372 187.456 31.712 186.806 31.892 186.076C32.521 183.517 30.941 180.917 28.381 180.287Z" fill="#ef7911" fill-rule="nonzero" opacity="1" stroke="none" />
