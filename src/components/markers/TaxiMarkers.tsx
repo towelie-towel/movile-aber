@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, memo, useCallback } from 'react';
 // import { useColorScheme } from 'react-native';
 
 import { useWSState } from '~/context/WSContext';
@@ -21,18 +21,40 @@ import { TaxiSVG } from '~/components/svgs';
 />
 */
 
-/* interface props {
-  onPressTaxi: (taxiId: string) => void;
-} */
+interface ITaxiMarkers {
+  onPressTaxi: (taxiId: string) => Promise<void>;
+  animateToRegion: (region: {
+    latitudeDelta: number;
+    longitudeDelta: number;
+    latitude: number;
+    longitude: number;
+  }) => void;
+}
 
-const TaxisMarkers = (/* { onPressTaxi }: props */) => {
+const TaxisMarkers = ({ onPressTaxi, animateToRegion }: ITaxiMarkers) => {
   // const colorScheme = useColorScheme();
   const [taxis, setTaxis] = useState<WSTaxi[]>([]);
   const { wsTaxis, confirmedTaxi } = useWSState();
 
-  useEffect(() => {
-    setTaxis(wsTaxis ?? []);
-  }, [wsTaxis]);
+  const onWsTaxisChangeHandler = useCallback(() => {
+    if (confirmedTaxi) {
+      const confirmedTaxiLocation = wsTaxis?.find(taxi => taxi.userId === confirmedTaxi.userId)
+      if (!confirmedTaxiLocation) {
+        console.error("confirmed taxi not found")
+        return
+      }
+      setTaxis([confirmedTaxiLocation]);
+      animateToRegion({
+        latitudeDelta: 0.00922, longitudeDelta: 0.009121,
+        latitude: confirmedTaxiLocation.latitude,
+        longitude: confirmedTaxiLocation.longitude,
+      })
+    } else {
+      setTaxis(wsTaxis ?? []);
+    }
+  }, [wsTaxis, confirmedTaxi, animateToRegion])
+
+  useEffect(onWsTaxisChangeHandler, [wsTaxis]);
 
   return (
     <>
@@ -55,4 +77,4 @@ const TaxisMarkers = (/* { onPressTaxi }: props */) => {
   );
 };
 
-export default TaxisMarkers;
+export default memo(TaxisMarkers);

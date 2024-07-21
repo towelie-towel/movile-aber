@@ -172,6 +172,7 @@ export const WSProvider = ({ children, userType }: { children: React.ReactNode, 
                 taxi = JSON.parse(taxistring) as TaxiProfile;
             }
             setConfirmedTaxi(taxi)
+            if (WS_LOGS) console.log(JSON.stringify(taxi))
         }
         const taxis = message
             .replace('taxis-', '')

@@ -35,6 +35,8 @@ import type { TaxiType } from '~/types/Taxi';
 import type { RideInfo } from '~/types/RideFlow';
 import type { AddMarker } from '~/types/Marker';
 
+const RIDE_FLOW_LOGS = false
+
 export default function ClientMap() {
     useKeepAwake();
     console.log('ClientMap Rendered')
@@ -76,8 +78,8 @@ export default function ClientMap() {
     const bottomSheetModalRef = useRef<BottomSheetModal>(null);
 
     useEffect(() => {
-        console.log(currentStep)
-        console.log(selectedTaxiType)
+        if (RIDE_FLOW_LOGS) console.log(currentStep)
+        if (RIDE_FLOW_LOGS) console.log(selectedTaxiType)
         switch (currentStep) {
             case ClientSteps.SEARCH:
                 setSnapPoints([210, 390, 700])
@@ -193,7 +195,7 @@ export default function ClientMap() {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         setFindingRide(true);
         setCurrentStep(ClientSteps.FINDING)
-        console.log(rideInfo)
+        if (RIDE_FLOW_LOGS) console.log(rideInfo)
         try {
             if (rideInfo) {
                 await findTaxi(rideInfo, "eff41f96-178e-4e97-9f43-35d4de7b7a18")
@@ -208,6 +210,14 @@ export default function ClientMap() {
             setFindingRide(false);
         }
     }, [rideInfo, findTaxi]);
+
+    const onPressTaxi = useCallback(async () => {
+        try {
+        } catch (error) {
+            console.error(error)
+        } finally {
+        }
+    }, []);
 
     const getMiddlePoint = useCallback(async () => {
         const pointCoords = await mapViewRef.current?.coordinateForPoint({ x: width / 2, y: height / 2 });
@@ -308,7 +318,7 @@ export default function ClientMap() {
                         customMapStyle={colorScheme === 'dark' ? NightMap : undefined}
                     >
                         {activeRoute && <Polyline coordinates={activeRoute.coords} strokeWidth={5} strokeColor="#000" />}
-                        <TaxisMarkers /* onPressTaxi={() => { }} */ />
+                        <TaxisMarkers animateToRegion={animateToRegion} onPressTaxi={onPressTaxi} />
                         <UserMarker findingRide={findingRide} />
 
                         <AnimatedRouteMarker key={2} />
