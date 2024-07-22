@@ -29,9 +29,12 @@ interface ITaxiMarkers {
     latitude: number;
     longitude: number;
   }) => void;
+  taxiConfirm: () => void;
+  startRide: () => void;
+  finishRide: () => void;
 }
 
-const TaxisMarkers = ({ onPressTaxi, animateToRegion }: ITaxiMarkers) => {
+const TaxisMarkers = ({ onPressTaxi, animateToRegion, taxiConfirm, startRide, finishRide }: ITaxiMarkers) => {
   // const colorScheme = useColorScheme();
   const [taxis, setTaxis] = useState<WSTaxi[]>([]);
   const { wsTaxis, confirmedTaxi } = useWSState();
@@ -53,8 +56,20 @@ const TaxisMarkers = ({ onPressTaxi, animateToRegion }: ITaxiMarkers) => {
       setTaxis(wsTaxis ?? []);
     }
   }, [wsTaxis, confirmedTaxi, animateToRegion])
+  const onConfirmedTaxiChangeHandler = useCallback(() => {
+    if (confirmedTaxi) {
+      if (confirmedTaxi.status === "confirmed") {
+        taxiConfirm()
+      } else if (confirmedTaxi.status === "ongoing") {
+        startRide()
+      } else if (confirmedTaxi.status === "completed") {
+        finishRide()
+      }
+    }
+  }, [confirmedTaxi])
 
   useEffect(onWsTaxisChangeHandler, [wsTaxis]);
+  useEffect(onConfirmedTaxiChangeHandler, [confirmedTaxi]);
 
   return (
     <>

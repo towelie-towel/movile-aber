@@ -288,7 +288,7 @@ export const BottomSheetContent = ({
     } else {
       setDestinationLoading(true)
     }
-    setCurrentStep(ClientSteps.PINNING - 1)
+    setCurrentStep(ClientSteps.SEARCH)
     try {
       const location = await getMiddlePoint();
       const streetInfo = await getCoordinateAddress(location.latitude, location.longitude);
@@ -333,10 +333,10 @@ export const BottomSheetContent = ({
       } else {
         setDestinationLoading(false)
       }
-      if (piningInput !== 'origin' || !pinedInfo?.destination) {
-        setCurrentStep(ClientSteps.PINNING + 1)
+      if (piningInput !== 'origin' || pinedInfo?.destination) {
+        setCurrentStep(ClientSteps.TAXI)
       } else {
-        setCurrentStep(ClientSteps.PINNING - 1)
+        setCurrentStep(ClientSteps.SEARCH)
       }
       endPiningLocation()
       setPiningInput(null)

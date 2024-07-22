@@ -1,7 +1,7 @@
 import { LatLng } from 'react-native-maps';
 import { Profile } from '~/types/User';
 
-export type RideStatus = "pending" | "ongoing" | "calceled" | "completed" | "error"
+export type RideStatus = "pending" | "confirmed" | "ongoing" | "calceled" | "completed" | "error"
 export interface DBRide {
     id: number,
     status: RideStatus;

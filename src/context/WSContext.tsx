@@ -10,7 +10,7 @@ import { PlaceMarkerIconType } from '~/components/markers/AddUserMarker';
 import { calculateDistance, calculateBearing, duplicateCoords } from '~/utils/directions';
 import type { TaxiProfile } from '~/types/Taxi';
 import type { PlaceInfo } from '~/types/Places';
-import type { RideInfo } from '~/types/RideFlow';
+import type { RideInfo, RideStatus } from '~/types/RideFlow';
 import type { UserRole } from '~/types/User';
 
 const storedlastLocation = createJSONStorage<PlaceMarkerIconType[]>(() => AsyncStorage)
@@ -31,7 +31,7 @@ export interface WSTaxi {
 interface WSStateContext {
     ws: WebSocket | null | undefined;
     wsTaxis: WSTaxi[] | null | undefined;
-    confirmedTaxi: TaxiProfile | null;
+    confirmedTaxi: TaxiProfile & { status: RideStatus } | null;
     position: ExpoLocation.LocationObject | undefined;
     heading: ExpoLocation.LocationHeadingObject | undefined;
     userType: UserRole | undefined;
@@ -109,7 +109,7 @@ export const WSProvider = ({ children, userType }: { children: React.ReactNode, 
     const [wsTaxis, setWsTaxis] = useState<WSTaxi[]>([]);
     const [heading, setHeading] = useState<ExpoLocation.LocationHeadingObject>();
     const [position, setPosition] = useState<ExpoLocation.LocationObject>();
-    const [confirmedTaxi, setConfirmedTaxi] = useState<TaxiProfile | null>(null);
+    const [confirmedTaxi, setConfirmedTaxi] = useState<TaxiProfile & { status: RideStatus } | null>(null);
 
     const [currentUserType, setCurrentUserType] = useState(userType);
 
@@ -155,7 +155,39 @@ export const WSProvider = ({ children, userType }: { children: React.ReactNode, 
             return;
         }
         if (WS_LOGS) console.log('handleWebSocketMessage: ', message);
-        if (message.startsWith("confirm-")) {
+        if (message.startsWith("taxis-")) {
+            const taxis = message
+                .replace('taxis-', '')
+                .split('$')
+                .map((taxiStr) => {
+                    const taxi = taxiStr.split('&');
+                    const id = taxi[1];
+                    const location = taxi[0]!.split(',');
+                    return {
+                        latitude: parseFloat(location[0]!),
+                        longitude: parseFloat(location[1]!),
+                        header: parseFloat(location[2]!),
+                        userId: id ?? '',
+                    };
+                });
+            const sortedTaxis = [...taxis].sort((taxiA, taxiB) => {
+                const distanceA = calculateDistance(
+                    position?.coords.latitude ?? 0,
+                    position?.coords.longitude ?? 0,
+                    taxiA.latitude,
+                    taxiA.longitude
+                );
+                const distanceB = calculateDistance(
+                    position?.coords.latitude ?? 0,
+                    position?.coords.longitude ?? 0,
+                    taxiB.latitude,
+                    taxiB.longitude
+                );
+                return distanceA - distanceB;
+            });
+            if (WS_LOGS) console.log(sortedTaxis)
+            setWsTaxis(sortedTaxis);
+        } else if (message.startsWith("confirm-")) {
             const taxistring = message.replace('confirm-', '');
             let taxi: TaxiProfile | undefined;
             if (taxistring === 'test') {
@@ -171,43 +203,27 @@ export const WSProvider = ({ children, userType }: { children: React.ReactNode, 
             } else {
                 taxi = JSON.parse(taxistring) as TaxiProfile;
             }
-            setConfirmedTaxi(taxi)
+            setConfirmedTaxi({ ...taxi, status: "confirmed" })
             if (WS_LOGS) console.log(JSON.stringify(taxi))
+        } else if (message.startsWith("ridestart-")) {
+            const rideStartStatus = message.replace('ridestart-', '');
+            if (rideStartStatus === 'success') {
+                // @ts-ignore
+                setConfirmedTaxi({ ...confirmedTaxi, status: "ongoing" })
+            } else {
+                console.error("Ride started with invalid status")
+            }
+        } else if (message.startsWith("completed-")) {
+            const completedStatus = message.replace('confirm-', '');
+            if (completedStatus === 'success') {
+                // @ts-ignore
+                setConfirmedTaxi({ ...confirmedTaxi, status: "completed" })
+            } else {
+                console.error("Ride completed with invalid status")
+            }
         }
-        const taxis = message
-            .replace('taxis-', '')
-            .split('$')
-            .map((taxiStr) => {
-                const taxi = taxiStr.split('&');
-                const id = taxi[1];
-                const location = taxi[0]!.split(',');
-                return {
-                    latitude: parseFloat(location[0]!),
-                    longitude: parseFloat(location[1]!),
-                    header: parseFloat(location[2]!),
-                    userId: id ?? '',
-                };
-            });
-        const sortedTaxis = [...taxis].sort((taxiA, taxiB) => {
-            const distanceA = calculateDistance(
-                position?.coords.latitude ?? 0,
-                position?.coords.longitude ?? 0,
-                taxiA.latitude,
-                taxiA.longitude
-            );
-            const distanceB = calculateDistance(
-                position?.coords.latitude ?? 0,
-                position?.coords.longitude ?? 0,
-                taxiB.latitude,
-                taxiB.longitude
-            );
-            return distanceA - distanceB;
-        });
-        if (WS_LOGS) console.log(sortedTaxis)
-        setWsTaxis(sortedTaxis);
 
-
-    }, []);
+    }, [confirmedTaxi]);
 
     const asyncNewWebSocket = useCallback(() => {
         const protocol = `map-client`;

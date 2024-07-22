@@ -35,7 +35,7 @@ import type { TaxiType } from '~/types/Taxi';
 import type { RideInfo } from '~/types/RideFlow';
 import type { AddMarker } from '~/types/Marker';
 
-const RIDE_FLOW_LOGS = false
+const RIDE_FLOW_LOGS = true
 
 export default function ClientMap() {
     useKeepAwake();
@@ -199,17 +199,33 @@ export default function ClientMap() {
         try {
             if (rideInfo) {
                 await findTaxi(rideInfo, "eff41f96-178e-4e97-9f43-35d4de7b7a18")
-                setCurrentStep(ClientSteps.PICKUP)
             } else {
                 throw new Error('Ride Info is not set')
             }
         } catch (error) {
             console.error(error)
             setCurrentStep(ClientSteps.FINDING - 1)
-        } finally {
-            setFindingRide(false);
         }
     }, [rideInfo, findTaxi]);
+    const taxiConfirm = useCallback(() => {
+        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+        setFindingRide(false);
+        // @ts-ignore
+        setRideInfo({ ...rideInfo, status: "confirmed" })
+        setCurrentStep(ClientSteps.PICKUP)
+    }, [rideInfo]);
+    const startRide = useCallback(() => {
+        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+        // @ts-ignore
+        setRideInfo({ ...rideInfo, status: "ongoing" })
+        setCurrentStep(ClientSteps.RIDE)
+    }, [rideInfo]);
+    const finishRide = useCallback(() => {
+        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+        // @ts-ignore
+        setRideInfo({ ...rideInfo, status: "completed" })
+        setCurrentStep(ClientSteps.FINISHED)
+    }, [rideInfo]);
 
     const onPressTaxi = useCallback(async () => {
         try {
@@ -318,7 +334,7 @@ export default function ClientMap() {
                         customMapStyle={colorScheme === 'dark' ? NightMap : undefined}
                     >
                         {activeRoute && <Polyline coordinates={activeRoute.coords} strokeWidth={5} strokeColor="#000" />}
-                        <TaxisMarkers animateToRegion={animateToRegion} onPressTaxi={onPressTaxi} />
+                        <TaxisMarkers taxiConfirm={taxiConfirm} startRide={startRide} finishRide={finishRide} animateToRegion={animateToRegion} onPressTaxi={onPressTaxi} />
                         <UserMarker findingRide={findingRide} />
 
                         <AnimatedRouteMarker key={2} />
