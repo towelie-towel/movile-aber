@@ -200,7 +200,7 @@ export default function ClientMap() {
         setRideInfo({ ...rideInfo, status: "ongoing" })
         setCurrentStep(ClientSteps.RIDE)
     }, [rideInfo]);
-    const finishRide = useCallback(() => {
+    const completeRide = useCallback(() => {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         // @ts-ignore
         setRideInfo({ ...rideInfo, status: "completed" })
@@ -314,8 +314,8 @@ export default function ClientMap() {
                         customMapStyle={colorScheme === 'dark' ? NightMap : undefined}
                     >
                         {activeRoute && <Polyline coordinates={activeRoute.coords} strokeWidth={5} strokeColor="#000" />}
-                        <TaxisMarkers taxiConfirm={taxiConfirm} startRide={startRide} finishRide={finishRide} animateToRegion={animateToRegion} onPressTaxi={onPressTaxi} />
-                        <UserMarker findingRide={findingRide} />
+                        {currentStep !== ClientSteps.RIDE && <TaxisMarkers taxiConfirm={taxiConfirm} startRide={startRide} animateToRegion={animateToRegion} onPressTaxi={onPressTaxi} />}
+                        <UserMarker findingRide={findingRide} completeRide={completeRide} />
 
                         <AnimatedRouteMarker key={2} />
 
@@ -336,19 +336,13 @@ export default function ClientMap() {
                             </>
                         )}
 
-                        {[{ latitude: 23.127778, longitude: -82.361833 }, { latitude: 23.127778, longitude: -82.423028 }, { latitude: 23.088667, longitude: -82.361833 }, { latitude: 23.088667, longitude: -82.423028 }].map((item, i) => (
-                            <Marker key={i} coordinate={{ latitude: item.latitude, longitude: item.longitude }}>
-                                <MaterialIcons name="location-on" size={24} color={Colors[colorScheme ?? 'light'].text} />
-                            </Marker>
-                        ))}
-
                     </MapView>
 
                     {currentStep === ClientSteps.PINNING && (
                         <Animated.View
                             style={[{ position: 'absolute', top: 0, right: 0, flex: 1, zIndex: 1000 }, piningMarkerAnimStyle]}
                         >
-                            {!piningLocation && piningMarker &&
+                            {!piningLocation &&
                                 <UserMapMarker style={{ position: 'absolute', right: width / 2 - 41, top: height / 2 - 82, zIndex: 1001, }} piningMarker={piningMarker} />
                             }
                             {piningLocation && (

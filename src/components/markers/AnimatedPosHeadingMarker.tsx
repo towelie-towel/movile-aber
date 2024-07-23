@@ -6,14 +6,13 @@ import { calculateBearing } from '~/utils/directions';
 type AnimatedMarkerParams = {
     longitude: number;
     latitude: number;
-    heading: number;
     headingAnimated?: boolean;
 } & Omit<MapMarkerProps, 'coordinate'>;
 
 const AnimatedMarker: React.FC<AnimatedMarkerParams> = ({
     latitude,
     longitude,
-    headingAnimated,
+    headingAnimated = true,
     children,
     ...restProps
 }) => {
@@ -65,12 +64,9 @@ const AnimatedMarker: React.FC<AnimatedMarkerParams> = ({
 
     return (
         <MarkerAnimated
-            p
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
             coordinate={anim_marker_coords_ref.current} ref={(_ref) => (anim_marker_ref.current = _ref)}
-            tracksViewChanges={false}
-            // rotation={!headingAnimated ? heading : undefined}
             {...restProps}
         >
             <Animated.View

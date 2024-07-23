@@ -1,25 +1,9 @@
 import React, { useEffect, useState, memo, useCallback } from 'react';
-// import { useColorScheme } from 'react-native';
 
 import { useWSState } from '~/context/WSContext';
 import { WSTaxi } from '~/context/WSContext';
 import AnimatedPosHeadingMarker from '~/components/markers/AnimatedPosHeadingMarker';
 import { TaxiSVG } from '~/components/svgs';
-
-/* 
-<TaxiMarker
-  id={wsTaxi.userId}
-  key={wsTaxi.userId}
-  taxi={taxis.find((taxi) => taxi.id === wsTaxi.userId)!}
-  onPress={() => {
-    onPressTaxi(wsTaxi.userId);
-  }}
-  heading={wsTaxi.header}
-  headingAnimated
-  latitude={wsTaxi.latitude}
-  longitude={wsTaxi.longitude}
-/>
-*/
 
 interface ITaxiMarkers {
   onPressTaxi: (taxiId: string) => Promise<void>;
@@ -31,11 +15,9 @@ interface ITaxiMarkers {
   }) => void;
   taxiConfirm: () => void;
   startRide: () => void;
-  finishRide: () => void;
 }
 
-const TaxisMarkers = ({ onPressTaxi, animateToRegion, taxiConfirm, startRide, finishRide }: ITaxiMarkers) => {
-  // const colorScheme = useColorScheme();
+const TaxisMarkers = ({ onPressTaxi, animateToRegion, taxiConfirm, startRide }: ITaxiMarkers) => {
   const [taxis, setTaxis] = useState<WSTaxi[]>([]);
   const { wsTaxis, confirmedTaxi } = useWSState();
 
@@ -44,17 +26,13 @@ const TaxisMarkers = ({ onPressTaxi, animateToRegion, taxiConfirm, startRide, fi
   }, [wsTaxis])
   const onTaxisChangeHandler = useCallback(() => {
     if (confirmedTaxi) {
-      const confirmedTaxiLocation = taxis?.find(taxi => taxi.userId === confirmedTaxi.userId)
-      console.log(JSON.stringify({ confirmedTaxiLocation, taxis, confirmedTaxi }, null, 2))
-      if (!confirmedTaxiLocation) {
-        console.error("confirmed taxi not found")
-        return
+      if (confirmedTaxi.status === "confirmed") {
+        animateToRegion({
+          latitudeDelta: 0.00922, longitudeDelta: 0.009121,
+          latitude: taxis[0].latitude,
+          longitude: taxis[0].longitude,
+        })
       }
-      animateToRegion({
-        latitudeDelta: 0.00922, longitudeDelta: 0.009121,
-        latitude: confirmedTaxiLocation.latitude,
-        longitude: confirmedTaxiLocation.longitude,
-      })
     } else { }
   }, [taxis, confirmedTaxi, animateToRegion])
   const onConfirmedTaxiChangeHandler = useCallback(() => {
@@ -63,8 +41,6 @@ const TaxisMarkers = ({ onPressTaxi, animateToRegion, taxiConfirm, startRide, fi
         taxiConfirm()
       } else if (confirmedTaxi.status === "ongoing") {
         startRide()
-      } else if (confirmedTaxi.status === "completed") {
-        finishRide()
       }
     }
   }, [confirmedTaxi])
@@ -78,8 +54,8 @@ const TaxisMarkers = ({ onPressTaxi, animateToRegion, taxiConfirm, startRide, fi
       {taxis?.map((taxi) => {
         return (
           <AnimatedPosHeadingMarker
+            onPress={() => onPressTaxi(taxi.userId)}
             key={taxi.userId}
-            heading={0}
             headingAnimated={true}
             latitude={taxi.latitude}
             longitude={taxi.longitude}

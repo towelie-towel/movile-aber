@@ -2,7 +2,7 @@ import { MaterialCommunityIcons, FontAwesome6, AntDesign } from '@expo/vector-ic
 import { BottomSheetView, useBottomSheet } from '@gorhom/bottom-sheet';
 import { Image } from 'expo-image';
 import * as ExpoLocation from 'expo-location';
-import React, { useCallback, useEffect, useMemo, useRef, useState, ComponentRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState, ComponentRef } from 'react';
 import { View, Text, useColorScheme, useWindowDimensions, LayoutAnimation, Keyboard, ScrollView, Animated, Easing, Alert, ActivityIndicator } from 'react-native';
 import type { LatLng } from 'react-native-maps';
 import { useAtom } from 'jotai/react';
@@ -16,6 +16,9 @@ import { ScaleBtn } from '~/components/common';
 import { selectableMarkerIcons, UserMarkerIconType } from '~/components/markers/AddUserMarker';
 import { ConfortSVG } from '~/components/svgs/index';
 import TaxiTypeRideRowItem from '~/components/elements/TaxiTypeRideRowItem';
+import RidesHistoryItem from '~/components/elements/RidesHistoryItem';
+import UserMarkerRowItem from '~/components/elements/UserMarkerRowItem';
+import DefaultMarkerRowItem from '~/components/elements/DefaultMarkerRowItem';
 import DashedLine from '~/components/bottomsheet/DashedLine';
 import Colors from '~/constants/Colors';
 import { ClientSteps } from '~/constants/RideFlow';
@@ -24,7 +27,7 @@ import { defaultMarkers } from '~/constants/Markers';
 import { generateUniqueId } from '~/utils';
 import { getCoordinateAddress/* , getDirections */, polylineDecode } from '~/utils/directions';
 import type { TaxiTypesInfo, TaxiType } from '~/types/Taxi';
-import type { DBRide, RideInfo } from '~/types/RideFlow';
+import type { RideInfo } from '~/types/RideFlow';
 import type { AddMarker } from '~/types/Marker';
 
 import TestRidesData from '~/constants/TestRidesData.json'
@@ -96,9 +99,9 @@ export const BottomSheetContent = ({
   const markerNameInputViewRef = useRef<ComponentRef<typeof FloatingLabelInput>>(null);
   const originInputViewRef = useRef<GooglePlacesAutocompleteRef>(null);
   const destinationInputViewRef = useRef<GooglePlacesAutocompleteRef>(null);
-  const markerShakeAnimatedValue = React.useRef(new Animated.Value(0)).current;
-  const originShakeAnimatedValue = React.useRef(new Animated.Value(0)).current;
-  const destinationShakeAnimatedValue = React.useRef(new Animated.Value(0)).current;
+  const markerShakeAnimatedValue = useRef(new Animated.Value(0)).current;
+  const originShakeAnimatedValue = useRef(new Animated.Value(0)).current;
+  const destinationShakeAnimatedValue = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (confirmedTaxi) handleTaxiConfirmation()
@@ -138,6 +141,12 @@ export const BottomSheetContent = ({
       }).start()
     }
   }, [piningInput, originShakeAnimatedValue, destinationShakeAnimatedValue])
+
+  /* const handleBottomSheetExpand = useCallback(() => {
+    if (currentStep === ClientSteps.PINNING) {
+      markerNameInputViewRef.current?.focus()
+    }
+  }, [currentStep, markerNameInputViewRef]) */
 
   const handleTaxiConfirmation = useCallback(() => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -477,795 +486,650 @@ export const BottomSheetContent = ({
     <BottomSheetView className="flex-1 bg-[#F8F8F8] dark:bg-[#1b1b1b]">
 
       {!piningLocation && !piningInput/*  && piningMarker */ && currentStep === ClientSteps.PINNING ?
-        <View className="w-[95%] h-full self-center overflow-visible">
-          <View className='flex-row justify-between mt-3'>
-            <View className='h-10 flex-row gap-3- justify-center items-center'>
-              <ScaleBtn className='h-full pr-3 justify-center items-center' onPress={cancelPiningLocationHandler}>
-                <FontAwesome6 name="chevron-left" size={18} color={Colors[colorScheme ?? "light"].icons_link} />
-              </ScaleBtn>
-              <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-bold text-xl">Añadiendo Marcador</Text>
+        (
+          <View className="w-[95%] h-full self-center overflow-visible">
+            <View className='flex-row justify-between mt-3'>
+              <View className='h-10 flex-row gap-3- justify-center items-center'>
+                <ScaleBtn className='h-full pr-3 justify-center items-center' onPress={cancelPiningLocationHandler}>
+                  <FontAwesome6 name="chevron-left" size={18} color={Colors[colorScheme ?? "light"].icons_link} />
+                </ScaleBtn>
+                <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-bold text-xl">Añadiendo Marcador</Text>
+              </View>
+              {/* <ScaleBtn onPress={pickMarkerImage}>
+                <MaterialCommunityIcons name="file-image-marker" size={28} color={Colors[colorScheme ?? "light"].icons_link} />
+              </ScaleBtn> */}
+              {/* <Text className="text-[#21288a] dark:text-[#766acd] font-bold text-xl">mas</Text> */}
             </View>
-            {/* <ScaleBtn onPress={pickMarkerImage}>
-              <MaterialCommunityIcons name="file-image-marker" size={28} color={Colors[colorScheme ?? "light"].icons_link} />
-            </ScaleBtn> */}
-            {/* <Text className="text-[#21288a] dark:text-[#766acd] font-bold text-xl">mas</Text> */}
-          </View>
-          {/* <View className='pl-[5%]- pr-[3%]- h-[5rem] mt-3 rounded-lg bg-[#E9E9E9] dark:bg-[#333333] overflow-hidden shadow'>
-            <ScrollView contentContainerClassName='flex-row p-3 gap-5 self-center' horizontal showsHorizontalScrollIndicator={false}>
+            {/* <View className='pl-[5%]- pr-[3%]- h-[5rem] mt-3 rounded-lg bg-[#E9E9E9] dark:bg-[#333333] overflow-hidden shadow'>
+              <ScrollView contentContainerClassName='flex-row p-3 gap-5 self-center' horizontal showsHorizontalScrollIndicator={false}>
 
-              {Object.entries(ColorsPalettes).map(([colorName, colorShades]) => {
-                return (
-                  <ScaleBtn
-                    key={colorName}
-                    style={{ backgroundColor: Colors[colorScheme ?? "light"].border_light }}
-                    onPress={() => {
-                      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-                      setPiningMarker({ ...piningMarker, color: colorName })
-                    }}
-                    className='rounded-full w-12 h-12 items-center justify-center'
-                  >
-                    {piningMarker?.color === colorName && <View className='bg-[#D8D8D8]- dark:bg-[#444444]- bg-red-500 absolute w-full h-full top-0 rounded-full' style={{ backgroundColor: Colors[colorScheme === "light" ? "dark" : "light"].border_light }}></View>}
-                    <View className='w-10 h-10 rounded-full' style={{ backgroundColor: colorName }} />
-                  </ScaleBtn>
-                );
-              })}
-
-            </ScrollView>
-          </View> */}
-
-          <View className='pl-[5%]- pr-[3%]- h-[3rem]- mt-3 rounded-lg bg-[#E9E9E9]- dark:bg-[#333333]- overflow-hidden shadow'>
-            <FloatingLabelInput
-              label={"Nombre del Marcador"}
-              value={markerName ?? undefined}
-              onChangeText={value => setMarkerName(value)}
-              onFocus={() => {
-                snapToIndex(2);
-              }}
-              onBlur={() => {
-                snapToIndex(1);
-              }}
-              ref={markerNameInputViewRef}
-
-              containerStyles={{
-                height: 52,
-                // borderWidth: 2,
-                paddingHorizontal: 10,
-                backgroundColor: Colors[colorScheme ?? "light"].background_light1,
-                // borderColor: 'blue',
-                borderRadius: 8,
-              }}
-              customLabelStyles={{
-                colorFocused: Colors[colorScheme ?? "light"].border,
-                colorBlurred: Colors[colorScheme ?? "light"].border,
-                fontSizeFocused: 12,
-                fontSizeBlurred: 18,
-              }}
-              labelStyles={{
-                backgroundColor: "transparent",
-                paddingHorizontal: 5,
-              }}
-              inputStyles={{
-                marginTop: 8,
-                color: Colors[colorScheme ?? 'light'].text_dark,
-                paddingHorizontal: 10,
-
-                fontWeight: '400',
-                borderRadius: 10,
-                fontSize: 18,
-                textAlignVertical: 'bottom',
-              }}
-            />
-          </View>
-
-          <Animated.View style={{
-            transform: [{
-              translateX: markerShakeAnimatedValue.interpolate({
-                inputRange: [0, 0.25, 0.50, 0.75, 1],
-                outputRange: [0, 5, -5, 5, 0]
-              })
-            }]
-          }} className='pl-[5%]- pr-[3%]- h-[10rem] mt-3 rounded-lg bg-[#E9E9E9] dark:bg-[#333333] overflow-hidden shadow'>
-            <ScrollView contentContainerClassName='flex-wrap p-3 gap-5 flex-row self-center' showsHorizontalScrollIndicator={false}>
-              {selectableMarkerIcons.map((markerIcon) => {
-                return (
-                  <ScaleBtn
-                    key={markerIcon.icon}
-                    style={{ backgroundColor: Colors[colorScheme ?? "light"].border_light }}
-                    onPress={() => {
-                      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-                      setPiningMarker({ ...piningMarker, icon: markerIcon.icon })
-                    }}
-                    className='rounded-full w-14 h-14 items-center justify-center'
-                  >
-                    {piningMarker?.icon === markerIcon.name && <View className='bg-[#D8D8D8]- dark:bg-[#444444]- bg-red-500 absolute w-full h-full top-0 rounded-full' style={{ backgroundColor: Colors[colorScheme === "light" ? "dark" : "light"].border_light }}></View>}
-                    <MaterialCommunityIcons
-                      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                      // @ts-ignore
-                      name={markerIcon.icon}
-                      size={34}
-                      color={piningMarker?.icon === markerIcon.name ? (colorScheme === "light" ? "#D8D8D8" : "#444444") : (colorScheme === "light" ? "#444444" : "#D8D8D8")}
-                    />
-                  </ScaleBtn>
-                );
-              })}
-            </ScrollView>
-          </Animated.View>
-
-          <ScaleBtn className="mt-5 w-full gap-3" onPress={addMarkerHandler}>
-            <View className="h-18 flex-row items-center justify-center bg-[#25D366] dark:bg-[#137136] rounded-xl p-3">
-              <Text className="text-white font-bold text-xl">Guardar</Text>
-            </View>
-          </ScaleBtn>
-        </View>
-        :
-        <View className="w-[95%] h-full self-center overflow-visible">
-
-          {currentStep >= ClientSteps.PICKUP ?
-            <View className="mt-3 px-[5%]- h-full self-center">
-              <View className="h-20 flex-row justify-between items-center">
-                <View className="flex-row gap-3 items-center">
-                  <Image
-                    style={{ width: 50, height: 50 }}
-                    source={require('../../../assets/images/taxi_test.png')}
-                  />
-                  <View className="justify-center">
-                    <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-bold text-xl">{confirmedTaxi?.name ?? "Anonymous"}</Text>
-                    <View className="flex-row items-center">
-                      <Text className="text-[#FED141] text-[#1b1b1b]- dark:text-[#C1C0C9]- text-lg">★ </Text>
-                      <Text className="text-[#1b1b1b] dark:text-[#C1C0C9]">4.9</Text>
-                    </View>
-                  </View>
-                </View>
-
-                <View className="flex-row gap-4">
-                  <ScaleBtn>
-                    <View className="bg-[#25D366] p-2 rounded-full">
-                      <FontAwesome6 name="phone" size={25} color="white" />
-                    </View>
-                  </ScaleBtn>
-                  <ScaleBtn>
-                    <View className="bg-[#4252FF] p-2 rounded-full">
-                      <AntDesign name="message1" size={25} color="white" />
-                    </View>
-                  </ScaleBtn>
-                </View>
-              </View>
-
-              <View
-                className='flex-row items-center bg-[#E9E9E9] dark:bg-[#333333] py-3 px-3 mt-3 rounded-lg overflow-hidden shadow'
-              >
-                <ConfortSVG color={Colors[colorScheme ?? "light"].border} />
-                <View className="flex-row items-center justify-around flex-1 ml-1">
-                  <View className="gap-1">
-                    <Text className="text-lg font-medium text-[#1b1b1b] dark:text-[#C1C0C9] text-center">Distance</Text>
-                    <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] text-xl font-bold">{routeInfo?.distance.text}</Text>
-                  </View>
-                  <View className="gap-1">
-                    <Text className="text-lg font-medium text-[#1b1b1b] dark:text-[#C1C0C9] text-center">Time</Text>
-                    <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] text-xl font-bold">{routeInfo?.duration.text}</Text>
-                  </View>
-                  <View className="gap-1">
-                    <Text className="text-lg font-medium text-[#1b1b1b] dark:text-[#C1C0C9] text-center">Price</Text>
-                    <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] text-xl font-bold">3000 CUP</Text>
-                  </View>
-                </View>
-              </View>
-
-              <View className="relative z-[1000] w-full mt-3 py-1 pr-[2.5%] flex-row items-center-">
-                <MaterialCommunityIcons className='mt-1' name="map-marker-account" size={32} color={Colors[colorScheme ?? "light"].border} />
-                <Text className="ml-2 font-bold text-lg text-[#1b1b1b] dark:text-[#C1C0C9] ">{pinedInfo?.origin?.address}</Text>
-              </View>
-              <View className="relative z-[999] w-full pr-[2.5%] mb-3 items-end flex-row">
-                <DashedLine
-                  axis="vertical"
-                  style={{
-                    height: 35,
-                    left: 15,
-                    top: -32,
-                  }}
-                  dashColor={Colors[colorScheme ?? "light"].border}
-                />
-                <MaterialCommunityIcons
-                  className="ml-[-1.5px] mb-1"
-                  name="map-marker-radius"
-                  size={32}
-                  color={Colors[colorScheme ?? "light"].border}
-                />
-                <Text className="ml-2 font-bold text-lg text-[#1b1b1b] dark:text-[#C1C0C9]">{pinedInfo?.destination?.address}</Text>
-              </View>
-
-              <ScaleBtn className="mt-4 w-full gap-3" onPress={cancelRideInnerHandler}>
-                <View className="h-18 flex-row items-center justify-center bg-[#242E42] rounded-xl p-3">
-                  <Text className="text-white font-bold text-xl">Cancel</Text>
-                </View>
-              </ScaleBtn>
-            </View>
-            :
-            <>
-              <View className="h-10 flex-row justify-between items-center mx-1.5 mt-3">
-                <View className='flex-row gap-3- justify-center items-center'>
-                  {
-                    currentStep === ClientSteps.TAXI &&
-                    <>
-                      <ScaleBtn className='h-full pr-3 justify-center items-center' onPress={goBackToSearch}>
-                        <FontAwesome6 name="chevron-left" size={18} color={Colors[colorScheme ?? "light"].icons_link} />
-                      </ScaleBtn>
-                      <Text className="font-bold text-xl text-[#1b1b1b] dark:text-[#C1C0C9]">Cómo quieres ir?</Text>
-                    </>
-                  }
-                  {
-                    currentStep === ClientSteps.SEARCH &&
-                    <Text className="font-bold text-xl text-[#1b1b1b] dark:text-[#C1C0C9]">A dónde quieres ir?</Text>
-                  }
-
-                  {currentStep === ClientSteps.PINNING && piningLocation &&
-                    <>
-                      <ScaleBtn className='h-full pr-3 justify-center items-center' onPress={goBackToSearch}>
-                        <FontAwesome6 name="chevron-left" size={18} color={Colors[colorScheme ?? "light"].icons_link} />
-                      </ScaleBtn>
-                      <Text className="font-bold text-xl text-[#1b1b1b] dark:text-[#C1C0C9]">Seleccione el lugar {piningInput === "destination" ? "destino" : "origen"}</Text>
-                    </>
-                  }
-                </View>
-
-                {viewPinOnMap && (
-                  <ScaleBtn onPress={startPiningLocationHandler}>
-                    <View style={{ borderColor: Colors[colorScheme ?? "light"].icons_link }} className="flex-row items-center gap-2 p-1 px-2 border rounded-lg border-[#C1C0C9]-">
-                      {/* <Text className="h-full text-lg font-medium text-center text-[#1b1b1b] dark:text-[#C1C0C9]">Fijar en el Mapa</Text> */}
-                      <FontAwesome6 name="chevron-up" size={18} color={Colors[colorScheme ?? "light"].icons_link} />
-                      <MaterialCommunityIcons name="map-search-outline" size={22} color={Colors[colorScheme ?? "light"].icons_link} />
-                    </View>
-                  </ScaleBtn>
-                )}
-
-                {!viewPinOnMap && !piningLocation && <>
-                  {
-                    currentStep === ClientSteps.SEARCH && (pinedInfo?.origin && pinedInfo.destination || routeLoading) &&
-                    <ScaleBtn onPress={goToPinnedRouteTaxi} disabled={routeLoading} >
-                      <View style={{ borderColor: Colors[colorScheme ?? "light"].icons_link }} className="flex-row items-center justify-center p-1 border rounded-lg">
-                        {
-                          routeLoading ? <ActivityIndicator color={Colors[colorScheme ?? "light"].icons_link} size={24} /> : <MaterialCommunityIcons name="car-multiple" size={24} color={Colors[colorScheme ?? "light"].icons_link} />
-                        }
-
-                        <MaterialCommunityIcons name="chevron-right" size={24} color={Colors[colorScheme ?? "light"].icons_link} />
-                      </View>
+                {Object.entries(ColorsPalettes).map(([colorName, colorShades]) => {
+                  return (
+                    <ScaleBtn
+                      key={colorName}
+                      style={{ backgroundColor: Colors[colorScheme ?? "light"].border_light }}
+                      onPress={() => {
+                        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                        setPiningMarker({ ...piningMarker, color: colorName })
+                      }}
+                      className='rounded-full w-12 h-12 items-center justify-center'
+                    >
+                      {piningMarker?.color === colorName && <View className='bg-[#D8D8D8]- dark:bg-[#444444]- bg-red-500 absolute w-full h-full top-0 rounded-full' style={{ backgroundColor: Colors[colorScheme === "light" ? "dark" : "light"].border_light }}></View>}
+                      <View className='w-10 h-10 rounded-full' style={{ backgroundColor: colorName }} />
                     </ScaleBtn>
-                  }
-                </>}
-              </View>
+                  );
+                })}
 
-              {currentStep === ClientSteps.SEARCH && <View className='relative z-[1000]'>
-                <View className="relative z-[1000] w-full h-12 px-0 mt-3 items-start flex-row">
-                  {
-                    originLoading ? <ActivityIndicator color={Colors[colorScheme ?? "light"].border} size={32} /> : <MaterialCommunityIcons className='mt-1' name="map-marker-account" size={32} color={Colors[colorScheme ?? "light"].border} />
-                  }
-                  <Animated.View style={{
-                    transform: [{
-                      translateX: originShakeAnimatedValue.interpolate({
-                        inputRange: [0, 0.25, 0.50, 0.75, 1],
-                        outputRange: [0, 5, -5, 5, 0]
-                      })
-                    }]
-                  }}>
-                    <GooglePlacesAutocomplete
-                      ref={originInputViewRef}
-                      predefinedPlaces={userMarkers.map((marker) => ({
-                        description: marker.name,
-                        geometry: {
-                          location: {
-                            lat: marker.coords.latitude,
-                            lng: marker.coords.longitude,
-                          },
-                        },
-                      }))}
-                      placeholder="Lugar de Origen"
-                      textInputProps={{
-                        id: "originInput",
-                        placeholderTextColor: colorScheme === 'light' ? 'black' : '#6C6C6C',
-                        onFocus: (e) => {
-                          LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-                          if (piningLocation) cancelPiningLocationHandler();
-                          if (editingMarkers) endEditingMarkers();
-                          setViewPinOnMap(true);
-                          setPiningInput('origin');
-                          console.log(JSON.stringify(e.nativeEvent, null, 2))
-                        },
-                        onBlur: () => {
-                          LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-                          setViewPinOnMap(false);
-                          setPiningInput(null);
-                          // if (currentStep !== ClientSteps.PICKUP) setPiningInput(null);
-                        },
-                      }}
-                      enablePoweredByContainer={false}
-                      onPress={handleOriginMarkerTarget}
-                      debounce={400}
-                      styles={{
-                        container: {
-                          position: 'relative',
-                          zIndex: 1000,
-                          overflow: 'visible',
-                        },
-                        textInputContainer: {
-                          position: 'relative',
-                          zIndex: 1000,
-                          overflow: 'hidden',
-                          marginLeft: 12,
-                          height: 46,
-                          borderRadius: 10,
-                          width: width * 0.95 - 48,
-                        },
-                        textInput: {
-                          position: 'relative',
-                          zIndex: 1000,
+              </ScrollView>
+            </View> */}
 
-                          height: '100%',
-                          fontWeight: '400',
-                          borderRadius: 10,
-                          fontSize: 16,
-                          textAlignVertical: 'center',
-                          color: Colors[colorScheme ?? 'light'].text_dark,
-                          backgroundColor: Colors[colorScheme ?? 'light'].background_light1,
+            <View className='pl-[5%]- pr-[3%]- h-[3rem]- mt-3 rounded-lg bg-[#E9E9E9]- dark:bg-[#333333]- overflow-hidden shadow'>
+              <FloatingLabelInput
+                label={"Nombre del Marcador"}
+                value={markerName ?? undefined}
+                onChangeText={value => setMarkerName(value)}
+                onFocus={() => {
+                  snapToIndex(2);
+                }}
+                onBlur={() => {
+                  snapToIndex(1);
+                }}
+                ref={markerNameInputViewRef}
 
-                          borderTopRightRadius: 10,
-                          borderBottomRightRadius: 10,
-                        },
-                        listView: {
-                          position: 'absolute',
-                          maxHeight: 150,
-                          minHeight: 100,
-                          width: "100%",
-                          zIndex: 10000,
-                          backgroundColor: Colors[colorScheme ?? 'light'].background_light,
-                          borderRadius: 5,
-                          flex: 1,
-                          elevation: 3,
-                          marginTop: 8,
-                          borderColor: Colors[colorScheme ?? 'light'].icons,
-                          borderWidth: 1
-                        },
-                        row: {
-                          backgroundColor: Colors[colorScheme ?? 'light'].background_light1,
-                        },
-                        description: {
-                          color: Colors[colorScheme ?? 'light'].text_dark
-                        },
-                        separator: {
-                          backgroundColor: Colors[colorScheme ?? 'light'].icons
-                        }
-                      }}
-                      fetchDetails
-                      query={{
-                        key: 'AIzaSyAtcwUbA0jjJ6ARXl5_FqIqYcGbTI_XZEE',
-                        language: 'es',
-                        components: 'country:cu',
-                        location: '23.11848,-82.38052',
-                        radius: 100,
-                      }}
-                    />
-                  </Animated.View>
-                </View>
+                containerStyles={{
+                  height: 52,
+                  // borderWidth: 2,
+                  paddingHorizontal: 10,
+                  backgroundColor: Colors[colorScheme ?? "light"].background_light1,
+                  // borderColor: 'blue',
+                  borderRadius: 8,
+                }}
+                customLabelStyles={{
+                  colorFocused: Colors[colorScheme ?? "light"].border,
+                  colorBlurred: Colors[colorScheme ?? "light"].border,
+                  fontSizeFocused: 12,
+                  fontSizeBlurred: 18,
+                }}
+                labelStyles={{
+                  backgroundColor: "transparent",
+                  paddingHorizontal: 5,
+                }}
+                inputStyles={{
+                  marginTop: 8,
+                  color: Colors[colorScheme ?? 'light'].text_dark,
+                  paddingHorizontal: 10,
 
-                <View className="relative z-[999] w-full h-12 px-0 mt-5 items-end flex-row">
-                  <DashedLine axis="vertical" style={{ height: 30, left: 15, top: -38, backgroundColor: Colors[colorScheme ?? "light"].border, }} />
-                  {
-                    destinationLoading ? <ActivityIndicator color={Colors[colorScheme ?? "light"].border} size={32} /> : <MaterialCommunityIcons className="mb-1 ml-[-1.5px]" name="map-marker-radius" size={32} color={Colors[colorScheme ?? "light"].border} />
-                  }
-                  <Animated.View style={{
-                    transform: [{
-                      translateX: destinationShakeAnimatedValue.interpolate({
-                        inputRange: [0, 0.25, 0.50, 0.75, 1],
-                        outputRange: [0, 5, -5, 5, 0]
-                      })
-                    }]
-                  }}>
-                    <GooglePlacesAutocomplete
-                      ref={destinationInputViewRef}
-                      predefinedPlaces={userMarkers.map((marker) => ({
-                        description: marker.name,
-                        geometry: {
-                          location: {
-                            lat: marker.coords.latitude,
-                            lng: marker.coords.longitude,
-                          },
-                        },
-                      }))}
-                      placeholder="Lugar Destino"
-                      textInputProps={{
-                        id: "destinationInput",
-                        placeholderTextColor: colorScheme === 'light' ? 'black' : '#6C6C6C',
-                        onFocus: (e) => {
-                          LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-                          if (piningLocation) cancelPiningLocationHandler();
-                          if (editingMarkers) endEditingMarkers();
-                          setViewPinOnMap(true);
-                          setPiningInput('destination');
-                          console.log(JSON.stringify(e.nativeEvent, null, 2))
-                        },
-                        onBlur: () => {
-                          LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-                          setViewPinOnMap(false);
-                          setPiningInput(null);
-                          // if (currentStep !== ClientSteps.PICKUP) setPiningInput(null);
-                        },
-                      }}
-                      enablePoweredByContainer={false}
-                      onPress={handleDestinationMarkerTarget}
-                      debounce={400}
-                      styles={{
-                        container: {
-                          position: 'relative',
-                          zIndex: 999,
-                          overflow: 'visible',
-                        },
-                        textInputContainer: {
-                          position: 'relative',
-                          zIndex: 999,
-                          overflow: 'hidden',
-                          marginLeft: 12,
-                          height: 46,
-                          borderRadius: 10,
-                          width: width * 0.95 - 48,
-                        },
-                        textInput: {
-                          position: 'relative',
-                          zIndex: 999,
-
-                          height: '100%',
-                          fontWeight: '400',
-                          borderRadius: 10,
-                          fontSize: 16,
-                          textAlignVertical: 'center',
-                          color: Colors[colorScheme ?? 'light'].text_dark,
-                          backgroundColor: Colors[colorScheme ?? 'light'].background_light1,
-
-                          borderTopRightRadius: 10,
-                          borderBottomRightRadius: 10,
-                        },
-                        listView: {
-                          position: 'absolute',
-                          maxHeight: 150,
-                          minHeight: 100,
-                          width: "100%",
-                          zIndex: 10000,
-                          backgroundColor: Colors[colorScheme ?? 'light'].background_light,
-                          borderRadius: 5,
-                          flex: 1,
-                          elevation: 3,
-                          marginTop: 8,
-                          borderColor: Colors[colorScheme ?? 'light'].icons,
-                          borderWidth: 1
-                        },
-                        row: {
-                          backgroundColor: Colors[colorScheme ?? 'light'].background_light1,
-                        },
-                        description: {
-                          color: Colors[colorScheme ?? 'light'].text_dark
-                        },
-                        separator: {
-                          backgroundColor: Colors[colorScheme ?? 'light'].icons
-                        }
-                      }}
-                      fetchDetails
-                      query={{
-                        key: 'AIzaSyAtcwUbA0jjJ6ARXl5_FqIqYcGbTI_XZEE',
-                        language: 'es',
-                        components: 'country:cu',
-                        location: '23.11848,-82.38052',
-                        radius: 100,
-                      }}
-                    />
-                  </Animated.View>
-                </View>
-              </View>}
-            </>
-          }
-
-          {/* {currentStep === ClientSteps.PINNING && piningLocation &&
-            <View className="mx-1.5 flex-row justify-between mt-5 gap-5">
-              <ScaleBtn containerStyle={{ flex: 1 }} className="h-18" onPress={confirmPiningLocationHandler}>
-                <View className="w-full flex-row items-center justify-center bg-[#25D366] dark:bg-[#137136] rounded-xl p-3">
-                  <Text className="text-white font-bold text-xl">Guardar</Text>
-                </View>
-              </ScaleBtn>
-              <ScaleBtn containerStyle={{ flex: 1 }} className="h-18" onPress={cancelPiningLocationHandler}>
-                <View className="w-full flex-row items-center justify-center bg-[#242E42] rounded-xl p-3">
-                  <Text className="text-white font-bold text-xl">Cancel</Text>
-                </View>
-              </ScaleBtn>
+                  fontWeight: '400',
+                  borderRadius: 10,
+                  fontSize: 18,
+                  textAlignVertical: 'bottom',
+                }}
+              />
             </View>
-          } */}
 
-          {currentStep === ClientSteps.PINNING && piningLocation &&
-            <ScaleBtn containerStyle={{ flex: 1 }} className="mx-1.5 mt-3" onPress={confirmPiningLocationHandler}>
+            <Animated.View style={{
+              transform: [{
+                translateX: markerShakeAnimatedValue.interpolate({
+                  inputRange: [0, 0.25, 0.50, 0.75, 1],
+                  outputRange: [0, 5, -5, 5, 0]
+                })
+              }]
+            }} className='pl-[5%]- pr-[3%]- h-[10rem] mt-3 rounded-lg bg-[#E9E9E9] dark:bg-[#333333] overflow-hidden shadow'>
+              <ScrollView contentContainerClassName='flex-wrap p-3 gap-5 flex-row self-center' showsHorizontalScrollIndicator={false}>
+                {selectableMarkerIcons.map((markerIcon) => {
+                  return (
+                    <ScaleBtn
+                      key={markerIcon.icon}
+                      style={{ backgroundColor: Colors[colorScheme ?? "light"].border_light }}
+                      onPress={() => {
+                        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                        setPiningMarker({ ...piningMarker, icon: markerIcon.icon })
+                      }}
+                      className='rounded-full w-14 h-14 items-center justify-center'
+                    >
+                      {piningMarker?.icon === markerIcon.name && <View className='bg-[#D8D8D8]- dark:bg-[#444444]- bg-red-500 absolute w-full h-full top-0 rounded-full' style={{ backgroundColor: Colors[colorScheme === "light" ? "dark" : "light"].border_light }}></View>}
+                      <MaterialCommunityIcons
+                        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                        // @ts-ignore
+                        name={markerIcon.icon}
+                        size={34}
+                        color={piningMarker?.icon === markerIcon.name ? (colorScheme === "light" ? "#D8D8D8" : "#444444") : (colorScheme === "light" ? "#444444" : "#D8D8D8")}
+                      />
+                    </ScaleBtn>
+                  );
+                })}
+              </ScrollView>
+            </Animated.View>
+
+            <ScaleBtn className="mt-5 w-full gap-3" onPress={addMarkerHandler}>
               <View className="h-18 flex-row items-center justify-center bg-[#25D366] dark:bg-[#137136] rounded-xl p-3">
                 <Text className="text-white font-bold text-xl">Guardar</Text>
               </View>
             </ScaleBtn>
-          }
+          </View>
+        )
+        :
+        (
+          <View className="w-[95%] h-full self-center overflow-visible">
 
-          {currentStep === ClientSteps.SEARCH &&
-            <>
-              <View className="mx-1.5 mt-7 overflow-visible">
-                <View className='flex-row justify-between'>
-                  <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-bold text-xl">Favoritos</Text>
-                  {userMarkers.length > 0 && <ScaleBtn onPress={editingMarkers ? endEditingMarkers : startEditingMarkers}>
-                    <Text className="text-[#21288a] dark:text-[#766acd] font-bold text-xl">{editingMarkers ? "done" : "editar"}</Text>
-                  </ScaleBtn>}
-                </View>
-
-                <View className='py-3 pl-[5%]- pr-[3%]- mt-3 rounded-lg bg-[#E9E9E9] dark:bg-[#333333] overflow-hidden shadow'>
-                  <ScrollView keyboardShouldPersistTaps="always" showsHorizontalScrollIndicator={false} horizontal className="w-100 overflow-visible">
-                    {
-                      defaultMarkers.map((defaultMarker) => {
-                        const userMarker = userMarkers.find(item => item.name === defaultMarker.name)
-
-                        if (userMarkers.length === 0 || !userMarker) {
-                          if (editingMarkers) {
-                            return null
-                          }
-                          return (
-                            <DefaultMarkerRowItem key={defaultMarker.icon} addHandler={startAddingMarkerHandler} defaultMarker={defaultMarker} />
-                          )
-                        } else {
-                          return (
-                            <UserMarkerRowItem key={userMarker.id} userMarker={userMarker} pressHandler={selectMarkerHandler} editingMarkers={editingMarkers} deleteHandler={deleteMarkerHandler} />
-                          )
-                        }
-                      })
-                    }
-                    {
-                      userMarkers.filter(marker => !defaultMarkers.find(m => m.icon === marker.icon.name)).map((userMarker) => {
-                        return (
-                          <UserMarkerRowItem key={userMarker.id} userMarker={userMarker} pressHandler={selectMarkerHandler} editingMarkers={editingMarkers} deleteHandler={deleteMarkerHandler} />
-                        )
-                      })
-                    }
-                    {
-                      !editingMarkers && <View className='relative ml-5 items-center justify-center' key={"add-marker"}>
-                        <View className={""}>
-                          <ScaleBtn
-                            style={{ backgroundColor: Colors[colorScheme ?? 'light'].border_light }}
-                            className="w-[64px] h-[64px] rounded-full bg-[#D8D8D8] dark:bg-[#444444]- items-center justify-center"
-                            onPress={startAddingMarkerHandler}
-                          >
-                            <MaterialCommunityIcons
-                              // @ts-ignore
-                              name={"plus-circle"}
-                              size={38}
-                              color={Colors[colorScheme ?? 'light'].icons}
-                            />
-                          </ScaleBtn>
-                        </View>
-                        <View className='h-12 w-full'>
-                          <Text className="text-lg font-semibold text-center text-[#1b1b1b] dark:text-[#C1C0C9]">{"Add"}</Text>
+            {currentStep >= ClientSteps.PICKUP ?
+              (
+                <View className="mt-3 px-[5%]- h-full self-center">
+                  <View className="h-20 flex-row justify-between items-center">
+                    <View className="flex-row gap-3 items-center">
+                      <Image
+                        style={{ width: 50, height: 50 }}
+                        source={require('../../../assets/images/taxi_test.png')}
+                      />
+                      <View className="justify-center">
+                        <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-bold text-xl">{confirmedTaxi?.name ?? "Anonymous"}</Text>
+                        <View className="flex-row items-center">
+                          <Text className="text-[#FED141] text-[#1b1b1b]- dark:text-[#C1C0C9]- text-lg">★ </Text>
+                          <Text className="text-[#1b1b1b] dark:text-[#C1C0C9]">4.9</Text>
                         </View>
                       </View>
-                    }
-                    <View className='w-3'></View>
-                  </ScrollView>
-                </View>
-              </View>
+                    </View>
 
-              <View className="mx-1.5 mt-5 overflow-visible">
-                <View className='flex-row justify-between'>
-                  <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-bold text-xl">Recent</Text>
-                  {/* <Text className="text-[#21288a] dark:text-[#766acd] font-bold text-xl">mas</Text> */}
-                </View>
-
-
-                <View className='pl-[5%]- pr-[3%]- h-[18.5rem] mt-3 rounded-lg bg-[#E9E9E9] dark:bg-[#333333] overflow-hidden shadow'>
-                  <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="always" className="w-100">
-                    {
-                      TestRidesData.map((item, index) => (
-                        <View className='bg-transparent' key={item.id}>
-                          <RidesHistoryItem
-                            // @ts-ignore
-                            ride={item}
-                          />
-                          {index !== TestRidesData.length - 1 ? <View style={{ height: 1, backgroundColor: Colors[colorScheme ?? 'light'].border_light, width: "90%", alignSelf: "center", marginTop: 8, marginBottom: 5 }} /> : <View style={{ height: 1, width: "90%", alignSelf: "center", marginTop: 8, marginBottom: 5 }} />}
+                    <View className="flex-row gap-4">
+                      <ScaleBtn>
+                        <View className="bg-[#25D366] p-2 rounded-full">
+                          <FontAwesome6 name="phone" size={25} color="white" />
                         </View>
-                      ))
-                    }
-                  </ScrollView>
+                      </ScaleBtn>
+                      <ScaleBtn>
+                        <View className="bg-[#4252FF] p-2 rounded-full">
+                          <AntDesign name="message1" size={25} color="white" />
+                        </View>
+                      </ScaleBtn>
+                    </View>
+                  </View>
+
+                  <View
+                    className='flex-row items-center bg-[#E9E9E9] dark:bg-[#333333] py-3 px-3 mt-3 rounded-lg overflow-hidden shadow'
+                  >
+                    <ConfortSVG color={Colors[colorScheme ?? "light"].border} />
+                    <View className="flex-row items-center justify-around flex-1 ml-1">
+                      <View className="gap-1">
+                        <Text className="text-lg font-medium text-[#1b1b1b] dark:text-[#C1C0C9] text-center">Distance</Text>
+                        <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] text-xl font-bold">{routeInfo?.distance.text}</Text>
+                      </View>
+                      <View className="gap-1">
+                        <Text className="text-lg font-medium text-[#1b1b1b] dark:text-[#C1C0C9] text-center">Time</Text>
+                        <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] text-xl font-bold">{routeInfo?.duration.text}</Text>
+                      </View>
+                      <View className="gap-1">
+                        <Text className="text-lg font-medium text-[#1b1b1b] dark:text-[#C1C0C9] text-center">Price</Text>
+                        <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] text-xl font-bold">3000 CUP</Text>
+                      </View>
+                    </View>
+                  </View>
+
+                  <View className="relative z-[1000] w-full mt-3 py-1 pr-[2.5%] flex-row items-center-">
+                    <MaterialCommunityIcons className='mt-1' name="map-marker-account" size={32} color={Colors[colorScheme ?? "light"].border} />
+                    <Text className="ml-2 font-bold text-lg text-[#1b1b1b] dark:text-[#C1C0C9] ">{pinedInfo?.origin?.address}</Text>
+                  </View>
+                  <View className="relative z-[999] w-full pr-[2.5%] mb-3 items-end flex-row">
+                    <DashedLine
+                      axis="vertical"
+                      style={{
+                        height: 35,
+                        left: 15,
+                        top: -32,
+                      }}
+                      dashColor={Colors[colorScheme ?? "light"].border}
+                    />
+                    <MaterialCommunityIcons
+                      className="ml-[-1.5px] mb-1"
+                      name="map-marker-radius"
+                      size={32}
+                      color={Colors[colorScheme ?? "light"].border}
+                    />
+                    <Text className="ml-2 font-bold text-lg text-[#1b1b1b] dark:text-[#C1C0C9]">{pinedInfo?.destination?.address}</Text>
+                  </View>
+
+                  <ScaleBtn className="mt-4 w-full gap-3" onPress={cancelRideInnerHandler}>
+                    <View className="h-18 flex-row items-center justify-center bg-[#242E42] rounded-xl p-3">
+                      <Text className="text-white font-bold text-xl">Cancel</Text>
+                    </View>
+                  </ScaleBtn>
                 </View>
-              </View>
-            </>
-          }
+              )
+              :
+              <>
+                <View className="h-10 flex-row justify-between items-center mx-1.5 mt-3">
+                  <View className='flex-row gap-3- justify-center items-center'>
+                    {
+                      currentStep === ClientSteps.TAXI &&
+                      (
+                        <>
+                          <ScaleBtn className='h-full pr-3 justify-center items-center' onPress={goBackToSearch}>
+                            <FontAwesome6 name="chevron-left" size={18} color={Colors[colorScheme ?? "light"].icons_link} />
+                          </ScaleBtn>
+                          <Text className="font-bold text-xl text-[#1b1b1b] dark:text-[#C1C0C9]">Cómo quieres ir?</Text>
+                        </>
+                      )
+                    }
+                    {
+                      currentStep === ClientSteps.SEARCH &&
+                      <Text className="font-bold text-xl text-[#1b1b1b] dark:text-[#C1C0C9]">A dónde quieres ir?</Text>
+                    }
 
-          {currentStep === ClientSteps.TAXI &&
-            <View className="mx-1.5 mt-7- overflow-visible">
-              {/* <View className='flex-row justify-between'>
-                <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-bold text-xl">Taxis</Text>
-                {
-                  // <Text className="text-[#21288a] dark:text-[#766acd] font-bold text-xl">mas</Text>
-                }
-              </View> */}
+                    {currentStep === ClientSteps.PINNING && piningLocation &&
+                      (
+                        <>
+                          <ScaleBtn className='h-full pr-3 justify-center items-center' onPress={goBackToSearch}>
+                            <FontAwesome6 name="chevron-left" size={18} color={Colors[colorScheme ?? "light"].icons_link} />
+                          </ScaleBtn>
+                          <Text className="font-bold text-xl text-[#1b1b1b] dark:text-[#C1C0C9]">Seleccione el lugar {piningInput === "destination" ? "destino" : "origen"}</Text>
+                        </>
+                      )
+                    }
+                  </View>
 
-              <View className='pl-[5%]- pr-[3%]- h-[18rem] mt-3 rounded-lg bg-[#E9E9E9] dark:bg-[#333333] overflow-hidden shadow'>
-                <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="always" className="w-100 px-3-">
-                  {
-                    // @ts-ignore
-                    TestTaxiTypesInfo.map((taxiType: TaxiTypesInfo) => <TaxiTypeRideRowItem selectedTaxiType={selectedTaxiType} selectTaxiType={selectTaxiTypeHandler} key={taxiType.slug} taxiType={taxiType} />)
+                  {viewPinOnMap &&
+                    (
+                      <ScaleBtn onPress={startPiningLocationHandler}>
+                        <View style={{ borderColor: Colors[colorScheme ?? "light"].icons_link }} className="flex-row items-center gap-2 p-1 px-2 border rounded-lg border-[#C1C0C9]-">
+                          {/* <Text className="h-full text-lg font-medium text-center text-[#1b1b1b] dark:text-[#C1C0C9]">Fijar en el Mapa</Text> */}
+                          <FontAwesome6 name="chevron-up" size={18} color={Colors[colorScheme ?? "light"].icons_link} />
+                          <MaterialCommunityIcons name="map-search-outline" size={22} color={Colors[colorScheme ?? "light"].icons_link} />
+                        </View>
+                      </ScaleBtn>
+                    )
                   }
-                </ScrollView>
-              </View>
-            </View>
-          }
 
-        </View>
+                  {!viewPinOnMap && !piningLocation && currentStep === ClientSteps.SEARCH && (pinedInfo?.origin && pinedInfo.destination || routeLoading) &&
+                    (
+                      <ScaleBtn onPress={goToPinnedRouteTaxi} disabled={routeLoading} >
+                        <View style={{ borderColor: Colors[colorScheme ?? "light"].icons_link }} className="flex-row items-center justify-center p-1 border rounded-lg">
+                          {
+                            routeLoading ? <ActivityIndicator color={Colors[colorScheme ?? "light"].icons_link} size={24} /> : <MaterialCommunityIcons name="car-multiple" size={24} color={Colors[colorScheme ?? "light"].icons_link} />
+                          }
+
+                          <MaterialCommunityIcons name="chevron-right" size={24} color={Colors[colorScheme ?? "light"].icons_link} />
+                        </View>
+                      </ScaleBtn>
+                    )
+                  }
+                </View>
+
+                {currentStep === ClientSteps.SEARCH &&
+                  (
+                    <View className='relative z-[1000]'>
+                      <View className="relative z-[1000] w-full h-12 px-0 mt-3 items-start flex-row">
+                        {
+                          originLoading ? <ActivityIndicator color={Colors[colorScheme ?? "light"].border} size={32} /> : <MaterialCommunityIcons className='mt-1' name="map-marker-account" size={32} color={Colors[colorScheme ?? "light"].border} />
+                        }
+                        <Animated.View style={{
+                          transform: [{
+                            translateX: originShakeAnimatedValue.interpolate({
+                              inputRange: [0, 0.25, 0.50, 0.75, 1],
+                              outputRange: [0, 5, -5, 5, 0]
+                            })
+                          }]
+                        }}>
+                          <GooglePlacesAutocomplete
+                            ref={originInputViewRef}
+                            predefinedPlaces={userMarkers.map((marker) => ({
+                              description: marker.name,
+                              geometry: {
+                                location: {
+                                  lat: marker.coords.latitude,
+                                  lng: marker.coords.longitude,
+                                },
+                              },
+                            }))}
+                            placeholder="Lugar de Origen"
+                            textInputProps={{
+                              id: "originInput",
+                              placeholderTextColor: colorScheme === 'light' ? 'black' : '#6C6C6C',
+                              onFocus: (e) => {
+                                LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                                if (piningLocation) cancelPiningLocationHandler();
+                                if (editingMarkers) endEditingMarkers();
+                                setViewPinOnMap(true);
+                                setPiningInput('origin');
+                                console.log(JSON.stringify(e.nativeEvent, null, 2))
+                              },
+                              onBlur: () => {
+                                LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                                setViewPinOnMap(false);
+                                setPiningInput(null);
+                                // if (currentStep !== ClientSteps.PICKUP) setPiningInput(null);
+                              },
+                            }}
+                            enablePoweredByContainer={false}
+                            onPress={handleOriginMarkerTarget}
+                            debounce={400}
+                            styles={{
+                              container: {
+                                position: 'relative',
+                                zIndex: 1000,
+                                overflow: 'visible',
+                              },
+                              textInputContainer: {
+                                position: 'relative',
+                                zIndex: 1000,
+                                overflow: 'hidden',
+                                marginLeft: 12,
+                                height: 46,
+                                borderRadius: 10,
+                                width: width * 0.95 - 48,
+                              },
+                              textInput: {
+                                position: 'relative',
+                                zIndex: 1000,
+
+                                height: '100%',
+                                fontWeight: '400',
+                                borderRadius: 10,
+                                fontSize: 16,
+                                textAlignVertical: 'center',
+                                color: Colors[colorScheme ?? 'light'].text_dark,
+                                backgroundColor: Colors[colorScheme ?? 'light'].background_light1,
+
+                                borderTopRightRadius: 10,
+                                borderBottomRightRadius: 10,
+                              },
+                              listView: {
+                                position: 'absolute',
+                                maxHeight: 150,
+                                minHeight: 100,
+                                width: "100%",
+                                zIndex: 10000,
+                                backgroundColor: Colors[colorScheme ?? 'light'].background_light,
+                                borderRadius: 5,
+                                flex: 1,
+                                elevation: 3,
+                                marginTop: 8,
+                                borderColor: Colors[colorScheme ?? 'light'].icons,
+                                borderWidth: 1
+                              },
+                              row: {
+                                backgroundColor: Colors[colorScheme ?? 'light'].background_light1,
+                              },
+                              description: {
+                                color: Colors[colorScheme ?? 'light'].text_dark
+                              },
+                              separator: {
+                                backgroundColor: Colors[colorScheme ?? 'light'].icons
+                              }
+                            }}
+                            fetchDetails
+                            query={{
+                              key: 'AIzaSyAtcwUbA0jjJ6ARXl5_FqIqYcGbTI_XZEE',
+                              language: 'es',
+                              components: 'country:cu',
+                              location: '23.11848,-82.38052',
+                              radius: 100,
+                            }}
+                          />
+                        </Animated.View>
+                      </View>
+
+                      <View className="relative z-[999] w-full h-12 px-0 mt-5 items-end flex-row">
+                        <DashedLine axis="vertical" style={{ height: 30, left: 15, top: -38, backgroundColor: Colors[colorScheme ?? "light"].border, }} />
+                        {
+                          destinationLoading ? <ActivityIndicator color={Colors[colorScheme ?? "light"].border} size={32} /> : <MaterialCommunityIcons className="mb-1 ml-[-1.5px]" name="map-marker-radius" size={32} color={Colors[colorScheme ?? "light"].border} />
+                        }
+                        <Animated.View style={{
+                          transform: [{
+                            translateX: destinationShakeAnimatedValue.interpolate({
+                              inputRange: [0, 0.25, 0.50, 0.75, 1],
+                              outputRange: [0, 5, -5, 5, 0]
+                            })
+                          }]
+                        }}>
+                          <GooglePlacesAutocomplete
+                            ref={destinationInputViewRef}
+                            predefinedPlaces={userMarkers.map((marker) => ({
+                              description: marker.name,
+                              geometry: {
+                                location: {
+                                  lat: marker.coords.latitude,
+                                  lng: marker.coords.longitude,
+                                },
+                              },
+                            }))}
+                            placeholder="Lugar Destino"
+                            textInputProps={{
+                              id: "destinationInput",
+                              placeholderTextColor: colorScheme === 'light' ? 'black' : '#6C6C6C',
+                              onFocus: (e) => {
+                                LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                                if (piningLocation) cancelPiningLocationHandler();
+                                if (editingMarkers) endEditingMarkers();
+                                setViewPinOnMap(true);
+                                setPiningInput('destination');
+                                console.log(JSON.stringify(e.nativeEvent, null, 2))
+                              },
+                              onBlur: () => {
+                                LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                                setViewPinOnMap(false);
+                                setPiningInput(null);
+                                // if (currentStep !== ClientSteps.PICKUP) setPiningInput(null);
+                              },
+                            }}
+                            enablePoweredByContainer={false}
+                            onPress={handleDestinationMarkerTarget}
+                            debounce={400}
+                            styles={{
+                              container: {
+                                position: 'relative',
+                                zIndex: 999,
+                                overflow: 'visible',
+                              },
+                              textInputContainer: {
+                                position: 'relative',
+                                zIndex: 999,
+                                overflow: 'hidden',
+                                marginLeft: 12,
+                                height: 46,
+                                borderRadius: 10,
+                                width: width * 0.95 - 48,
+                              },
+                              textInput: {
+                                position: 'relative',
+                                zIndex: 999,
+
+                                height: '100%',
+                                fontWeight: '400',
+                                borderRadius: 10,
+                                fontSize: 16,
+                                textAlignVertical: 'center',
+                                color: Colors[colorScheme ?? 'light'].text_dark,
+                                backgroundColor: Colors[colorScheme ?? 'light'].background_light1,
+
+                                borderTopRightRadius: 10,
+                                borderBottomRightRadius: 10,
+                              },
+                              listView: {
+                                position: 'absolute',
+                                maxHeight: 150,
+                                minHeight: 100,
+                                width: "100%",
+                                zIndex: 10000,
+                                backgroundColor: Colors[colorScheme ?? 'light'].background_light,
+                                borderRadius: 5,
+                                flex: 1,
+                                elevation: 3,
+                                marginTop: 8,
+                                borderColor: Colors[colorScheme ?? 'light'].icons,
+                                borderWidth: 1
+                              },
+                              row: {
+                                backgroundColor: Colors[colorScheme ?? 'light'].background_light1,
+                              },
+                              description: {
+                                color: Colors[colorScheme ?? 'light'].text_dark
+                              },
+                              separator: {
+                                backgroundColor: Colors[colorScheme ?? 'light'].icons
+                              }
+                            }}
+                            fetchDetails
+                            query={{
+                              key: 'AIzaSyAtcwUbA0jjJ6ARXl5_FqIqYcGbTI_XZEE',
+                              language: 'es',
+                              components: 'country:cu',
+                              location: '23.11848,-82.38052',
+                              radius: 100,
+                            }}
+                          />
+                        </Animated.View>
+                      </View>
+                    </View>
+                  )
+                }
+              </>
+            }
+
+            {/* {currentStep === ClientSteps.PINNING && piningLocation &&
+              <View className="mx-1.5 flex-row justify-between mt-5 gap-5">
+                <ScaleBtn containerStyle={{ flex: 1 }} className="h-18" onPress={confirmPiningLocationHandler}>
+                  <View className="w-full flex-row items-center justify-center bg-[#25D366] dark:bg-[#137136] rounded-xl p-3">
+                    <Text className="text-white font-bold text-xl">Guardar</Text>
+                  </View>
+                </ScaleBtn>
+                <ScaleBtn containerStyle={{ flex: 1 }} className="h-18" onPress={cancelPiningLocationHandler}>
+                  <View className="w-full flex-row items-center justify-center bg-[#242E42] rounded-xl p-3">
+                    <Text className="text-white font-bold text-xl">Cancel</Text>
+                  </View>
+                </ScaleBtn>
+              </View>
+            } */}
+
+            {currentStep === ClientSteps.PINNING && piningLocation &&
+              (
+                <ScaleBtn containerStyle={{ flex: 1 }} className="mx-1.5 mt-3" onPress={confirmPiningLocationHandler}>
+                  <View className="h-18 flex-row items-center justify-center bg-[#25D366] dark:bg-[#137136] rounded-xl p-3">
+                    <Text className="text-white font-bold text-xl">Guardar</Text>
+                  </View>
+                </ScaleBtn>
+              )
+            }
+
+            {currentStep === ClientSteps.SEARCH &&
+              (
+                <>
+                  <View className="mx-1.5 mt-7 overflow-visible">
+                    <View className='flex-row justify-between'>
+                      <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-bold text-xl">Favoritos</Text>
+                      {userMarkers.length > 0 &&
+                        (
+                          <ScaleBtn onPress={editingMarkers ? endEditingMarkers : startEditingMarkers}>
+                            <Text className="text-[#21288a] dark:text-[#766acd] font-bold text-xl">{editingMarkers ? "done" : "editar"}</Text>
+                          </ScaleBtn>
+                        )
+                      }
+                    </View>
+
+                    <View className='py-3 pl-[5%]- pr-[3%]- mt-3 rounded-lg bg-[#E9E9E9] dark:bg-[#333333] overflow-hidden shadow'>
+                      <ScrollView keyboardShouldPersistTaps="always" showsHorizontalScrollIndicator={false} horizontal className="w-100 overflow-visible">
+                        {
+                          defaultMarkers.map((defaultMarker) => {
+                            const userMarker = userMarkers.find(item => item.name === defaultMarker.name)
+
+                            if (userMarkers.length === 0 || !userMarker) {
+                              if (editingMarkers) {
+                                return null
+                              }
+                              return (
+                                <DefaultMarkerRowItem key={defaultMarker.icon} addHandler={startAddingMarkerHandler} defaultMarker={defaultMarker} />
+                              )
+                            } else {
+                              return (
+                                <UserMarkerRowItem key={userMarker.id} userMarker={userMarker} pressHandler={selectMarkerHandler} editingMarkers={editingMarkers} deleteHandler={deleteMarkerHandler} />
+                              )
+                            }
+                          })
+                        }
+                        {
+                          userMarkers.filter(marker => !defaultMarkers.find(m => m.icon === marker.icon.name)).map((userMarker) => {
+                            return (
+                              <UserMarkerRowItem key={userMarker.id} userMarker={userMarker} pressHandler={selectMarkerHandler} editingMarkers={editingMarkers} deleteHandler={deleteMarkerHandler} />
+                            )
+                          })
+                        }
+                        {
+                          !editingMarkers && <View className='relative ml-5 items-center justify-center' key={"add-marker"}>
+                            <View className={""}>
+                              <ScaleBtn
+                                style={{ backgroundColor: Colors[colorScheme ?? 'light'].border_light }}
+                                className="w-[64px] h-[64px] rounded-full bg-[#D8D8D8] dark:bg-[#444444]- items-center justify-center"
+                                onPress={startAddingMarkerHandler}
+                              >
+                                <MaterialCommunityIcons
+                                  // @ts-ignore
+                                  name={"plus-circle"}
+                                  size={38}
+                                  color={Colors[colorScheme ?? 'light'].icons}
+                                />
+                              </ScaleBtn>
+                            </View>
+                            <View className='h-12 w-full'>
+                              <Text className="text-lg font-semibold text-center text-[#1b1b1b] dark:text-[#C1C0C9]">{"Add"}</Text>
+                            </View>
+                          </View>
+                        }
+                        <View className='w-3'></View>
+                      </ScrollView>
+                    </View>
+                  </View>
+
+                  <View className="mx-1.5 mt-5 overflow-visible">
+                    <View className='flex-row justify-between'>
+                      <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-bold text-xl">Recent</Text>
+                      {/* <Text className="text-[#21288a] dark:text-[#766acd] font-bold text-xl">mas</Text> */}
+                    </View>
+
+
+                    <View className='pl-[5%]- pr-[3%]- h-[18.5rem] mt-3 rounded-lg bg-[#E9E9E9] dark:bg-[#333333] overflow-hidden shadow'>
+                      <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="always" className="w-100">
+                        {
+                          TestRidesData.map((item, index) => (
+                            <View className='bg-transparent' key={item.id}>
+                              <RidesHistoryItem
+                                // @ts-ignore
+                                ride={item}
+                              />
+                              {index !== TestRidesData.length - 1 ? <View style={{ height: 1, backgroundColor: Colors[colorScheme ?? 'light'].border_light, width: "90%", alignSelf: "center", marginTop: 8, marginBottom: 5 }} /> : <View style={{ height: 1, width: "90%", alignSelf: "center", marginTop: 8, marginBottom: 5 }} />}
+                            </View>
+                          ))
+                        }
+                      </ScrollView>
+                    </View>
+                  </View>
+                </>
+              )
+            }
+
+            {currentStep === ClientSteps.TAXI &&
+              (
+                <View className="mx-1.5 mt-7- overflow-visible">
+                  {/* <View className='flex-row justify-between'>
+                    <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-bold text-xl">Taxis</Text>
+                    {
+                      // <Text className="text-[#21288a] dark:text-[#766acd] font-bold text-xl">mas</Text>
+                    }
+                  </View> */}
+
+                  <View className='pl-[5%]- pr-[3%]- h-[18rem] mt-3 rounded-lg bg-[#E9E9E9] dark:bg-[#333333] overflow-hidden shadow'>
+                    <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="always" className="w-100 px-3-">
+                      {
+                        // @ts-ignore
+                        TestTaxiTypesInfo.map((taxiType: TaxiTypesInfo) => <TaxiTypeRideRowItem selectedTaxiType={selectedTaxiType} selectTaxiType={selectTaxiTypeHandler} key={taxiType.slug} taxiType={taxiType} />)
+                      }
+                    </ScrollView>
+                  </View>
+                </View>
+              )
+            }
+
+          </View>
+        )
       }
     </BottomSheetView>
   );
 };
 
-const RidesHistoryItem = ({ ride }: { ride: DBRide }) => {
-  const getRideHistoryIcon = useMemo(() => {
-    switch (ride.status) {
-      case "calceled": return { icon: "map-marker-remove-variant", bgColor: "#242E42", color: "white" }
-      case "completed": return { icon: "map-marker-check", bgColor: "#25D366", color: "white" }
-      case "error": return { icon: "map-marker-alert", bgColor: "#f82f00", color: "white" }
-      case "ongoing": return { icon: "map-marker-account", bgColor: "#FCCB6F", color: "white" }
-      case "pending": return { icon: "map-marker-up", bgColor: "#FCCB6F", color: "white" }
-
-      default:
-        return null
-    }
-  }, [ride])
-
-  return (
-    <View className="flex-row items-center mt-3">
-      <ScrollView contentContainerClassName='items-center' showsHorizontalScrollIndicator={false} horizontal>
-        <View style={{ backgroundColor: getRideHistoryIcon?.bgColor, width: 40, height: 40 }} className="rounded-full items-center justify-center p-1 ml-3">
-          <MaterialCommunityIcons
-            // @ts-ignore
-            name={getRideHistoryIcon?.icon}
-            size={32} color={getRideHistoryIcon?.color} />
-        </View>
-        <View className='justify-between ml-2 mr-3'>
-          <Text numberOfLines={1} className="text-[#1b1b1b] dark:text-[#d6d6d6] text-xl font-bold">
-            {ride.destination_address.split(",")[0]}
-          </Text>
-          <Text numberOfLines={1} className="text-[#1b1b1b] dark:text-[#d6d6d6] text-md font-medium">
-            {ride.destination_address}
-          </Text>
-        </View>
-      </ScrollView>
-    </View>
-  )
-}
-
-const UserMarkerRowItem = ({ userMarker, color, bgColor, pressHandler, editingMarkers, deleteHandler }: { userMarker: UserMarkerIconType, pressHandler: (addingMarker: UserMarkerIconType) => void, color?: string, bgColor?: string, editingMarkers: boolean, deleteHandler: (deletingMarker: UserMarkerIconType) => void }) => {
-
-  const shakeAnimatedValue = React.useRef(new Animated.Value(0)).current;
-  const colorScheme = useColorScheme();
-
-  const pressInnerHandler = useCallback(() => {
-    if (editingMarkers) {
-      console.warn("case not handled yet")
-    } else {
-      pressHandler(userMarker)
-    }
-  }, [editingMarkers, userMarker, pressHandler])
-  const deleteInnerHandler = useCallback(() => {
-    if (editingMarkers) {
-      deleteHandler(userMarker)
-    } else {
-      console.warn("case not handled yet")
-    }
-  }, [editingMarkers, userMarker, deleteHandler])
-
-  const startShaking = () => {
-    Animated.loop(
-      Animated.timing(shakeAnimatedValue, {
-        toValue: 1,
-        duration: 300,
-        easing: Easing.linear,
-        useNativeDriver: true,
-      })
-    ).start();
-  };
-  const stopShaking = () => {
-    shakeAnimatedValue.stopAnimation();
-    shakeAnimatedValue.setValue(0);
-  };
-  useEffect(() => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    if (editingMarkers) {
-      startShaking();
-    } else {
-      stopShaking();
-    }
-  }, [editingMarkers]);
-
-
-  return (
-    <View className='relative ml-5 items-center justify-center' key={userMarker.id}>
-      <Animated.View className={""}
-        style={{
-          transform: [
-            {
-              rotate: shakeAnimatedValue.interpolate({
-                inputRange: [0, 0.25, 0.5, 0.75, 1],
-                outputRange: ["0deg", "5deg", "-5deg", "5deg", "0deg"],
-              }),
-            },
-          ],
-        }}>
-        <ScaleBtn
-          style={{ backgroundColor: bgColor ?? Colors[colorScheme ?? 'light'].border_light }}
-          className="w-[64px] h-[64px] rounded-full bg-[#D8D8D8] dark:bg-[#444444]- items-center justify-center"
-          onPress={pressInnerHandler}>
-          <MaterialCommunityIcons
-            // @ts-ignore
-            name={userMarker.icon.name}
-            size={38}
-            color={color ?? Colors[colorScheme ?? 'light'].icons}
-          />
-        </ScaleBtn>
-      </Animated.View>
-      {editingMarkers && <ScaleBtn onPress={deleteInnerHandler} containerStyle={{ position: "absolute", right: 0 }}>
-        <FontAwesome6 name="circle-minus" size={24} color={Colors[colorScheme ?? 'light'].delete} />
-      </ScaleBtn>}
-      <View className='h-12 w-full'>
-        <Text className="text-lg font-semibold text-center text-[#1b1b1b] dark:text-[#C1C0C9]">{userMarker.name}</Text>
-      </View>
-    </View>
-  )
-}
-
-const DefaultMarkerRowItem = ({ defaultMarker, color, bgColor, addHandler }: { defaultMarker: { name: string, icon: string }, addHandler: (addingMarker?: AddMarker) => void, color?: string, bgColor?: string }) => {
-
-  const colorScheme = useColorScheme();
-  const shakeAnimatedValue = React.useRef(new Animated.Value(0)).current;
-
-  const shortShake = () => {
-    shakeAnimatedValue.setValue(0);
-    Animated.timing(shakeAnimatedValue,
-      {
-        toValue: 1,
-        duration: 150,
-        easing: Easing.linear,
-        useNativeDriver: true
-      }
-    ).start()
-  }
-  const addInnerHandler = useCallback(() => {
-    addHandler(defaultMarker)
-  }, [addHandler, defaultMarker])
-  // 1c1818
-  return (
-    <View className='ml-5 items-center justify-center' key={defaultMarker.icon}>
-      <ScaleBtn
-        style={{ backgroundColor: bgColor ?? Colors[colorScheme ?? 'light'].border_light }}
-        className="w-[64px] h-[64px] rounded-full bg-[#D8D8D8]- dark:bg-[#444444]- items-center justify-center"
-        onPress={() => {
-          shortShake()
-        }}>
-        <MaterialCommunityIcons
-          // @ts-ignore
-          name={defaultMarker.icon}
-          size={38}
-          color={color ?? Colors[colorScheme ?? 'light'].icons}
-        />
-      </ScaleBtn>
-      <View className='h-12 w-full'>
-        <Text className="text-lg font-semibold text-center text-[#1b1b1b] dark:text-[#C1C0C9]">{defaultMarker.name}</Text>
-        <Animated.View className={""} style={{
-          transform: [{
-            translateX: shakeAnimatedValue.interpolate({
-              inputRange: [0, 0.25, 0.50, 0.75, 1],
-              outputRange: [0, 5, -5, 5, 0]
-            })
-          }]
-        }}>
-          <ScaleBtn
-            className=""
-            onPress={addInnerHandler}>
-            <Text className="text-sm text-center text-[#1b1b1b] dark:text-[#C1C0C9]">Add</Text>
-          </ScaleBtn>
-        </Animated.View>
-      </View>
-    </View>
-  )
-}

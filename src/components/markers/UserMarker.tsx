@@ -1,18 +1,43 @@
+import { useEffect, useCallback } from "react";
 import { MotiView, View } from "@motify/components";
 import { Easing } from "react-native-reanimated";
 
 import { useWSState } from "~/context/WSContext";
-import AnimatedMarker from "./AnimatedMarker";
+import AnimatedMarker from "~/components/markers/AnimatedMarker";
+import AnimatedPosHeadingMarker from "~/components/markers/AnimatedPosHeadingMarker";
+import { TaxiSVG } from "~/components/svgs";
 
 type UserMarkerProps = {
     findingRide?: boolean;
+    completeRide: () => void;
 }
 
-const UserMarker = ({ findingRide = false }: UserMarkerProps) => {
-    const { position, heading } = useWSState();
+const UserMarker = ({ findingRide = false, completeRide }: UserMarkerProps) => {
+    const { position, heading, confirmedTaxi } = useWSState();
 
-    if (!position || !heading) {
+    const onConfirmedTaxiChangeHandler = useCallback(() => {
+        if (confirmedTaxi?.status === "completed") {
+            completeRide()
+        }
+    }, [confirmedTaxi])
+    useEffect(onConfirmedTaxiChangeHandler, [confirmedTaxi]);
+
+    if (!position) {
         return null
+    }
+
+    if (confirmedTaxi?.status === "ongoing") {
+        return (
+            <AnimatedPosHeadingMarker
+                headingAnimated={true}
+                latitude={position?.coords.latitude}
+                longitude={position?.coords.longitude}
+                anchor={{ x: 0.5, y: 0.6 }}
+                flat
+            >
+                <TaxiSVG isOnRide={!!confirmedTaxi} />
+            </AnimatedPosHeadingMarker>
+        )
     }
 
     return (

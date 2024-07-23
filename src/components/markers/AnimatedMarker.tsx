@@ -1,7 +1,6 @@
-import React, { useRef, useCallback, useEffect, memo } from 'react';
+import React, { useRef, useEffect, memo } from 'react';
 import { Animated, Dimensions, Easing, Platform } from 'react-native';
-import { MapMarkerProps, AnimatedRegion, MarkerAnimated, type MapMarker, LatLng } from 'react-native-maps';
-import { calculateBearing } from '~/utils/directions';
+import { MapMarkerProps, AnimatedRegion, MarkerAnimated, type MapMarker } from 'react-native-maps';
 
 type AnimatedMarkerParams = {
   longitude: number;
@@ -66,12 +65,10 @@ const AnimatedMarker: React.FC<AnimatedMarkerParams> = ({
 
   return (
     <MarkerAnimated
-      p
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       coordinate={anim_marker_coords_ref.current} ref={(_ref) => (anim_marker_ref.current = _ref)}
       tracksViewChanges={false}
-      // rotation={!headingAnimated ? heading : undefined}
       {...restProps}
     >
       <Animated.View

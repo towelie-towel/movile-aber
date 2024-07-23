@@ -22,7 +22,6 @@ const TopSheetButtonsAnimStyle = ({ animatedIndex, snapPoints, children }: {
 
     return (
         <Animated.View
-            pointerEvents="box-none"
             style={[
                 topSheetBtnsAnimStyle,
                 {
