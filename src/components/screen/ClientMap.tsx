@@ -16,15 +16,16 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAtom } from 'jotai/react';
 
 import { userMarkersAtom, useUser } from '~/context/UserContext';
-import { useWSActions } from '~/context/WSContext';
 import { BottomSheetContent } from '~/components/bottomsheet/BottomSheetContent';
 import { CustomHandle } from '~/components/bottomsheet/hooks/CustomHandle';
+import TopSheetButtonsAnimStyle from '~/components/bottomsheet/TopSheetButtonsAnimStyle';
 import Ripple from '~/components/common/RippleBtn';
 import ScaleBtn from '~/components/common/ScaleBtn';
 import AnimatedRouteMarker from '~/components/markers/AnimatedRouteMarker';
 import TaxisMarkers from '~/components/markers/TaxiMarkers';
 import UserMarker from '~/components/markers/UserMarker';
 import { UserMapMarker } from '~/components/markers/UserMapMarker';
+import FindRideBtn from '~/components/elements/FindRideBtn';
 import { ColorInstagram, ColorFacebook, ColorTwitter } from '~/components/svgs';
 import Colors from '~/constants/Colors';
 import { NightMap } from '~/constants/NightMap';
@@ -45,7 +46,6 @@ export default function ClientMap() {
     const insets = useSafeAreaInsets();
     const router = useRouter();
     const { profile, isSignedIn, signOut, toggleUserRole/* , ridesHistory */ } = useUser();
-    const { findTaxi } = useWSActions();
     const [userMarkers] = useAtom(userMarkersAtom)
 
     if (Platform.OS === 'android') {
@@ -73,7 +73,6 @@ export default function ClientMap() {
     const [snapPoints, setSnapPoints] = useState<number[]>([195, 360, 550]);
     const animatedPosition = useSharedValue(0);
     const animatedIndex = useSharedValue(0);
-    const [sheetCurrentSnap, setSheetCurrentSnap] = useState(1);
     const sheetCurrentSnapRef = useRef(1);
     const bottomSheetModalRef = useRef<BottomSheetModal>(null);
 
@@ -117,20 +116,6 @@ export default function ClientMap() {
         }
     }, [isSignedIn]);
 
-    const topSheetBtnsAnimStyle = useAnimatedStyle(() => ({
-        transform: [
-            {
-                translateY: interpolate(
-                    animatedIndex.value,
-                    snapPoints.map((_, i) => i),
-                    snapPoints.map((item) => (item * -1) + 740),
-                    Extrapolation.CLAMP
-                ),
-            },
-        ],
-    }),
-        // [snapPoints, animatedIndex, /* sheetCurrentSnapRef, animatedPosition, sheetCurrentSnap */]
-    );
     const piningMarkerAnimStyle = useAnimatedStyle(() => ({
         opacity: interpolate(
             animatedIndex.value,
@@ -191,22 +176,17 @@ export default function ClientMap() {
         },
         [mapViewRef]
     );
-    const findRideHandler = useCallback(async () => {
+    const startFindingRide = useCallback(() => {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         setFindingRide(true);
         setCurrentStep(ClientSteps.FINDING)
-        if (RIDE_FLOW_LOGS) console.log(rideInfo)
-        try {
-            if (rideInfo) {
-                await findTaxi(rideInfo, "eff41f96-178e-4e97-9f43-35d4de7b7a18")
-            } else {
-                throw new Error('Ride Info is not set')
-            }
-        } catch (error) {
-            console.error(error)
-            setCurrentStep(ClientSteps.FINDING - 1)
-        }
-    }, [rideInfo, findTaxi]);
+    }, []);
+    const errorFindingRide = useCallback(() => {
+        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+        setFindingRide(false);
+        setCurrentStep(ClientSteps.FINDING - 1)
+    }, []);
+
     const taxiConfirm = useCallback(() => {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         setFindingRide(false);
@@ -364,7 +344,7 @@ export default function ClientMap() {
 
                     </MapView>
 
-                    {currentStep === ClientSteps.PINNING && sheetCurrentSnap !== 2 && (
+                    {currentStep === ClientSteps.PINNING && (
                         <Animated.View
                             style={[{ position: 'absolute', top: 0, right: 0, flex: 1, zIndex: 1000 }, piningMarkerAnimStyle]}
                         >
@@ -379,7 +359,7 @@ export default function ClientMap() {
                         </Animated.View>
                     )}
 
-                    <Animated.View pointerEvents={"box-none"} style={topSheetBtnsAnimStyle} className="absolute bottom-[750px] w-[95%] self-center flex-row items-end justify-between border-">
+                    <TopSheetButtonsAnimStyle animatedIndex={animatedIndex} snapPoints={snapPoints} >
                         {activeRoute && activeRoute.coords.length > 0 && (
                             <>
                                 {/* <ScaleBtn
@@ -394,13 +374,13 @@ export default function ClientMap() {
                                 <View className='w-12' />
 
                                 {currentStep <= ClientSteps.FINDING && currentStep !== ClientSteps.PINNING &&
-                                    <ScaleBtn containerStyle={{}} disabled={(findingRide || !selectedTaxiType)} onPress={findRideHandler}>
+                                    <FindRideBtn rideInfo={rideInfo} startFindingRide={startFindingRide} errorFindingRide={errorFindingRide} disabled={(findingRide || !selectedTaxiType)} >
                                         <View className="bg-[#FCCB6F] w-40 h-14 rounded-lg p-3">
                                             <Text className="text-center text-lg font-bold w-auto text-[#fff]">
                                                 {findingRide ? 'Finding Ride' : 'Request Ride'}
                                             </Text>
                                         </View>
-                                    </ScaleBtn>
+                                    </FindRideBtn>
                                 }
                             </>
                         )}
@@ -427,7 +407,7 @@ export default function ClientMap() {
                                 </View>
                             </ScaleBtn>
                         </View>
-                    </Animated.View>
+                    </TopSheetButtonsAnimStyle>
 
 
                     <BottomSheetModal
@@ -446,7 +426,6 @@ export default function ClientMap() {
                             }
                             sheetCurrentSnapRef.current = e;
                             LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-                            setSheetCurrentSnap(e)
                         }}
                         // enableDynamicSizing
                         android_keyboardInputMode="adjustResize"
@@ -492,7 +471,6 @@ export default function ClientMap() {
                         }}
                         backdropComponent={renderBackdrop}>
                         <BottomSheetContent
-                            sheetCurrentSnap={sheetCurrentSnap}
                             currentStep={currentStep}
                             setCurrentStep={setCurrentStep}
                             startPiningLocation={startPiningLocation}

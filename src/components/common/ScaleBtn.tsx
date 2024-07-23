@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { Animated, Pressable, PressableProps, ViewStyle } from 'react-native';
 
-type PressBtnProps = {
+export type PressBtnProps = {
   containerStyle?: ViewStyle;
   scaleReduction?: number;
   onPress?: () => void;

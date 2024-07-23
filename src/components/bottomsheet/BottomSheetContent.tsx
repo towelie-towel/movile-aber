@@ -37,7 +37,6 @@ import TestTaxiTypesInfo from '~/constants/TestTaxiTypesInfo.json'
 */
 
 interface BottomSheetContentProps {
-  sheetCurrentSnap: number;
   currentStep: ClientSteps;
   setCurrentStep: React.Dispatch<ClientSteps>;
   setRideInfo: React.Dispatch<RideInfo | null>;
@@ -54,7 +53,6 @@ interface BottomSheetContentProps {
 }
 
 export const BottomSheetContent = ({
-  sheetCurrentSnap,
   currentStep,
   piningMarker,
   setPiningMarker,
@@ -103,10 +101,6 @@ export const BottomSheetContent = ({
   const destinationShakeAnimatedValue = React.useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    if (sheetCurrentSnap === 2) handleBottomSheetExpand()
-    if (editingMarkers) endEditingMarkers()
-  }, [sheetCurrentSnap]);
-  useEffect(() => {
     if (confirmedTaxi) handleTaxiConfirmation()
   }, [confirmedTaxi]);
   useEffect(() => {
@@ -144,12 +138,6 @@ export const BottomSheetContent = ({
       }).start()
     }
   }, [piningInput, originShakeAnimatedValue, destinationShakeAnimatedValue])
-
-  const handleBottomSheetExpand = useCallback(() => {
-    if (currentStep === ClientSteps.PINNING) {
-      markerNameInputViewRef.current?.focus()
-    }
-  }, [currentStep, markerNameInputViewRef])
 
   const handleTaxiConfirmation = useCallback(() => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
