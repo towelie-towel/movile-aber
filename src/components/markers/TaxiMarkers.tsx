@@ -40,22 +40,23 @@ const TaxisMarkers = ({ onPressTaxi, animateToRegion, taxiConfirm, startRide, fi
   const { wsTaxis, confirmedTaxi } = useWSState();
 
   const onWsTaxisChangeHandler = useCallback(() => {
+    setTaxis(wsTaxis ?? []);
+  }, [wsTaxis])
+  const onTaxisChangeHandler = useCallback(() => {
     if (confirmedTaxi) {
-      const confirmedTaxiLocation = wsTaxis?.find(taxi => taxi.userId === confirmedTaxi.userId)
+      const confirmedTaxiLocation = taxis?.find(taxi => taxi.userId === confirmedTaxi.userId)
+      console.log(JSON.stringify({ confirmedTaxiLocation, taxis, confirmedTaxi }, null, 2))
       if (!confirmedTaxiLocation) {
         console.error("confirmed taxi not found")
         return
       }
-      setTaxis([confirmedTaxiLocation]);
       animateToRegion({
         latitudeDelta: 0.00922, longitudeDelta: 0.009121,
         latitude: confirmedTaxiLocation.latitude,
         longitude: confirmedTaxiLocation.longitude,
       })
-    } else {
-      setTaxis(wsTaxis ?? []);
-    }
-  }, [wsTaxis, confirmedTaxi, animateToRegion])
+    } else { }
+  }, [taxis, confirmedTaxi, animateToRegion])
   const onConfirmedTaxiChangeHandler = useCallback(() => {
     if (confirmedTaxi) {
       if (confirmedTaxi.status === "confirmed") {
@@ -69,6 +70,7 @@ const TaxisMarkers = ({ onPressTaxi, animateToRegion, taxiConfirm, startRide, fi
   }, [confirmedTaxi])
 
   useEffect(onWsTaxisChangeHandler, [wsTaxis]);
+  useEffect(onTaxisChangeHandler, [taxis]);
   useEffect(onConfirmedTaxiChangeHandler, [confirmedTaxi]);
 
   return (

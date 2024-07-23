@@ -37,7 +37,7 @@ interface WSStateContext {
     userType: UserRole | undefined;
 }
 interface WSActionsContext {
-    // resetWSConnection: () => Promise<void>;
+    // openWSConnection: () => Promise<void>;
     // trackPosition: () => Promise<void>;
     sendStringToServer: (message: string) => void;
     findTaxi: (ride: RideInfo, taxiid?: string) => Promise<void>;
@@ -55,7 +55,7 @@ const stateInitialValue: WSStateContext = {
     userType: undefined,
 };
 const stateActionslValue: WSActionsContext = {
-    /* resetWSConnection: async () => {
+    /* openWSConnection: async () => {
         throw new Error('Function not initizaliced yet');
     },
     trackPosition: async () => {
@@ -209,28 +209,28 @@ export const WSProvider = ({ children, userType }: { children: React.ReactNode, 
             const rideStartStatus = message.replace('ridestart-', '');
             if (rideStartStatus === 'success') {
                 // @ts-ignore
-                setConfirmedTaxi({ ...confirmedTaxi, status: "ongoing" })
+                setConfirmedTaxi(prevTaxi => ({ ...prevTaxi, status: "ongoing" }))
             } else {
                 console.error("Ride started with invalid status")
             }
         } else if (message.startsWith("completed-")) {
-            const completedStatus = message.replace('confirm-', '');
+            const completedStatus = message.replace('completed-', '');
             if (completedStatus === 'success') {
                 // @ts-ignore
-                setConfirmedTaxi({ ...confirmedTaxi, status: "completed" })
+                setConfirmedTaxi(prevTaxi => ({ ...prevTaxi, status: "ongoing" }))
             } else {
                 console.error("Ride completed with invalid status")
             }
         }
 
-    }, [confirmedTaxi]);
+    }, []);
 
     const asyncNewWebSocket = useCallback(() => {
         const protocol = `map-client`;
 
         if (WS_LOGS) console.log('new Web Socket initializing', protocol);
         const suckItToMeBBy = new WebSocket(
-            `ws://192.168.1.101:6942/subscribe?id=03563972-fab9-4744-b9a7-15f8d35d38c9&lat=51.5073509&lon=-0.1277581999999997&head=51`,
+            `ws://192.168.1.101:6942/subscribe?id=e117adcb-f429-42f7-95d9-07f1c92a1c8b&lat=51.5073509&lon=-0.1277581999999997&head=51`,
             protocol
         );
 
@@ -255,7 +255,12 @@ export const WSProvider = ({ children, userType }: { children: React.ReactNode, 
         return suckItToMeBBy;
     }, [handleWebSocketMessage]);
 
-    const resetWSConnection = useCallback(async () => {
+    const closeWSConnection = useCallback(() => {
+        if (WS_LOGS) console.log('removing ws subscription', ws);
+        if (ws.current?.readyState === WebSocket.OPEN)
+            ws.current?.close()
+    }, [ws])
+    const openWSConnection = useCallback(() => {
         if (!isConnected) {
             console.warn('💣 ==> No internet connection ==> ');
             return;
@@ -263,12 +268,12 @@ export const WSProvider = ({ children, userType }: { children: React.ReactNode, 
         try {
             if (!ws.current) {
                 if (WS_LOGS) console.log('initializasing web socket');
-                ws.current = await asyncNewWebSocket();
+                ws.current = asyncNewWebSocket();
             } else if (ws.current.readyState === WebSocket.OPEN) {
                 console.warn('a ws connection is already open');
             } else if (ws.current.readyState === WebSocket.CLOSED) {
-                if (WS_LOGS) console.log('🚿 resetWSConnection ==> reseting connection');
-                ws.current = await asyncNewWebSocket();
+                if (WS_LOGS) console.log('🚿 openWSConnection ==> reseting connection');
+                ws.current = asyncNewWebSocket();
             } else {
                 console.error("ws connection is not OPEN or CLOSED");
                 // TODO: handle CONNECTING and CLOSING cases
@@ -276,7 +281,8 @@ export const WSProvider = ({ children, userType }: { children: React.ReactNode, 
         } catch (error) {
             console.error(error);
         }
-    }, [isConnected, ws, asyncNewWebSocket]);
+        return closeWSConnection
+    }, [isConnected, ws, asyncNewWebSocket, closeWSConnection]);
 
     const trackPosition = useCallback(async () => {
         await requestPermissions();
@@ -383,15 +389,7 @@ export const WSProvider = ({ children, userType }: { children: React.ReactNode, 
             }
         };
     }, []);
-    useEffect(() => {
-        if (WS_LOGS) console.log('WSContext.tsx -> useEffect [isConnected]', isConnected);
-        void resetWSConnection();
-        return () => {
-            if (WS_LOGS) console.log('removing ws subscription', ws);
-            if (ws.current?.readyState === WebSocket.OPEN)
-                ws.current?.close()
-        }
-    }, [isConnected]);
+    useEffect(openWSConnection, [isConnected]);
 
     const actions = useMemo(() => ({
         sendStringToServer,
@@ -399,7 +397,7 @@ export const WSProvider = ({ children, userType }: { children: React.ReactNode, 
         cancelTaxi,
         simulateRoutePosition,
         stopRouteSimulation,
-        // resetWSConnection,
+        // openWSConnection,
         // trackPosition,
     }), [sendStringToServer, findTaxi, cancelTaxi]);
 
@@ -421,3 +419,194 @@ TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }) => {
         if (WS_LOGS) console.log(data);
     }
 });
+
+/* import AsyncStorage from '@react-native-async-storage/async-storage';
+import NetInfo from '@react-native-community/netinfo';
+import * as ExpoLocation from 'expo-location';
+import { atomWithStorage, createJSONStorage } from 'jotai/utils';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+
+import { calculateDistance } from '~/utils/directions';
+import type { TaxiProfile } from '~/types/Taxi';
+import type { RideStatus } from '~/types/RideFlow';
+import type { UserRole } from '~/types/User';
+
+export interface WSTaxi {
+    latitude: number;
+    longitude: number;
+    header: number;
+    userId: string;
+}
+
+interface WSStateContext {
+    ws: WebSocket | null | undefined;
+    wsTaxis: WSTaxi[] | null | undefined;
+    confirmedTaxi: TaxiProfile & { status: RideStatus } | null;
+    position: ExpoLocation.LocationObject | undefined;
+    heading: ExpoLocation.LocationHeadingObject | undefined;
+    userType: UserRole | undefined;
+}
+
+const stateInitialValue: WSStateContext = {
+    ws: undefined,
+    wsTaxis: undefined,
+    confirmedTaxi: null,
+    position: undefined,
+    heading: undefined,
+    userType: undefined,
+};
+
+const WSStateContext = createContext(stateInitialValue);
+
+export const useWSState = () => {
+    return useContext(WSStateContext);
+};
+export const useWSActions = () => {
+    return useContext(WSActionsContext);
+};
+
+export const WSProvider = ({ children, userType }: { children: React.ReactNode, userType: UserRole }) => {
+
+    const handleWebSocketMessage = useCallback((event: MessageEvent<string>) => {
+        const message = event.data;
+        if (typeof message !== 'string') {
+            return;
+        }
+        if (WS_LOGS) console.log('handleWebSocketMessage: ', message);
+        if (message.startsWith("taxis-")) {
+            const taxis = message
+                .replace('taxis-', '')
+                .split('$')
+                .map((taxiStr) => {
+                    const taxi = taxiStr.split('&');
+                    const id = taxi[1];
+                    const location = taxi[0]!.split(',');
+                    return {
+                        latitude: parseFloat(location[0]!),
+                        longitude: parseFloat(location[1]!),
+                        header: parseFloat(location[2]!),
+                        userId: id ?? '',
+                    };
+                });
+            const sortedTaxis = [...taxis].sort((taxiA, taxiB) => {
+                const distanceA = calculateDistance(
+                    position?.coords.latitude ?? 0,
+                    position?.coords.longitude ?? 0,
+                    taxiA.latitude,
+                    taxiA.longitude
+                );
+                const distanceB = calculateDistance(
+                    position?.coords.latitude ?? 0,
+                    position?.coords.longitude ?? 0,
+                    taxiB.latitude,
+                    taxiB.longitude
+                );
+                return distanceA - distanceB;
+            });
+            if (WS_LOGS) console.log(sortedTaxis)
+            setWsTaxis(sortedTaxis);
+        } else if (message.startsWith("confirm-")) {
+            const taxistring = message.replace('confirm-', '');
+            let taxi: TaxiProfile | undefined;
+            if (taxistring === 'test') {
+                taxi = {
+                    type: 'confort',
+                    userId: '123',
+                    name: 'Gregory Smith',
+                    phone: '+535 123 4567',
+                    car: 'Toyota Corolla',
+                    plate: 'HAB 123',
+                    stars: 4.9,
+                };
+            } else {
+                taxi = JSON.parse(taxistring) as TaxiProfile;
+            }
+            setConfirmedTaxi({ ...taxi, status: "confirmed" })
+            if (WS_LOGS) console.log(JSON.stringify(taxi))
+        } else if (message.startsWith("ridestart-")) {
+            const rideStartStatus = message.replace('ridestart-', '');
+            if (rideStartStatus === 'success') {
+                // @ts-ignore
+                setConfirmedTaxi({ ...confirmedTaxi, status: "ongoing" })
+            } else {
+                console.error("Ride started with invalid status")
+            }
+        } else if (message.startsWith("completed-")) {
+            const completedStatus = message.replace('completed-', '');
+            if (completedStatus === 'success') {
+                // @ts-ignore
+                setConfirmedTaxi({ ...confirmedTaxi, status: "completed" })
+            } else {
+                console.error("Ride completed with invalid status")
+            }
+        }
+
+    }, [confirmedTaxi]);
+
+    const asyncNewWebSocket = useCallback(() => {
+        const protocol = `map-client`;
+
+        if (WS_LOGS) console.log('new Web Socket initializing', protocol);
+        const suckItToMeBBy = new WebSocket(
+            `ws://192.168.1.101:6942/subscribe?id=e117adcb-f429-42f7-95d9-07f1c92a1c8b&lat=51.5073509&lon=-0.1277581999999997&head=51`,
+            protocol
+        );
+
+        // TODO: stream depending the role
+        suckItToMeBBy.addEventListener('open', (_event) => {
+            if (WS_LOGS) console.log('WS Connection opened');
+        });
+
+        suckItToMeBBy.addEventListener('close', (_event) => {
+            if (WS_LOGS) console.log('WS Connection closed', _event.reason);
+        });
+
+        suckItToMeBBy.addEventListener('error', (_error) => {
+            if (WS_LOGS)
+                console.error('WS Connection error', JSON.stringify(_error, null, 2));
+        }, {
+            once: true
+        });
+
+        suckItToMeBBy.addEventListener('message', handleWebSocketMessage);
+
+        return suckItToMeBBy;
+    }, [handleWebSocketMessage]);
+
+    const closeWSConnection = useCallback(() => {
+        if (WS_LOGS) console.log('removing ws subscription', ws);
+        if (ws.current?.readyState === WebSocket.OPEN)
+            ws.current?.close()
+    }, [ws])
+    const openWSConnection = useCallback(() => {
+        if (!isConnected) {
+            console.warn('💣 ==> No internet connection ==> ');
+            return;
+        }
+        try {
+            if (!ws.current) {
+                if (WS_LOGS) console.log('initializasing web socket');
+                ws.current = asyncNewWebSocket();
+            } else if (ws.current.readyState === WebSocket.OPEN) {
+                console.warn('a ws connection is already open');
+            } else if (ws.current.readyState === WebSocket.CLOSED) {
+                if (WS_LOGS) console.log('🚿 openWSConnection ==> reseting connection');
+                ws.current = asyncNewWebSocket();
+            } else {
+                console.error("ws connection is not OPEN or CLOSED");
+                // TODO: handle CONNECTING and CLOSING cases
+            }
+        } catch (error) {
+            console.error(error);
+        }
+        return closeWSConnection
+    }, [isConnected, ws, asyncNewWebSocket, closeWSConnection]);
+
+    useEffect(openWSConnection, [isConnected]);
+
+    return (
+        <WSStateContext.Provider value={{ ws: ws.current, wsTaxis, heading, position, confirmedTaxi, userType: currentUserType }}>
+            {children}
+        </WSStateContext.Provider>
+    );
+*/
