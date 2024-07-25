@@ -4,8 +4,8 @@ import { Easing } from "react-native-reanimated";
 
 import { useWSState } from "~/context/WSContext";
 import AnimatedMarker from "~/components/markers/AnimatedMarker";
-import AnimatedPosHeadingMarker from "~/components/markers/AnimatedPosHeadingMarker";
-import { TaxiSVG } from "~/components/svgs";
+// import AnimatedPosHeadingMarker from "~/components/markers/AnimatedPosHeadingMarker";
+// import { TaxiSVG } from "~/components/svgs";
 
 type UserMarkerProps = {
     findingRide?: boolean;
@@ -19,7 +19,7 @@ const UserMarker = ({ findingRide = false, completeRide }: UserMarkerProps) => {
         if (confirmedTaxi?.status === "completed") {
             completeRide()
         }
-    }, [confirmedTaxi])
+    }, [confirmedTaxi, completeRide])
     useEffect(onConfirmedTaxiChangeHandler, [confirmedTaxi]);
 
     if (!position) {

@@ -95,6 +95,12 @@ export default function ClientMap() {
             case ClientSteps.PICKUP:
                 setSnapPoints([330, 400])
                 break;
+            case ClientSteps.RIDE:
+                setSnapPoints([330, 400])
+                break;
+            case ClientSteps.FINISHED:
+                setSnapPoints([380, 700])
+                break;
             default:
                 break;
         }
@@ -186,6 +192,7 @@ export default function ClientMap() {
         setFindingRide(false);
         setCurrentStep(ClientSteps.FINDING - 1)
     }, []);
+
 
     const taxiConfirm = useCallback(() => {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -478,7 +485,7 @@ export default function ClientMap() {
                             setActiveRoute={setActiveRoute}
                             selectedTaxiType={selectedTaxiType}
                             setSelectedTaxiType={setSelectedTaxiType}
-                            setFindingRide={setFindingRide} />
+                        />
                     </BottomSheetModal>
 
                     <StatusBar backgroundColor="transparent" barStyle={colorScheme === 'dark' ? 'light-content' : 'dark-content'} />

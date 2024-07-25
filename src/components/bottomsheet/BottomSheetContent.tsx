@@ -1,26 +1,25 @@
-import { MaterialCommunityIcons, FontAwesome6, AntDesign } from '@expo/vector-icons';
-import { useBottomSheet, BottomSheetTextInput } from '@gorhom/bottom-sheet';
-import { Image } from 'expo-image';
+import { MaterialCommunityIcons, FontAwesome6 } from '@expo/vector-icons';
+import { useBottomSheet } from '@gorhom/bottom-sheet';
 import * as ExpoLocation from 'expo-location';
 import React, { useCallback, useEffect, useRef, useState, ComponentRef } from 'react';
 import { View, Text, useColorScheme, useWindowDimensions, LayoutAnimation, Keyboard, ScrollView, Animated, Easing, Alert, ActivityIndicator } from 'react-native';
 import type { LatLng } from 'react-native-maps';
 import { useAtom } from 'jotai/react';
-import StarRating from 'react-native-star-rating-widget';
 // import * as ImagePicker from 'expo-image-picker';
 
 import FloatingLabelInput from '~/lib/floating-label-input';
 import { GooglePlacesAutocomplete, GooglePlaceData, GooglePlaceDetail, GooglePlacesAutocompleteRef } from '~/lib/google-places-autocomplete/GooglePlacesAutocomplete';
-import { useWSActions, useWSState } from '~/context/WSContext';
+import { useWSActions } from '~/context/WSContext';
 import { userMarkersAtom, useUser } from '~/context/UserContext';
+import DashedLine from '~/components/bottomsheet/DashedLine';
+import RideReview from '~/components/bottomsheet/RideReview';
+import RideFlowInfo from '~/components/bottomsheet/RideFlowInfo';
 import { ScaleBtn } from '~/components/common';
 import { selectableMarkerIcons, UserMarkerIconType } from '~/components/markers/AddUserMarker';
-import { ConfortSVG } from '~/components/svgs/index';
 import TaxiTypeRideRowItem from '~/components/elements/TaxiTypeRideRowItem';
 import RidesHistoryItem from '~/components/elements/RidesHistoryItem';
 import UserMarkerRowItem from '~/components/elements/UserMarkerRowItem';
 import DefaultMarkerRowItem from '~/components/elements/DefaultMarkerRowItem';
-import DashedLine from '~/components/bottomsheet/DashedLine';
 import Colors from '~/constants/Colors';
 import { ClientSteps } from '~/constants/RideFlow';
 import { defaultMarkers } from '~/constants/Markers';
@@ -51,7 +50,6 @@ interface BottomSheetContentProps {
   piningLocation: boolean;
   piningMarker: AddMarker | null;
   setPiningMarker: React.Dispatch<AddMarker | null>;
-  setFindingRide: React.Dispatch<boolean>;
   selectedTaxiType: string | null;
   setSelectedTaxiType: React.Dispatch<TaxiType | null>;
 }
@@ -62,7 +60,6 @@ export const BottomSheetContent = ({
   setPiningMarker,
   setCurrentStep,
   setRideInfo,
-  setFindingRide,
   setActiveRoute,
   piningLocation,
   startPiningLocation,
@@ -75,7 +72,6 @@ export const BottomSheetContent = ({
   const { width } = useWindowDimensions();
   const { profile } = useUser()
   const { snapToIndex } = useBottomSheet();
-  const { confirmedTaxi } = useWSState()
   const { cancelTaxi } = useWSActions()
   const [userMarkers, setUserMarkers] = useAtom(userMarkersAtom)
 
@@ -91,7 +87,6 @@ export const BottomSheetContent = ({
     duration: { value: number; text: string };
   } | null>(null);
   const [markerName, setMarkerName] = useState<string | null>(null);
-  const [rating, setRating] = useState(0);
   // const [markerImage, setMarkerImage] = useState<ImagePicker.ImagePickerResult | null>(null);
 
   const [routeLoading, setRouteLoading] = useState(false);
@@ -105,9 +100,6 @@ export const BottomSheetContent = ({
   const originShakeAnimatedValue = useRef(new Animated.Value(0)).current;
   const destinationShakeAnimatedValue = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => {
-    if (confirmedTaxi) handleTaxiConfirmation()
-  }, [confirmedTaxi]);
   useEffect(() => {
     if (currentStep === ClientSteps.SEARCH) restoreInputFromPinedInfo()
   }, [currentStep]);
@@ -149,12 +141,6 @@ export const BottomSheetContent = ({
       markerNameInputViewRef.current?.focus()
     }
   }, [currentStep, markerNameInputViewRef]) */
-
-  const handleTaxiConfirmation = useCallback(() => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setCurrentStep(ClientSteps.PICKUP)
-    setFindingRide(false);
-  }, [])
 
   const getCurrentPositionWithAddressAsync = useCallback(async () => {
     const currentPosition = await ExpoLocation.getCurrentPositionAsync({
@@ -342,7 +328,7 @@ export const BottomSheetContent = ({
       setPiningMarker(null)
     }
   }, [getMiddlePoint, endPiningLocation, piningInput, pinedInfo, piningMarker, originInputViewRef, destinationInputViewRef]);
-  const cancelRideInnerHandler = useCallback(() => {
+  const cancelRideHandler = useCallback(() => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     // setPinedInfo({
     //   origin: pinedInfo?.origin ?? null,
@@ -356,6 +342,16 @@ export const BottomSheetContent = ({
     // setSelectedTaxiType(null)
     // collapse();
   }, [cancelTaxi]);
+  const finishRideHandler = useCallback(() => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setPiningInput(null)
+    setRideInfo(null)
+    setActiveRoute(null)
+    setSelectedTaxiType(null)
+    setPinedInfo(null)
+    setRouteInfo(null)
+    setCurrentStep(ClientSteps.SEARCH);
+  }, []);
 
   const goBackToSearch = useCallback(() => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -614,176 +610,13 @@ export const BottomSheetContent = ({
         (
           <View className="w-[95%] h-full self-center overflow-visible">
 
-            {currentStep >= ClientSteps.PICKUP /* || true */ ?
+            {currentStep >= ClientSteps.PICKUP ?
               (
                 <View className="mt-3 h-full self-center">
-                  {currentStep === ClientSteps.FINISHED /* || true */ ?
-                    <View className='w-full- mx-1.5- justify-center items-center-'>
-                      <Text className="font-bold text-xl text-[#1b1b1b] dark:text-[#C1C0C9]">Califica al chofer</Text>
-                      <View className="h-20- mt-3 mx-1.5 flex-row justify-between items-center">
-                        <View className="w-full flex-row gap-3 items-center- ">
-                          <Image
-                            style={{ width: 65, height: 65 }}
-                            source={require('../../../assets/images/taxi_test.png')}
-                          />
-                          <View className="py-2- gap-1 justify-between- justify-center ">
-                            <View className="flex-row justify-start items-center gap-2 ">
-                              <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-bold text-xl">{confirmedTaxi?.name ?? "Anonymous"}</Text>
-                              <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-bold text-xl">{"-"}</Text>
-                              <View className="flex-row justify-center items-center">
-                                <Text className="text-[#FED141] text-[#1b1b1b]- dark:text-[#C1C0C9]- text-lg">★ </Text>
-                                <Text className="text-[#1b1b1b] dark:text-[#C1C0C9]">4.9</Text>
-                              </View>
-                            </View>
-
-                            <View className='flex-row justify-start items-center mb-3- '>
-                              <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] text-md">{confirmedTaxi?.name ?? "Anonymous"}</Text>
-                              <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-semibold text-lg">{" - "}</Text>
-                              <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-medium text-lg">{confirmedTaxi?.name ?? "Anonymous"}</Text>
-                            </View>
-                          </View>
-                        </View>
-
-                        <View className="flex-row gap-4">
-                          <></>
-                        </View>
-                      </View>
-                      {/* <View className='h-10 flex-row justify-center items-center'>
-                        <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-bold text-2xl">Añadiendo Marcador</Text>
-                      </View>
-                      <Image
-                        className=''
-                        style={{ width: 100, height: 100 }}
-                        source={require('../../../assets/images/taxi_test.png')}
-                      />
-                      <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-bold text-xl">{confirmedTaxi?.name ?? "Anonymous"}</Text>
-                      <View className='flex-row justify-center items-center'>
-                        <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] text-md">{confirmedTaxi?.name ?? "Anonymous"}</Text>
-                        <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-semibold text-lg">{" - "}</Text>
-                        <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-medium text-lg">{confirmedTaxi?.name ?? "Anonymous"}</Text>
-                      </View> */}
-                      <View className='w-full items-center justify-center mt-3'>
-                        <StarRating
-                          rating={rating}
-                          onChange={setRating}
-                        />
-                      </View>
-                      <View
-                        style={{
-                          position: 'relative',
-                          zIndex: 1000,
-                          overflow: 'hidden',
-                          height: 96,
-                          borderRadius: 10,
-                          width: "100%",
-                          marginTop: 24,
-                          alignSelf: "center",
-                        }}
-                      >
-                        <BottomSheetTextInput
-                          style={{
-                            position: 'relative',
-                            zIndex: 1000,
-
-                            padding: 12,
-                            height: '100%',
-                            fontWeight: '400',
-                            borderRadius: 10,
-                            fontSize: 16,
-                            textAlignVertical: 'center',
-                            color: Colors[colorScheme ?? 'light'].text_dark,
-                            backgroundColor: Colors[colorScheme ?? 'light'].background_light1,
-
-                            borderTopRightRadius: 10,
-                            borderBottomRightRadius: 10,
-                          }}
-                          multiline
-                          numberOfLines={4}
-                          placeholderTextColor={colorScheme === 'light' ? 'black' : '#6C6C6C'}
-                          placeholder='Añade un comentario'
-                        />
-                      </View>
-                    </View>
+                  {currentStep === ClientSteps.FINISHED ?
+                    <RideReview finishRideHandler={finishRideHandler} />
                     :
-                    <>
-                      <View className="h-20 flex-row justify-between items-center">
-                        <View className="flex-row gap-3 items-center">
-                          <Image
-                            style={{ width: 50, height: 50 }}
-                            source={require('../../../assets/images/taxi_test.png')}
-                          />
-                          <View className="justify-center">
-                            <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-bold text-xl">{confirmedTaxi?.name ?? "Anonymous"}</Text>
-                            <View className="flex-row items-center">
-                              <Text className="text-[#FED141] text-[#1b1b1b]- dark:text-[#C1C0C9]- text-lg">★ </Text>
-                              <Text className="text-[#1b1b1b] dark:text-[#C1C0C9]">4.9</Text>
-                            </View>
-                          </View>
-                        </View>
-
-                        <View className="flex-row gap-4">
-                          <ScaleBtn>
-                            <View className="bg-[#25D366] p-2 rounded-full">
-                              <FontAwesome6 name="phone" size={25} color="white" />
-                            </View>
-                          </ScaleBtn>
-                          <ScaleBtn>
-                            <View className="bg-[#4252FF] p-2 rounded-full">
-                              <AntDesign name="message1" size={25} color="white" />
-                            </View>
-                          </ScaleBtn>
-                        </View>
-                      </View>
-
-                      <View
-                        className='flex-row items-center bg-[#E9E9E9] dark:bg-[#333333] py-3 px-3 mt-3 rounded-lg overflow-hidden shadow'
-                      >
-                        <ConfortSVG color={Colors[colorScheme ?? "light"].border} />
-                        <View className="flex-row items-center justify-around flex-1 ml-1">
-                          <View className="gap-1">
-                            <Text className="text-lg font-medium text-[#1b1b1b] dark:text-[#C1C0C9] text-center">Distance</Text>
-                            <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] text-xl font-bold">{routeInfo?.distance.text}</Text>
-                          </View>
-                          <View className="gap-1">
-                            <Text className="text-lg font-medium text-[#1b1b1b] dark:text-[#C1C0C9] text-center">Time</Text>
-                            <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] text-xl font-bold">{routeInfo?.duration.text}</Text>
-                          </View>
-                          <View className="gap-1">
-                            <Text className="text-lg font-medium text-[#1b1b1b] dark:text-[#C1C0C9] text-center">Price</Text>
-                            <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] text-xl font-bold">3000 CUP</Text>
-                          </View>
-                        </View>
-                      </View>
-
-                      <View className="relative z-[1000] w-full mt-3 py-1 pr-[2.5%] flex-row items-center-">
-                        <MaterialCommunityIcons className='mt-1' name="map-marker-account" size={32} color={Colors[colorScheme ?? "light"].border} />
-                        <Text className="ml-2 font-bold text-lg text-[#1b1b1b] dark:text-[#C1C0C9] ">{pinedInfo?.origin?.address}</Text>
-                      </View>
-                      <View className="relative z-[999] w-full pr-[2.5%] mb-3 items-end flex-row">
-                        <DashedLine
-                          axis="vertical"
-                          style={{
-                            height: 35,
-                            left: 15,
-                            top: -32,
-                          }}
-                          dashColor={Colors[colorScheme ?? "light"].border}
-                        />
-                        <MaterialCommunityIcons
-                          className="ml-[-1.5px] mb-1"
-                          name="map-marker-radius"
-                          size={32}
-                          color={Colors[colorScheme ?? "light"].border}
-                        />
-                        <Text className="ml-2 font-bold text-lg text-[#1b1b1b] dark:text-[#C1C0C9]">{pinedInfo?.destination?.address}</Text>
-                      </View>
-
-                      <ScaleBtn className="mt-4 w-full gap-3" onPress={cancelRideInnerHandler}>
-                        <View className="h-18 flex-row items-center justify-center bg-[#242E42] rounded-xl p-3">
-                          <Text className="text-white font-bold text-xl">Cancel</Text>
-                        </View>
-                      </ScaleBtn>
-                    </>
+                    <RideFlowInfo routeInfo={routeInfo} pinedInfo={pinedInfo} cancelRideHandler={cancelRideHandler} />
                   }
                 </View>
               )

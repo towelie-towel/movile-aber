@@ -203,7 +203,7 @@ export default function ClientMap() {
         try {
             console.log(`fetching route from ${startLatitude},${startLongitude} to ${destination.latitude},${destination.longitude}`)
             const resp = await fetch(
-                `http://172.20.10.12:6942/route?from=${startLatitude},${startLongitude}&to=${destination.latitude},${destination.longitude}`
+                `http://192.168.1.101:6942/route?from=${startLatitude},${startLongitude}&to=${destination.latitude},${destination.longitude}`
             );
             const respJson = await resp.json();
             const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map(
