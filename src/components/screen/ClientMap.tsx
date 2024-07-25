@@ -295,6 +295,7 @@ export default function ClientMap() {
                     {Platform.OS === 'ios' && <BlurView style={{ position: 'absolute', zIndex: 1000, height: insets.top, width, top: 0 }} tint="light" intensity={20} />}
                     <MapView
                         // showsUserLocation
+                        showsUserLocation={currentStep !== ClientSteps.RIDE}
                         style={{ flex: 1 }}
                         onTouchMove={() => { }}
                         onTouchStart={() => { }}
@@ -314,7 +315,7 @@ export default function ClientMap() {
                         customMapStyle={colorScheme === 'dark' ? NightMap : undefined}
                     >
                         {activeRoute && <Polyline coordinates={activeRoute.coords} strokeWidth={5} strokeColor="#000" />}
-                        {currentStep !== ClientSteps.RIDE && <TaxisMarkers taxiConfirm={taxiConfirm} startRide={startRide} animateToRegion={animateToRegion} onPressTaxi={onPressTaxi} />}
+                        <TaxisMarkers taxiConfirm={taxiConfirm} startRide={startRide} animateToRegion={animateToRegion} onPressTaxi={onPressTaxi} />
                         <UserMarker findingRide={findingRide} completeRide={completeRide} />
 
                         <AnimatedRouteMarker key={2} />

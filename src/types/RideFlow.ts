@@ -1,6 +1,7 @@
 import { LatLng } from 'react-native-maps';
 import { Profile } from '~/types/User';
 
+// TODO: evaluate if an onpickup state is needed between the confirmed and ongoing states
 export type RideStatus = "pending" | "confirmed" | "ongoing" | "calceled" | "completed" | "error"
 export interface DBRide {
     id: number,

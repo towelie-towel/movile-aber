@@ -26,7 +26,7 @@ const TaxisMarkers = ({ onPressTaxi, animateToRegion, taxiConfirm, startRide }: 
   }, [wsTaxis])
   const onTaxisChangeHandler = useCallback(() => {
     if (confirmedTaxi) {
-      if (confirmedTaxi.status === "confirmed") {
+      if (confirmedTaxi.status === "confirmed" || confirmedTaxi.status === "ongoing") {
         animateToRegion({
           latitudeDelta: 0.00922, longitudeDelta: 0.009121,
           latitude: taxis[0].latitude,

@@ -26,7 +26,7 @@ const UserMarker = ({ findingRide = false, completeRide }: UserMarkerProps) => {
         return null
     }
 
-    if (confirmedTaxi?.status === "ongoing") {
+    /* if (confirmedTaxi?.status === "ongoing") {
         return (
             <AnimatedPosHeadingMarker
                 headingAnimated={true}
@@ -38,7 +38,7 @@ const UserMarker = ({ findingRide = false, completeRide }: UserMarkerProps) => {
                 <TaxiSVG isOnRide={!!confirmedTaxi} />
             </AnimatedPosHeadingMarker>
         )
-    }
+    } */
 
     return (
         <AnimatedMarker
@@ -49,7 +49,7 @@ const UserMarker = ({ findingRide = false, completeRide }: UserMarkerProps) => {
             anchor={{ x: 0.5, y: 0.6 }}
             flat
         >
-            <View className='h-10 w-5 border bg-red-500'></View>
+            {/* <View className='h-10 w-5 border bg-red-500'></View> */}
             {
                 findingRide && [...Array(3).keys()].map((index) => (
                     <View key={index} className='flex-1 absolute top-[-13px] left-[-13px]'>
