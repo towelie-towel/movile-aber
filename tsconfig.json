@@ -30,7 +30,8 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "skipDefaultLibCheck": true,
-    "lib": ["ESNext", "DOM", "DOM.Iterable", "ScriptHost"]
+    "lib": ["ESNext", "DOM", "DOM.Iterable", "ScriptHost"],
+    "allowImportingTsExtensions": true
   },
   "include": [
     "src/**/*.ts",

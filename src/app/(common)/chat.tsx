@@ -1,8 +1,8 @@
-import ChatScreen from '~/components/screen/Chat';
+import GiftedChatScreen from '~/components/screen/GiftedChat';
 
 const Chat = () => {
     return (
-        <ChatScreen />
+        <GiftedChatScreen />
     );
 };
 

@@ -610,7 +610,7 @@ export const BottomSheetContent = ({
         (
           <View className="w-[95%] h-full self-center overflow-visible">
 
-            {currentStep >= ClientSteps.PICKUP ?
+            {currentStep >= ClientSteps.PICKUP || true ?
               (
                 <View className="mt-3 h-full self-center">
                   {currentStep === ClientSteps.FINISHED ?

@@ -68,21 +68,21 @@ const RideFlowInfo: React.FC<IRideFlowInfo> = ({ routeInfo, pinedInfo, cancelRid
                 <ConfortSVG color={Colors[colorScheme ?? "light"].border} />
                 <View className="flex-row items-center justify-around flex-1 ml-1">
                     <View className="gap-1">
-                        <Text className="text-lg font-medium text-[#1b1b1b] dark:text-[#C1C0C9] text-center">Distance</Text>
-                        <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] text-xl font-bold">{routeInfo?.distance.text}</Text>
+                        <Text className="text-lg font-medium text-center text-[#1b1b1b] dark:text-[#C1C0C9]">Distance</Text>
+                        <Text className="text-xl font-bold text-[#1b1b1b] dark:text-[#C1C0C9]">{routeInfo?.distance.text ?? "3.5km"}</Text>
                     </View>
                     <View className="gap-1">
-                        <Text className="text-lg font-medium text-[#1b1b1b] dark:text-[#C1C0C9] text-center">Time</Text>
-                        <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] text-xl font-bold">{routeInfo?.duration.text}</Text>
+                        <Text className="text-lg font-medium text-center text-[#1b1b1b] dark:text-[#C1C0C9]">Time</Text>
+                        <Text className="text-xl font-bold text-[#1b1b1b] dark:text-[#C1C0C9]">{routeInfo?.duration.text ?? "20min"}</Text>
                     </View>
                     <View className="gap-1">
-                        <Text className="text-lg font-medium text-[#1b1b1b] dark:text-[#C1C0C9] text-center">Price</Text>
-                        <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] text-xl font-bold">3000 CUP</Text>
+                        <Text className="text-lg font-medium text-center text-[#1b1b1b] dark:text-[#C1C0C9]">Price</Text>
+                        <Text className="text-xl font-bold text-[#1b1b1b] dark:text-[#C1C0C9]">3000 CUP</Text>
                     </View>
                 </View>
             </View>
 
-            <View className="relative z-[1000] w-full mt-3 py-1 pr-[2.5%] flex-row items-center-">
+            <View className="relative z-[1000] w-full mt-4 py-1 pr-[2.5%] flex-row items-center-">
                 <MaterialCommunityIcons className='mt-1' name="map-marker-account" size={32} color={Colors[colorScheme ?? "light"].border} />
                 <Text className="ml-2 font-bold text-lg text-[#1b1b1b] dark:text-[#C1C0C9] ">{pinedInfo?.origin?.address}</Text>
             </View>
