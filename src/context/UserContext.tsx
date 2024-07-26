@@ -31,6 +31,7 @@ type Action =
   | { type: 'GET_SESSION_ERROR', payload: Error }
   | { type: 'GET_PROFILE_ERROR', payload: Error }
   | { type: 'GET_SESSION_SUCCESS', payload: Session }
+  | { type: 'SET_INITIAL_SESSION_SUCCESS', payload: { session: Session, profile: Profile } }
   | { type: 'GET_PROFILE_SUCCESS', payload: Profile }
   | { type: 'GET_USER_SUCCESS', payload: User }
   | { type: 'UPDATE_PROFILE_SUCCESS', payload: Profile }
@@ -53,6 +54,22 @@ function reducer(state: State, action: Action): State {
       return {
         ...state,
         session: action.payload,
+        isSignedIn: true,
+        isError: false,
+        error: null
+      };
+    case 'SET_INITIAL_SESSION_SUCCESS':
+      return {
+        ...state,
+        profile: {
+          ...state.profile,
+          id: action.payload.profile.id,
+          phone: action.payload.profile.phone,
+          username: action.payload.profile.username,
+          slug: action.payload.profile.slug,
+          role: action.payload.profile.role,
+        },
+        session: action.payload.session,
         isSignedIn: true,
         isError: false,
         error: null
@@ -160,8 +177,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       if (error instanceof Error) {
         dispatch({ type: 'GET_SESSION_ERROR', payload: error });
       }
-    } finally {
-      dispatch({ type: 'SET_IS_INITIALIZED' });
     }
   }, [dispatch]);
 
@@ -188,6 +203,31 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       dispatch({ type: 'SET_IS_INITIALIZED' });
     }
   }, [state.session, dispatch]);
+
+  const getInitialSession = useCallback(async (currentSession: Session) => {
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select<any, Profile>()
+        .eq("id", currentSession.user.id);
+      if (error) {
+        dispatch({ type: 'GET_PROFILE_ERROR', payload: { ...error, name: "Get Profile Error" } });
+      } else if (data === null || data.length === 0) {
+        dispatch({ type: 'GET_PROFILE_ERROR', payload: new Error('Profile not found') });
+      } else {
+        if (AUTH_LOGS) console.log("setInitialSession success", JSON.stringify(data[0], null, 2))
+        dispatch({ type: 'SET_INITIAL_SESSION_SUCCESS', payload: { session: currentSession, profile: data[0] } });
+      }
+
+    } catch (error) {
+      console.error(error);
+      if (error instanceof Error) {
+        dispatch({ type: 'GET_SESSION_ERROR', payload: error });
+      }
+    } finally {
+      dispatch({ type: 'SET_IS_INITIALIZED' });
+    }
+  }, [dispatch, getProfile]);
 
   const signOut = useCallback(async () => {
     try {
@@ -299,8 +339,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   }, [isConnected]);
 
   useEffect(() => {
-    if (AUTH_LOGS)
-      console.log('UserContext.tsx -> useEffect []');
+    if (AUTH_LOGS) console.log('UserContext.tsx -> useEffect []');
     getData('user_markers').then((data) => {
       dispatch({ type: 'SET_USER_MARKERS', payload: data ?? [] });
     });
@@ -309,8 +348,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       if (AUTH_LOGS) console.log('AuthState Changed: ' + _event);
 
       if (currentSession?.user) {
-        getProfile(currentSession.user.id);
-        dispatch({ type: 'GET_SESSION_SUCCESS', payload: currentSession });
+        getInitialSession(currentSession)
       } else {
         dispatch({ type: 'SET_SESSION', payload: null });
       }

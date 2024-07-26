@@ -1,5 +1,6 @@
 import { View, Text, useColorScheme } from 'react-native';
-import React from 'react';
+import React, { useCallback } from 'react';
+import { useRouter } from 'expo-router';
 import { Image } from 'expo-image';
 import { MaterialCommunityIcons, FontAwesome6, AntDesign } from '@expo/vector-icons';
 
@@ -18,12 +19,17 @@ interface IRideFlowInfo {
         origin: { latitude: number, longitude: number, address: string } | null,
         destination: { latitude: number, longitude: number, address: string } | null,
     } | null,
-    cancelRideHandler: () => void,
+    cancelRide: () => void,
 }
 
-const RideFlowInfo: React.FC<IRideFlowInfo> = ({ routeInfo, pinedInfo, cancelRideHandler }) => {
+const RideFlowInfo: React.FC<IRideFlowInfo> = ({ routeInfo, pinedInfo, cancelRide }) => {
     const colorScheme = useColorScheme();
+    const router = useRouter();
     const { confirmedTaxi } = useWSState()
+
+    const cancelRideHandler = useCallback(() => {
+        cancelRide()
+    }, [cancelRide])
 
     return (
         <>
@@ -48,7 +54,7 @@ const RideFlowInfo: React.FC<IRideFlowInfo> = ({ routeInfo, pinedInfo, cancelRid
                             <FontAwesome6 name="phone" size={25} color="white" />
                         </View>
                     </ScaleBtn>
-                    <ScaleBtn>
+                    <ScaleBtn onPress={() => router.push('chat')}>
                         <View className="bg-[#4252FF] p-2 rounded-full">
                             <AntDesign name="message1" size={25} color="white" />
                         </View>

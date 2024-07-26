@@ -328,7 +328,7 @@ export const BottomSheetContent = ({
       setPiningMarker(null)
     }
   }, [getMiddlePoint, endPiningLocation, piningInput, pinedInfo, piningMarker, originInputViewRef, destinationInputViewRef]);
-  const cancelRideHandler = useCallback(() => {
+  const cancelRide = useCallback(() => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     // setPinedInfo({
     //   origin: pinedInfo?.origin ?? null,
@@ -342,7 +342,7 @@ export const BottomSheetContent = ({
     // setSelectedTaxiType(null)
     // collapse();
   }, [cancelTaxi]);
-  const finishRideHandler = useCallback(() => {
+  const finishRide = useCallback(() => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setPiningInput(null)
     setRideInfo(null)
@@ -614,9 +614,9 @@ export const BottomSheetContent = ({
               (
                 <View className="mt-3 h-full self-center">
                   {currentStep === ClientSteps.FINISHED ?
-                    <RideReview finishRideHandler={finishRideHandler} />
+                    <RideReview finishRide={finishRide} />
                     :
-                    <RideFlowInfo routeInfo={routeInfo} pinedInfo={pinedInfo} cancelRideHandler={cancelRideHandler} />
+                    <RideFlowInfo routeInfo={routeInfo} pinedInfo={pinedInfo} cancelRide={cancelRide} />
                   }
                 </View>
               )

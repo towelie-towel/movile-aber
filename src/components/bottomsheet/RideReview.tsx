@@ -1,5 +1,5 @@
 import { View, Text, useColorScheme } from 'react-native';
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Image } from 'expo-image';
 import StarRating from 'react-native-star-rating-widget';
 import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
@@ -9,13 +9,17 @@ import { ScaleBtn } from '~/components/common';
 import Colors from '~/constants/Colors';
 
 interface IRideFlowInfo {
-    finishRideHandler: () => void,
+    finishRide: () => void,
 }
 
-const RideReview: React.FC<IRideFlowInfo> = ({ finishRideHandler }) => {
+const RideReview: React.FC<IRideFlowInfo> = ({ finishRide }) => {
     const colorScheme = useColorScheme();
     const { confirmedTaxi } = useWSState()
     const [rating, setRating] = useState(0);
+
+    const finishRideHandler = useCallback(() => {
+        finishRide()
+    }, [finishRide])
 
     return (
         <View className='w-full- mx-1.5- justify-center items-center-'>
