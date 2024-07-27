@@ -32,7 +32,7 @@ const RideFlowInfo: React.FC<IRideFlowInfo> = ({ routeInfo, pinedInfo, cancelRid
     }, [cancelRide])
 
     return (
-        <>
+        <View className='w-full'>
             <View className="h-20 flex-row justify-between items-center">
                 <View className="flex-row gap-3 items-center">
                     <Image
@@ -110,7 +110,7 @@ const RideFlowInfo: React.FC<IRideFlowInfo> = ({ routeInfo, pinedInfo, cancelRid
                     <Text className="text-white font-bold text-xl">Cancel</Text>
                 </View>
             </ScaleBtn>
-        </>
+        </View>
     );
 };
 

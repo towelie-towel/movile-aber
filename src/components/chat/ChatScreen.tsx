@@ -31,104 +31,23 @@ import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import ImageView from 'react-native-image-viewing';
 import NetInfo from '@react-native-community/netinfo';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { filter, isEmpty, isNull, reverse, sortBy } from 'lodash';
+// import { filter, isEmpty, isNull, reverse, sortBy } from 'lodash';
 
 import { useUser } from '~/context/UserContext';
 import MoonInputToolbar from '~/components/chat/InputToolbar';
 import BaseView from '~/components/chat/BaseView';
 import Colors from '~/constants/Colors';
-import { generateUniqueId } from '~/utils';
-
-interface ChatTitleProps {
-    firstName: string;
-    lastName: string;
-    avatar: string;
-    myStatus: string;
-    userStatus: string;
-    userTime: Date;
-}
-
-const ChatTitle = ({
-    firstName,
-    lastName,
-    avatar,
-    myStatus,
-    userStatus,
-    userTime,
-}: ChatTitleProps) => {
-    const colorScheme = useColorScheme();
-
-    return (
-        <Pressable
-            style={{
-                flex: 1,
-                flexDirection: 'row',
-                marginLeft: -10 - 0.1 * -10,
-            }}>
-            <Image
-                style={{ width: 42.5, height: 42.5 }}
-                source={require('../../../assets/images/taxi_test.png')}
-            />
-            <View style={{ flexDirection: 'column', marginLeft: 5 - 0.1 * 5 }}>
-                <Text
-                    adjustsFontSizeToFit
-                    numberOfLines={1}
-                    style={{
-                        fontSize: 17,
-                        color: Colors[colorScheme ?? "light"].text_dark,
-                        opacity: 0.9,
-                    }}>
-                    {`${firstName}${' '}${lastName}`}
-                </Text>
-                <Text
-                    adjustsFontSizeToFit
-                    numberOfLines={1}
-                    style={{
-                        fontSize: 15,
-
-                        color: Colors[colorScheme ?? "light"].text_dark,
-                        opacity: 0.4,
-                    }}
-                >
-                    last seen recently
-                </Text>
-                {/* <Text
-                    adjustsFontSizeToFit
-                    numberOfLines={1}
-                    style={{
-                        fontSize: fontValue(15),
-                        
-                        color: Colors[colorScheme ?? "light"].text_dark,
-                        opacity: 0.4,
-                    }}>
-                    {
-                        // ${userTime.getFullYear()} ${userTime.getFullYear()} ${userTime.getDay()}
-                        myStatus === 'recently'
-                            ? 'last seen recently'
-                            : myStatus === 'normal' && userStatus === 'recently'
-                                ? 'last seen recently'
-                                : myStatus === 'normal' && userStatus === 'normal'
-                                    ? firestore?.Timestamp?.fromDate(new Date())?.toDate().getTime() -
-                                        userTime >
-                                        86400000
-                                        ? `last seen on ${moment(userTime)?.format('YYYY MMMM DD')}`
-                                        : firestore?.Timestamp?.fromDate(new Date())?.toDate().getTime() -
-                                            userTime <
-                                            180000
-                                            ? 'Active now'
-                                            : `last seen on ${moment(userTime)?.format('HH:MM A')}`
-                                    : 'long time ago'
-                    }
-                </Text> */}
-            </View>
-        </Pressable>
-    );
-};
+import { generateUniqueId, getFirstName, getLastName } from '~/utils';
+import { ScaleBtn } from '~/components/common';
+import Animated from 'react-native-reanimated';
+import ChatTitle from '~/components/chat/ChatTitle';
 
 const ChatScreen = () => {
     /* V A R I A B L E S */
     const colorScheme = useColorScheme();
+    const insets = useSafeAreaInsets();
     const { width, height } = useWindowDimensions()
     const router = useRouter();
     const { profile } = useUser()
@@ -136,60 +55,26 @@ const ChatScreen = () => {
     const stackRoute = useRoute();
     const destinedUser = useMemo(() => stackRoute?.params?.item, []); */
 
+    const [camStatus, requestCamPermission] = ImagePicker.useCameraPermissions();
+    const [mediaStatus, requestMediaPermission] = ImagePicker.useMediaLibraryPermissions();
+
     const [statusBarColor, setStatusBarColor] = React.useState('light');
     const [isTyping, setIsTyping] = React.useState<boolean>();
     const [imageViewVisible, setImageViewVisible] = React.useState(false);
-    /**
-     * "User" Credentials, we use those variables to get his data from firebase, then implement it in our App!
-     */
-    const [userFirstName, setUserFirstName] = React.useState('');
-    const [userLastName, setUserLastName] = React.useState('');
-    const [userAvatar, setUserAvatar] = React.useState('');
-    const [userActiveStatus, setUserActiveStatus] = React.useState('');
-    const [userActiveTime, setUserActiveTime] = React.useState('');
-    const [userPlayerID, setUserPlayerID] = React.useState();
-
-    /**
-     * "Me" Credentials, same as "User" Credentials above, this is the data of the currently logged-in User.
-     */
-
-    /* const [Me, setMe] = React.useState([]); */
-
-    /* useEffect(() => {
-        try {
-            const meFromStorage = StorageInstance?.getString('Me');
-            if (meFromStorage) {
-                const meObject = JSON?.parse(meFromStorage);
-                if (Array.isArray(meObject)) {
-                    setMe(meObject);
-                } else {
-                    if (__DEV__) {
-                        console.error("Parsed 'Me' is not an array.");
-                    }
-                    setMe([]);
-                }
-            } else {
-                if (__DEV__) {
-                    console.error("'Me' is not set in UserDataMMKV.");
-                }
-                setMe([]);
-            }
-        } catch (error) {
-            if (__DEV__) {
-                console.error("Error while parsing 'Me' from UserDataMMKV: ", error);
-            }
-            setMe([]);
-        }
-    }, []); */
 
     /**
      * Message Variables
      */
     const [mMessageText, setMessageText] = React.useState('');
-    const [mChatData, setChatData] = React.useState([]);
+    const [mChatData, setChatData] = React.useState<IMessage[]>([]);
     const [isLoading, setLoading] = React.useState(true);
 
-    let _id = generateUniqueId();
+    let _id = profile?.id ?? generateUniqueId();
+    let userName = profile?.username ?? "Anonymous";
+    let userFirstName = profile?.full_name && getFirstName(profile?.full_name);
+    let userLastName = profile?.full_name && getLastName(profile?.full_name);
+    let userAvatar = profile?.avatar_url;
+    let userPlayerID = generateUniqueId();
 
     // const [emojiKeyboardOpened, setEmojiKeyboardOpened] = React.useState(false);
 
@@ -388,7 +273,7 @@ const ChatScreen = () => {
 
     function onLongPress(context: any, message: IMessage) {
         const options =
-            message?.user?._id === profile?.id
+            message?.user?._id === _id
                 ? ['Copy Message', 'Delete For Everyone', 'Delete For Me', 'Cancel']
                 : ['Copy Message', 'Delete For Me', 'Cancel'];
         const cancelButtonIndex = options?.length - 1;
@@ -479,7 +364,11 @@ const ChatScreen = () => {
     }
 
     const sendMessage = useCallback(
-        async (mChatData = [], image: string) => {
+        async (mChatData: IMessage[] = [], image: string | null) => {
+            setChatData(previousMessages =>
+                GiftedChat.append(previousMessages, mChatData),
+            );
+            setMessageText(mMessageText?.trim());
             let connectionStatus = await NetInfo?.fetch();
             if (connectionStatus?.isConnected) {
                 if (!image) {
@@ -488,7 +377,7 @@ const ChatScreen = () => {
                     } else {
                         try {
                             // Send message to user logic goes here.
-                            setMessageText(mMessageText?.trim()); // Message text already trimmed here!
+                            // setMessageText(mMessageText?.trim()); // Message text already trimmed here!
                             /* firestore()
                                 .collection('users')
                                 .doc(auth()?.currentUser?.uid)
@@ -521,9 +410,9 @@ const ChatScreen = () => {
                                         _id: auth()?.currentUser?.uid,
                                     },
                                 }); */
-                            setChatData(previousMessage =>
-                                GiftedChat.append(previousMessage, mChatData),
-                            );
+                            // setChatData(previousMessages =>
+                            //     GiftedChat.append(previousMessages, mChatData),
+                            // );
                             // HomeScreen recent chats.
 
                             /* firestore()
@@ -571,6 +460,18 @@ const ChatScreen = () => {
                         }
                     }
                 } else {
+                    setChatData(previousMessage =>
+                        GiftedChat.append(previousMessage, [{
+                            _id: generateUniqueId(),
+                            image: image,
+                            user: {
+                                _id,
+                            },
+                            text: "",
+                            createdAt: new Date()
+                        }]),
+                    );
+
                     /* let pickedImage = `chats/images/${getRandomString(
                         18,
                     )}.${image?.substring(image?.lastIndexOf('.') + 1, 3)}`;
@@ -714,6 +615,12 @@ const ChatScreen = () => {
 
     const mAttachPressCallback = async () => {
         try {
+            await requestMediaPermission()
+
+            if (!mediaStatus?.granted) {
+                return;
+            }
+
             let result = await ImagePicker.launchImageLibraryAsync({
                 mediaTypes: ImagePicker.MediaTypeOptions.Images,
                 allowsEditing: true,
@@ -736,7 +643,7 @@ const ChatScreen = () => {
                         data: {
                             type: 'chat',
                             senderName: `${profile?.username}`,
-                            senderUID: `${profile?.id}`,
+                            senderUID: `${_id}`,
                             senderPhoto: `${profile?.avatar_url}`,
                             receiverName: `${userFirstName} ${userLastName}`,
                             receiverUID: `${"undefined"}`,
@@ -803,6 +710,12 @@ const ChatScreen = () => {
 
     const mCameraPressCallback = async () => {
         try {
+            await requestCamPermission()
+
+            if (!camStatus?.granted) {
+                return;
+            }
+
             let result = await ImagePicker.launchCameraAsync({
                 mediaTypes: ImagePicker.MediaTypeOptions.Images,
                 allowsEditing: true,
@@ -813,7 +726,7 @@ const ChatScreen = () => {
             const image = result?.assets && result?.assets[0];
 
             if (image)
-                sendMessage([], image?.uri).finally(() => {
+                sendMessage([], image.uri).finally(() => {
                     updateMySentStatus();
                     updateUserMessageSentStatus();
                     updateMyLastChatsRead();
@@ -825,7 +738,7 @@ const ChatScreen = () => {
                         data: {
                             type: 'chat',
                             senderName: `${profile?.username}`,
-                            senderUID: `${profile?.id}`,
+                            senderUID: `${_id}`,
                             senderPhoto: `${profile?.avatar_url}`,
                             receiverName: `${userFirstName} ${userLastName}`,
                             receiverUID: `${"undefined"}`,
@@ -1084,14 +997,25 @@ const ChatScreen = () => {
     ]); */
 
     return (
-        <>
-            {/* <StatusBar
-                backgroundColor={
-                    statusBarColor === 'dark' ? "black" : "white"
-                }
-                animated={true}
-                barStyle={statusBarColor === 'dark' ? 'light-content' : 'dark-content'}
-            /> */}
+        <View style={{ paddingBottom: insets.bottom + 48 }} className="flex-1 bg-[#F8F8F8] dark:bg-[#1b1b1b]">
+            <View className="w-[90%] self-center mt-5 h-20- flex-row justify-between items-center">
+                <View className="flex-row gap-3 items-center">
+                    <Image
+                        style={{ width: 50, height: 50 }}
+                        source={require('../../../assets/images/taxi_test.png')}
+                    />
+                    <View className="justify-center">
+                        <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-bold text-xl">{"Anonymous"}</Text>
+                        <View className="flex-row items-center">
+                            <Text className="text-[#1b1b1b] dark:text-[#C1C0C9]">last seen recently</Text>
+                        </View>
+                    </View>
+                </View>
+
+                <ScaleBtn onPress={() => router.back()}>
+                    <MaterialCommunityIcons name="close" size={28} color={Colors[colorScheme ?? "light"].border} />
+                </ScaleBtn>
+            </View>
             <BaseView>
                 <GiftedChat
                     isLoadingEarlier={isLoading}
@@ -1112,42 +1036,10 @@ const ChatScreen = () => {
                     )}
                     showAvatarForEveryMessage={false}
                     showUserAvatar={false}
-                    messages={[
-                        {
-                            _id: 1,
-                            text: 'Hello developer',
-                            createdAt: new Date(),
-                            user: {
-                                _id: 1,
-                                name: 'React Native',
-                                avatar: require('../../../assets/images/taxi_test.png'),
-                            },
-                        },
-                        {
-                            _id: 2,
-                            text: 'Hello developer',
-                            createdAt: new Date(),
-                            user: {
-                                _id: 2,
-                                name: 'React Native',
-                                avatar: require('../../../assets/images/taxi_test.png'),
-                            },
-                        },
-                        {
-                            _id: 3,
-                            text: 'Hello developer',
-                            createdAt: new Date(),
-                            user: {
-                                _id: profile?.id?.toString() ?? 3,
-                                name: 'React Native',
-                                avatar: require('../../../assets/images/taxi_test.png'),
-                            },
-                        },
-                    ]}
-                    // messages={mChatData}
+                    messages={mChatData}
                     onLongPress={onLongPress}
                     /* renderTicks={(message: any) => {
-                        if (message?.user?._id === profile?.id) {
+                        if (message?.user?._id === _id) {
                             return (
                                 <MaterialCommunityIcons
                                     name={message?.seen ? 'check-all' : 'check'}
@@ -1162,14 +1054,6 @@ const ChatScreen = () => {
                             return null
                         }
                     }} */
-                    lightboxProps={{
-                        onOpen: () => {
-                            setStatusBarColor('dark');
-                        },
-                        onClose: () => {
-                            setStatusBarColor('light');
-                        },
-                    }}
                     renderMessageImage={props => {
                         return (
                             <MessageImage
@@ -1191,7 +1075,7 @@ const ChatScreen = () => {
                                 {...props}
                                 textStyle={{
                                     left: [props?.textStyle?.left, {
-                                        color: Colors[colorScheme ?? "light"].text_dark,
+                                        color: Colors[colorScheme ?? "light"].text_light,
                                         textAlign: 'right',
                                     }],
                                     right: [props?.textStyle?.right, {
@@ -1202,32 +1086,112 @@ const ChatScreen = () => {
                             />
                         );
                     }}
+                    timeTextStyle={{
+                        left: {
+                            color: Colors[colorScheme ?? 'light'].text_dark
+                        },
+                        right: {
+                            color: Colors[colorScheme ?? 'light'].text_dark
+                        },
+                    }}
                     renderBubble={props => {
                         return (
                             <Bubble
                                 {...props}
+                                textStyle={{
+                                    right: {
+                                        color: Colors[colorScheme ?? 'light'].text_light,
+                                    },
+                                    left: {
+                                        color: Colors[colorScheme ?? 'light'].text_light,
+                                    }
+                                }}
                                 wrapperStyle={{
                                     right: [props?.wrapperStyle?.right, {
-                                        backgroundColor: Colors[colorScheme ?? "light"].text_light1,
+                                        backgroundColor: Colors[colorScheme ?? 'light'].background_light1,
+                                        padding: 2,
                                     }],
                                     left: [props?.wrapperStyle?.left, {
-                                        backgroundColor: Colors[colorScheme ?? "light"].icons,
+                                        backgroundColor: Colors[colorScheme ?? 'light'].background_light1,
+                                        padding: 2,
                                     }],
                                 }}
                             />
                         );
                     }}
                     minInputToolbarHeight={0}
-                    renderInputToolbar={_ => undefined}
+                    renderInputToolbar={_ => (
+                        <MoonInputToolbar
+                            messageGetter={mMessageText}
+                            messageSetter={setMessageText}
+                            attachPressCallback={() => void mAttachPressCallback()}
+                            cameraPressCallback={() => void mCameraPressCallback()}
+                            // emojiGetter={emojiKeyboardOpened}
+                            // emojiSetter={setEmojiKeyboardOpened}
+                            sendMessageCallback={() => {
+                                sendMessage([
+                                    {
+                                        _id: generateUniqueId(),
+                                        text: mMessageText?.trim(),
+                                        createdAt: Date.now(),
+                                        user: {
+                                            _id: _id
+                                        }
+                                    }
+                                ], null).finally(() => {
+                                    updateMySentStatus();
+                                    updateUserMessageSentStatus();
+                                    updateMyLastChatsRead();
+                                    const toSendNotification = {
+                                        contents: {
+                                            en: `${profile?.username}: You have a new message from ${userFirstName} ${userLastName}.`,
+                                        },
+                                        include_player_ids: [userPlayerID],
+                                        data: {
+                                            type: 'chat',
+                                            senderName: `${profile?.username}`,
+                                            senderUID: `${_id}`,
+                                            senderPhoto: `${profile?.avatar_url}`,
+                                            receiverName: `${userFirstName} ${userLastName}`,
+                                            receiverUID: `${"undefined"}`,
+                                            receiverPhoto: `${userAvatar}`,
+                                            messageDelivered: `${mMessageText?.trim()}`,
+                                            messageTime: Date.now(),
+                                        }, // some values ain't unsed, yet, but they will be used soon.
+                                    };
+                                    const stringifiedJSON = JSON.stringify(toSendNotification);
+                                    /* OneSignal.postNotification(
+                                        stringifiedJSON,
+                                        success => {
+                                            if (__DEV__) {
+                                                ToastAndroid.show(
+                                                    'Message notification sent',
+                                                    ToastAndroid.SHORT,
+                                                );
+                                                console.log(success);
+                                            }
+                                        },
+                                        error => {
+                                            if (__DEV__) {
+                                                console.error(error);
+                                            }
+                                        },
+                                    ); */
+                                    setMessageText('');
+                                });
+                            }}
+                            userUID={`${"undefined"}`}
+                        />
+                    )}
                     renderComposer={_ => undefined}
-                    renderSystemMessage={props => {
+                    /* renderSystemMessage={props => {
                         return (
                             <SystemMessage
                                 {...props}
                                 textStyle={props?.textStyle}
                             />
                         );
-                    }}
+                    }} */
                     renderTime={props => {
                         return (
                             <Time
@@ -1272,7 +1236,7 @@ const ChatScreen = () => {
                         setImageViewVisible(true);
                     }}
                     user={{
-                        _id: profile?.id ?? generateUniqueId(),
+                        _id: _id ?? generateUniqueId(),
                         avatar: profile?.avatar_url ?? require('../../../assets/images/taxi_test.png'),
                         name: profile?.username ?? "Anonymous",
                     }}
@@ -1296,59 +1260,8 @@ const ChatScreen = () => {
                     <></>
                 )}
                 {/* <Divider leftInset={false} /> */}
-                <View className='w-[90%] self-center border border-gray-600' />
-                <MoonInputToolbar
-                    messageGetter={mMessageText}
-                    messageSetter={setMessageText}
-                    attachPressCallback={() => void mAttachPressCallback()}
-                    cameraPressCallback={() => void mCameraPressCallback()}
-                    // emojiGetter={emojiKeyboardOpened}
-                    // emojiSetter={setEmojiKeyboardOpened}
-                    sendMessageCallback={() => {
-                        sendMessage([], '').finally(() => {
-                            updateMySentStatus();
-                            updateUserMessageSentStatus();
-                            updateMyLastChatsRead();
-                            const toSendNotification = {
-                                contents: {
-                                    en: `${profile?.username}: You have a new message from ${userFirstName} ${userLastName}.`,
-                                },
-                                include_player_ids: [userPlayerID],
-                                data: {
-                                    type: 'chat',
-                                    senderName: `${profile?.username}`,
-                                    senderUID: `${profile?.id}`,
-                                    senderPhoto: `${profile?.avatar_url}`,
-                                    receiverName: `${userFirstName} ${userLastName}`,
-                                    receiverUID: `${"undefined"}`,
-                                    receiverPhoto: `${userAvatar}`,
-                                    messageDelivered: `${mMessageText?.trim()}`,
-                                    messageTime: Date.now(),
-                                }, // some values ain't unsed, yet, but they will be used soon.
-                            };
-                            const stringifiedJSON = JSON.stringify(toSendNotification);
-                            /* OneSignal.postNotification(
-                                stringifiedJSON,
-                                success => {
-                                    if (__DEV__) {
-                                        ToastAndroid.show(
-                                            'Message notification sent',
-                                            ToastAndroid.SHORT,
-                                        );
-                                        console.log(success);
-                                    }
-                                },
-                                error => {
-                                    if (__DEV__) {
-                                        console.error(error);
-                                    }
-                                },
-                            ); */
-                            setMessageText('');
-                        });
-                    }}
-                    userUID={`${"undefined"}`}
-                />
+                {/* <View className='w-[100%] self-center mb-1 border border-gray-600' /> */}
+
                 {/* {emojiKeyboardOpened ? (
                     <EmojiKeyboard
                         emojiSize={28 - 0.1 * 28}
@@ -1359,6 +1272,7 @@ const ChatScreen = () => {
                 ) : (
                     <></>
                 )} */}
+                <Animated.View></Animated.View>
                 <ImageView
                     images={[userAvatar ? { uri: userAvatar } : require('../../../assets/images/taxi_test.png')]}
                     imageIndex={0}
@@ -1371,7 +1285,7 @@ const ChatScreen = () => {
                     presentationStyle={'fullScreen'}
                 />
             </BaseView>
-        </>
+        </View>
     );
 };
 

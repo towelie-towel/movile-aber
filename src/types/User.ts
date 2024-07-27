@@ -1,6 +1,7 @@
 export type Profile = {
     id?: string | null;
     username?: string | null;
+    full_name?: string | null;
     role?: UserRole;
     email?: string | null;
     phone?: string | null;

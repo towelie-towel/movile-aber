@@ -15,18 +15,16 @@ const BaseView: React.FC<BaseViewProps> = ({ children }) => {
             flex: 1,
             backgroundColor: Colors[colorScheme ?? "light"].background_light,
         }}>
-            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
-                <Pressable
-                    style={{
-                        flex: 1,
-                        backgroundColor: Colors[colorScheme ?? "light"].background_light,
-                    }}
-                    onPress={() => {
-                        Keyboard.dismiss();
-                    }}>
-                    {children}
-                </Pressable>
-            </KeyboardAvoidingView>
+            <Pressable
+                style={{
+                    flex: 1,
+                    backgroundColor: Colors[colorScheme ?? "light"].background_light,
+                }}
+                onPress={() => {
+                    Keyboard.dismiss();
+                }}>
+                {children}
+            </Pressable>
         </SafeAreaView>
     );
 };

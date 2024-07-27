@@ -66,6 +66,7 @@ function reducer(state: State, action: Action): State {
           id: action.payload.profile.id,
           phone: action.payload.profile.phone,
           username: action.payload.profile.username,
+          full_name: action.payload.profile.full_name,
           slug: action.payload.profile.slug,
           role: action.payload.profile.role,
         },
@@ -82,6 +83,7 @@ function reducer(state: State, action: Action): State {
           id: action.payload.id,
           phone: action.payload.phone,
           username: action.payload.username,
+          full_name: action.payload.full_name,
           slug: action.payload.slug,
           role: action.payload.role,
         },
@@ -112,6 +114,7 @@ type UserContext = {
   signOut: () => Promise<void>;
   updateUser: (params: {
     username?: string;
+    full_name?: string;
     slug?: string;
     avatar_url?: string;
     email?: string;
@@ -251,11 +254,13 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   const updateUser = useCallback(async ({
     username,
+    full_name,
     slug,
     avatar_url,
     email,
   }: {
     username?: string;
+    full_name?: string;
     slug?: string;
     avatar_url?: string;
     email?: string;
@@ -265,6 +270,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         .from('profiles')
         .update({
           username,
+          full_name,
           slug,
           avatar_url,
           email,
@@ -280,6 +286,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
           type: 'UPDATE_PROFILE_SUCCESS', payload: {
             ...state.profile,
             username: username ?? state.profile?.username,
+            full_name: full_name ?? state.profile?.full_name,
             slug: slug ?? state.profile?.slug,
             avatar_url: avatar_url ?? state.profile?.avatar_url,
             email: email ?? state.profile?.email,
