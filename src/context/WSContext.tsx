@@ -11,7 +11,8 @@ import { calculateDistance, calculateBearing, duplicateCoords } from '~/utils/di
 import type { TaxiProfile } from '~/types/Taxi';
 import type { PlaceInfo } from '~/types/Places';
 import type { RideInfo, RideStatus } from '~/types/RideFlow';
-import type { UserRole } from '~/types/User';
+import type { Profile } from '~/types/User';
+import type { ChatMessage } from '~/types/Chat';
 
 const storedlastLocation = createJSONStorage<PlaceMarkerIconType[]>(() => AsyncStorage)
 export const lastLocationAtom = atomWithStorage<PlaceMarkerIconType[]>('last_location', [], storedlastLocation)
@@ -34,7 +35,6 @@ interface WSStateContext {
     confirmedTaxi: TaxiProfile & { status: RideStatus } | null;
     position: ExpoLocation.LocationObject | undefined;
     heading: ExpoLocation.LocationHeadingObject | undefined;
-    userType: UserRole | undefined;
 }
 interface WSActionsContext {
     // openWSConnection: () => Promise<void>;
@@ -52,7 +52,6 @@ const stateInitialValue: WSStateContext = {
     confirmedTaxi: null,
     position: undefined,
     heading: undefined,
-    userType: undefined,
 };
 const stateActionslValue: WSActionsContext = {
     /* openWSConnection: async () => {
@@ -104,24 +103,17 @@ const requestPermissions = async () => {
     }
 };
 
-export const WSProvider = ({ children, userType }: { children: React.ReactNode, userType: UserRole }) => {
+export const WSProvider = ({ children, userProfile }: { children: React.ReactNode, userProfile: Profile | null }) => {
     const { isConnected } = NetInfo.useNetInfo();
     const [wsTaxis, setWsTaxis] = useState<WSTaxi[]>([]);
     const [heading, setHeading] = useState<ExpoLocation.LocationHeadingObject>();
     const [position, setPosition] = useState<ExpoLocation.LocationObject>();
     const [confirmedTaxi, setConfirmedTaxi] = useState<TaxiProfile & { status: RideStatus } | null>(null);
 
-    const [currentUserType, setCurrentUserType] = useState(userType);
-
     const ws = useRef<WebSocket | null>(null);
     const positionSubscription = useRef<ExpoLocation.LocationSubscription | null>();
     const headingSubscription = useRef<ExpoLocation.LocationSubscription | null>();
     const simulationSubscription = useRef<NodeJS.Timeout | null>();
-
-
-    useEffect(() => {
-        setCurrentUserType(userType);
-    }, [userType]);
 
     const sendStringToServer = useCallback((message: string) => {
         if (ws.current?.readyState === WebSocket.OPEN) {
@@ -219,6 +211,9 @@ export const WSProvider = ({ children, userType }: { children: React.ReactNode, 
             } else {
                 console.error("Ride completed with invalid status")
             }
+        } else if (message.startsWith("sentfrom-")) {
+            const chatMsgJSON = message.replace('sentfrom-', '');
+            const chatMsg = JSON.parse(chatMsgJSON) as ChatMessage;
         }
 
     }, []);
@@ -228,7 +223,7 @@ export const WSProvider = ({ children, userType }: { children: React.ReactNode, 
 
         if (WS_LOGS) console.log('new Web Socket initializing', protocol);
         const suckItToMeBBy = new WebSocket(
-            `ws://192.168.1.101:6942/subscribe?id=e117adcb-f429-42f7-95d9-07f1c92a1c8b&lat=51.5073509&lon=-0.1277581999999997&head=51`,
+            `ws://172.20.10.12:6942/subscribe?id=e117adcb-f429-42f7-95d9-07f1c92a1c8b&lat=51.5073509&lon=-0.1277581999999997&head=51`,
             protocol
         );
 
@@ -400,7 +395,7 @@ export const WSProvider = ({ children, userType }: { children: React.ReactNode, 
     }), [sendStringToServer, findTaxi, cancelTaxi]);
 
     return (
-        <WSStateContext.Provider value={{ ws: ws.current, wsTaxis, heading, position, confirmedTaxi, userType: currentUserType }}>
+        <WSStateContext.Provider value={{ ws: ws.current, wsTaxis, heading, position, confirmedTaxi }}>
             <WSActionsContext.Provider value={actions}>
                 {children}
             </WSActionsContext.Provider>
@@ -546,7 +541,7 @@ export const WSProvider = ({ children, userType }: { children: React.ReactNode, 
 
         if (WS_LOGS) console.log('new Web Socket initializing', protocol);
         const suckItToMeBBy = new WebSocket(
-            `ws://192.168.1.101:6942/subscribe?id=e117adcb-f429-42f7-95d9-07f1c92a1c8b&lat=51.5073509&lon=-0.1277581999999997&head=51`,
+            `ws://172.20.10.12:6942/subscribe?id=e117adcb-f429-42f7-95d9-07f1c92a1c8b&lat=51.5073509&lon=-0.1277581999999997&head=51`,
             protocol
         );
 

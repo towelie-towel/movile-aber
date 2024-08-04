@@ -86,7 +86,7 @@ const WSWrapper = ({ children, setIsUserInitialized, setIsUserSigned, setUserRol
   }, [isInitializing])
 
   return (
-    <WSProvider userType={profile?.role ?? "client"}>
+    <WSProvider userProfile={profile}>
       {children}
     </WSProvider>
   )
