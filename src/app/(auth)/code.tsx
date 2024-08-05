@@ -24,7 +24,7 @@ import { View } from '~/components/common/Themed';
 import Colors from '~/constants/Colors';
 import { useUser } from '~/context/UserContext';
 import useKeyboard from '~/hooks/useKeyboard';
-import { supabase } from '~/lib/supabase';
+// import { supabase } from '~/lib/supabase';
 import { isValidPassword, isValidPhone, isValidUsername } from '~/utils/validators';
 
 export default function Code() {
@@ -64,7 +64,7 @@ export default function Code() {
   const verifyOtp = async (otpToken: string) => {
     setIsLoading(true);
     console.log('otpToken', otpToken);
-    const { error, data } = await supabase.auth.verifyOtp({
+    /* const { error, data } = await supabase.auth.verifyOtp({
       phone: '53' + phone,
       token: otpToken,
       type: 'sms',
@@ -77,7 +77,7 @@ export default function Code() {
     console.log('User Signed In', JSON.stringify(data, null, 2));
 
     setIsLoading(false);
-    router.replace('/');
+    router.replace('/'); */
   };
 
   return (

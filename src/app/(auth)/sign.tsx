@@ -22,7 +22,7 @@ import { useToast } from 'react-native-toast-notifications';
 import ScaleBtn from '~/components/common/ScaleBtn';
 import { View } from '~/components/common/Themed';
 import Colors from '~/constants/Colors';
-import { supabase } from '~/lib/supabase';
+// import { supabase } from '~/lib/supabase';
 import { isValidPassword, isValidPhone } from '~/utils/validators';
 
 export default function Sign() {
@@ -177,7 +177,7 @@ const SignInTab = () => {
         return;
       }
 
-      const { error } = await supabase.auth.signInWithPassword({
+      /* const { error } = await supabase.auth.signInWithPassword({
         phone: '+53' + phone.trim(),
         password,
       });
@@ -193,7 +193,7 @@ const SignInTab = () => {
         return;
       }
       setIsLoading(false);
-      router.replace('/');
+      router.replace('/'); */
     } catch (error) {
       console.error(error);
       setIsLoading(false);
@@ -444,7 +444,7 @@ const SignUpTab = () => {
       return;
     }
 
-    const { error, data } = await supabase.auth.signUp({
+    /* const { error, data } = await supabase.auth.signUp({
       phone: '+53' + inputCronemberg.phone.trim(),
       password: inputCronemberg.password,
       options: {
@@ -469,7 +469,7 @@ const SignUpTab = () => {
     router.setParams({
       phone: inputCronemberg.phone.trim(),
     });
-    router.push({ pathname: 'code', params: { phone: inputCronemberg.phone.trim() } });
+    router.push({ pathname: 'code', params: { phone: inputCronemberg.phone.trim() } }); */
   };
 
   return (

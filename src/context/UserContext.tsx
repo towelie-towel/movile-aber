@@ -1,25 +1,19 @@
 import NetInfo from '@react-native-community/netinfo';
-import { User, type Session } from '@supabase/supabase-js';
 import React, { createContext, useCallback, useContext, useEffect, useReducer } from 'react';
 import { atomWithStorage, createJSONStorage, } from 'jotai/utils';
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
-import { supabase } from '~/lib/supabase';
 import { getData } from '~/lib/storage';
 import { UserMarkerIconType } from '~/components/markers/AddUserMarker';
 import { UserRoles } from '~/constants/User';
 import type { Profile } from '~/types/User';
-import type { RideInfo } from '~/types/RideFlow';
 
 const storedUserMarkers = createJSONStorage<UserMarkerIconType[]>(() => AsyncStorage)
 export const userMarkersAtom = atomWithStorage<UserMarkerIconType[]>('user_markers', [], storedUserMarkers)
-const storedRidesHistoryMarkers = createJSONStorage<RideInfo[]>(() => AsyncStorage)
-export const ridesHistoryAtom = atomWithStorage<RideInfo[]>('ride_history', [], storedRidesHistoryMarkers)
 
-const AUTH_LOGS = false;
+const AUTH_LOGS = true;
 
 type State = {
-  session: Session | null;
   profile: Profile | null;
   error: Error | null;
   isError: boolean;
@@ -28,118 +22,65 @@ type State = {
 }
 
 type Action =
-  | { type: 'GET_SESSION_ERROR', payload: Error }
-  | { type: 'GET_PROFILE_ERROR', payload: Error }
-  | { type: 'GET_SESSION_SUCCESS', payload: Session }
-  | { type: 'SET_INITIAL_SESSION_SUCCESS', payload: { session: Session, profile: Profile } }
   | { type: 'GET_PROFILE_SUCCESS', payload: Profile }
-  | { type: 'GET_USER_SUCCESS', payload: User }
+  | { type: 'GET_PROFILE_ERROR', payload: Error }
+  | { type: 'GET_PROFILE_NOT_FOUND', payload: Profile }
   | { type: 'UPDATE_PROFILE_SUCCESS', payload: Profile }
+  // | { type: 'UPDATE_PROFILE_ERROR', payload: Error }
   | { type: 'SIGN_OUT_SUCCESS' }
-  | { type: 'SET_ERROR', payload: Error | null }
-  | { type: 'SET_PROFILE', payload: Profile | null }
-  | { type: 'SET_SESSION', payload: Session | null }
   | { type: 'SET_USER_MARKERS', payload: UserMarkerIconType[] }
-  | { type: 'SET_SIGNED_IN', payload: boolean }
-  | { type: 'SET_IS_ERROR', payload: boolean }
-  | { type: 'SET_IS_INITIALIZED' };
 
 function reducer(state: State, action: Action): State {
   switch (action.type) {
-    case 'GET_PROFILE_ERROR':
-      return { ...state, error: action.payload, isError: true, session: null };
-    case 'GET_SESSION_ERROR':
-      return { ...state, error: action.payload, isError: true, session: null };
-    case 'GET_SESSION_SUCCESS':
-      return {
-        ...state,
-        session: action.payload,
-        isSignedIn: true,
-        isError: false,
-        error: null
-      };
-    case 'SET_INITIAL_SESSION_SUCCESS':
-      return {
-        ...state,
-        profile: {
-          ...state.profile,
-          id: action.payload.profile.id,
-          phone: action.payload.profile.phone,
-          username: action.payload.profile.username,
-          full_name: action.payload.profile.full_name,
-          slug: action.payload.profile.slug,
-          role: action.payload.profile.role,
-        },
-        session: action.payload.session,
-        isSignedIn: true,
-        isError: false,
-        error: null
-      };
     case 'GET_PROFILE_SUCCESS':
       return {
-        ...state,
+        isSignedIn: true,
+        isInitializing: false,
         profile: {
           ...state.profile,
           id: action.payload.id,
           phone: action.payload.phone,
           username: action.payload.username,
           full_name: action.payload.full_name,
-          slug: action.payload.slug,
           role: action.payload.role,
         },
         isError: false,
         error: null
       };
+    case 'GET_PROFILE_ERROR':
+      return { ...state, error: action.payload, isError: true, isSignedIn: false, isInitializing: false };
+    case 'GET_PROFILE_NOT_FOUND':
+      return { ...state, error: new Error("Profile not found"), isError: true, isSignedIn: false, isInitializing: false };
     case 'UPDATE_PROFILE_SUCCESS':
       return { ...state, profile: action.payload, isError: false, error: null };
     case 'SIGN_OUT_SUCCESS':
-      return { session: null, profile: null, isSignedIn: false, error: null, isError: false, isInitializing: false };
-    case 'SET_ERROR':
-      return { ...state, error: action.payload, isError: action.payload !== null };
-    case 'SET_PROFILE':
-      return { ...state, profile: action.payload };
-    case 'SET_SESSION':
-      return { ...state, session: action.payload, isSignedIn: action.payload !== null };
-    case 'SET_SIGNED_IN':
-      return { ...state, isSignedIn: action.payload };
-    case 'SET_IS_INITIALIZED':
-      return { ...state, isInitializing: false };
+      return { profile: null, isSignedIn: false, error: null, isError: false, isInitializing: false };
     default:
       return state;
   }
 }
 
 type UserContext = {
-  getSession: () => Promise<void>;
   signOut: () => Promise<void>;
   updateUser: (params: {
     username?: string;
     full_name?: string;
-    slug?: string;
+    role?: UserRoles;
     avatar_url?: string;
     email?: string;
-    role?: string;
   }) => Promise<void>;
-  toggleUserRole: () => Promise<void>;
 } & State
 
 const initialValue: UserContext = {
-  session: null,
   profile: null,
   error: null,
   isError: false,
   isSignedIn: false,
   isInitializing: true,
-  getSession: async () => {
-    throw new Error('Function not initizaliced yet');
-  },
   signOut: async () => {
     throw new Error('Function not initizaliced yet');
   },
   updateUser: async () => {
-    throw new Error('Function not initizaliced yet');
-  },
-  toggleUserRole: async () => {
     throw new Error('Function not initizaliced yet');
   },
 };
@@ -152,7 +93,6 @@ export const useUser = () => {
 
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [state, dispatch] = useReducer(reducer, {
-    session: null,
     error: null,
     profile: null,
     isSignedIn: false,
@@ -161,188 +101,81 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   });
   const { isConnected } = NetInfo.useNetInfo();
 
-  const getSession = useCallback(async () => {
+  const getProfile = useCallback(async (id: string) => {
     try {
-      const {
-        data: { session: currentSession },
-        error,
-      } = await supabase.auth.getSession();
-      if (error) {
-        dispatch({ type: 'GET_SESSION_ERROR', payload: error });
-      } else if (currentSession === null) {
-        dispatch({ type: 'GET_SESSION_ERROR', payload: new Error('Session is null') });
-      } else {
-        if (AUTH_LOGS) console.log("getSession success", JSON.stringify(currentSession, null, 2))
-        dispatch({ type: 'GET_SESSION_SUCCESS', payload: currentSession });
-      }
-    } catch (error) {
-      console.error(error);
-      if (error instanceof Error) {
-        dispatch({ type: 'GET_SESSION_ERROR', payload: error });
-      }
-    }
-  }, [dispatch]);
+      const resp = await fetch(
+        `http://172.20.10.12:6942/profile?id=${id}`
+      );
+      const respJson = await resp.json();
 
-  const getProfile = useCallback(async (id?: string) => {
-    try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select<any, Profile>()
-        .eq("id", id ?? state.session?.user.id);
-      if (error) {
-        dispatch({ type: 'GET_PROFILE_ERROR', payload: { ...error, name: "Get Profile Error" } });
-      } else if (data === null || data.length === 0) {
+      if (AUTH_LOGS) console.log(JSON.stringify(respJson, null, 2))
+
+      if (!respJson) {
         dispatch({ type: 'GET_PROFILE_ERROR', payload: new Error('Profile not found') });
       } else {
-        if (AUTH_LOGS) console.log("getProfile success", JSON.stringify(data[0], null, 2))
-        dispatch({ type: 'GET_PROFILE_SUCCESS', payload: data[0] });
+        if (AUTH_LOGS) console.log("getProfile success", JSON.stringify(respJson, null, 2))
+        dispatch({ type: 'GET_PROFILE_SUCCESS', payload: respJson });
       }
     } catch (error) {
       console.error(error);
       if (error instanceof Error) {
         dispatch({ type: 'GET_PROFILE_ERROR', payload: error });
       }
-    } finally {
-      dispatch({ type: 'SET_IS_INITIALIZED' });
     }
-  }, [state.session, dispatch]);
-
-  const getInitialSession = useCallback(async (currentSession: Session) => {
-    try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select<any, Profile>()
-        .eq("id", currentSession.user.id);
-      if (error) {
-        dispatch({ type: 'GET_PROFILE_ERROR', payload: { ...error, name: "Get Profile Error" } });
-      } else if (data === null || data.length === 0) {
-        dispatch({ type: 'GET_PROFILE_ERROR', payload: new Error('Profile not found') });
-      } else {
-        if (AUTH_LOGS) console.log("setInitialSession success", JSON.stringify(data[0], null, 2))
-        dispatch({ type: 'SET_INITIAL_SESSION_SUCCESS', payload: { session: currentSession, profile: data[0] } });
-      }
-
-    } catch (error) {
-      console.error(error);
-      if (error instanceof Error) {
-        dispatch({ type: 'GET_SESSION_ERROR', payload: error });
-      }
-    } finally {
-      dispatch({ type: 'SET_IS_INITIALIZED' });
-    }
-  }, [dispatch, getProfile]);
+  }, []);
 
   const signOut = useCallback(async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error(error);
-        // Case intern error
-        dispatch({ type: 'SET_ERROR', payload: error });
-      } else {
-        // Case Succes
-        if (AUTH_LOGS) console.log('signed out succesful');
-        dispatch({ type: 'SIGN_OUT_SUCCESS' });
-      }
+      // sign out
+
     } catch (error) {
       console.error(error);
-      if (error instanceof Error) {
-        dispatch({ type: 'SET_ERROR', payload: error });
-      }
     }
-  }, [dispatch]);
+  }, []);
 
   const updateUser = useCallback(async ({
     username,
     full_name,
-    slug,
+    role,
     avatar_url,
     email,
   }: {
     username?: string;
     full_name?: string;
-    slug?: string;
+    role?: UserRoles;
     avatar_url?: string;
     email?: string;
   }) => {
     try {
-      const { error, data } = await supabase
-        .from('profiles')
-        .update({
-          username,
-          full_name,
-          slug,
-          avatar_url,
-          email,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', state.profile?.id);
-      if (error) {
-        console.error(error);
-        dispatch({ type: 'SET_ERROR', payload: { ...error, name: 'PostgresError' } });
-      } else {
-        if (AUTH_LOGS) console.log('update user succesful', JSON.stringify(data, null, 2));
-        dispatch({
-          type: 'UPDATE_PROFILE_SUCCESS', payload: {
-            ...state.profile,
-            username: username ?? state.profile?.username,
-            full_name: full_name ?? state.profile?.full_name,
-            slug: slug ?? state.profile?.slug,
-            avatar_url: avatar_url ?? state.profile?.avatar_url,
-            email: email ?? state.profile?.email,
-          }
-        });
-      }
-    } catch (error) {
-      if (error instanceof Error) {
-        console.error(error)
-        dispatch({ type: 'SET_ERROR', payload: error });
-      }
-    }
-  }, [state.profile, dispatch]);
+      // update user
 
-  const toggleUserRole = useCallback(async () => {
-    try {
-      const { error, data } = await supabase
-        .from('profiles')
-        .update({
-          role: state.profile?.role === "client" ? UserRoles.TAXI : UserRoles.CLIENT,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', state.profile?.id);
-      if (error) {
-        console.error(error);
-        dispatch({ type: 'SET_ERROR', payload: { ...error, name: 'PostgresError' } });
-      } else {
-        if (AUTH_LOGS) console.log('update user role succesful', JSON.stringify(data, null, 2));
-        dispatch({
-          type: 'UPDATE_PROFILE_SUCCESS', payload: {
-            ...state.profile,
-            role: state.profile?.role === "client" ? UserRoles.TAXI : UserRoles.CLIENT,
-          }
-        });
-      }
+      dispatch({
+        type: 'UPDATE_PROFILE_SUCCESS', payload: {
+          ...state.profile,
+          username: username ?? state.profile?.username,
+          full_name: full_name ?? state.profile?.full_name,
+          role: role ?? state.profile?.role,
+          avatar_url: avatar_url ?? state.profile?.avatar_url,
+          email: email ?? state.profile?.email,
+        }
+      });
     } catch (error) {
+      console.error(error)
       if (error instanceof Error) {
-        console.error(error)
-        dispatch({ type: 'SET_ERROR', payload: error });
+        // dispatch({ type: 'UPDATE_PROFILE_ERROR', payload: error });
       }
     }
-  }, [state.profile, dispatch]);
+  }, [state.profile]);
 
   useEffect(() => {
-    if (AUTH_LOGS)
-      console.log('UserContext.tsx -> useEffect [isConnected]', isConnected);
-    const expired = !!state.session?.expires_at && new Date(state.session.expires_at) < new Date();
+    if (AUTH_LOGS) console.log('UserContext.tsx -> useEffect [isConnected]', isConnected);
 
     if (!isConnected) {
       if (AUTH_LOGS) console.log('Internet is not reachable');
       return;
     }
 
-    if (!state.session || expired) {
-      void getSession();
-    }
+    getProfile("e117adcb-f429-42f7-95d9-07f1c92a1c8b")
   }, [isConnected]);
 
   useEffect(() => {
@@ -350,20 +183,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     getData('user_markers').then((data) => {
       dispatch({ type: 'SET_USER_MARKERS', payload: data ?? [] });
     });
-
-    const authSub = supabase.auth.onAuthStateChange((_event, currentSession) => {
-      if (AUTH_LOGS) console.log('AuthState Changed: ' + _event);
-
-      if (currentSession?.user) {
-        getInitialSession(currentSession)
-      } else {
-        dispatch({ type: 'SET_SESSION', payload: null });
-      }
-    });
-
-    return () => {
-      authSub.data.subscription.unsubscribe()
-    }
   }, [])
 
   return (
@@ -371,9 +190,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       value={{
         ...state,
         updateUser,
-        getSession,
         signOut,
-        toggleUserRole,
       }}>
       {children}
     </UserContext.Provider>
