@@ -31,25 +31,25 @@ export interface WSTaxi {
 
 interface WSStateContext {
     ws: WebSocket | null | undefined;
+    recievedMessages: ChatMessage[] | undefined | null;
     wsTaxis: WSTaxi[] | null | undefined;
-    confirmedTaxi: TaxiProfile & { status: RideStatus } | null;
+    confirmedTaxi: TaxiProfile & { status: RideStatus } | undefined | null;
     position: ExpoLocation.LocationObject | undefined;
     heading: ExpoLocation.LocationHeadingObject | undefined;
 }
 interface WSActionsContext {
-    // openWSConnection: () => Promise<void>;
-    // trackPosition: () => Promise<void>;
     sendStringToServer: (message: string) => void;
     findTaxi: (ride: RideInfo, taxiid?: string) => Promise<void>;
     cancelTaxi: () => Promise<void>;
-    simulateRoutePosition: (coords: LatLng[]) => Promise<void>;
-    stopRouteSimulation: () => Promise<void>;
+    /* simulateRoutePosition: (coords: LatLng[]) => Promise<void>;
+    stopRouteSimulation: () => Promise<void>; */
 }
 
 const stateInitialValue: WSStateContext = {
     ws: undefined,
+    recievedMessages: undefined,
     wsTaxis: undefined,
-    confirmedTaxi: null,
+    confirmedTaxi: undefined,
     position: undefined,
     heading: undefined,
 };
@@ -60,12 +60,12 @@ const stateActionslValue: WSActionsContext = {
     trackPosition: async () => {
         throw new Error('Function not initizaliced yet');
     }, */
-    simulateRoutePosition: async () => {
+    /* simulateRoutePosition: async () => {
         throw new Error('Function not initizaliced yet');
     },
     stopRouteSimulation: async () => {
         throw new Error('Function not initizaliced yet');
-    },
+    }, */
     sendStringToServer: async () => {
         throw new Error('Function not initizaliced yet');
     },
@@ -108,7 +108,8 @@ export const WSProvider = ({ children, userProfile }: { children: React.ReactNod
     const [wsTaxis, setWsTaxis] = useState<WSTaxi[]>([]);
     const [heading, setHeading] = useState<ExpoLocation.LocationHeadingObject>();
     const [position, setPosition] = useState<ExpoLocation.LocationObject>();
-    const [confirmedTaxi, setConfirmedTaxi] = useState<TaxiProfile & { status: RideStatus } | null>(null);
+    const [confirmedTaxi, setConfirmedTaxi] = useState<TaxiProfile & { status: RideStatus } | null>();
+    const [recievedMessages, setRecievedMessages] = useState<ChatMessage[] | null>();
 
     const ws = useRef<WebSocket | null>(null);
     const positionSubscription = useRef<ExpoLocation.LocationSubscription | null>();
@@ -214,6 +215,9 @@ export const WSProvider = ({ children, userProfile }: { children: React.ReactNod
         } else if (message.startsWith("sentfrom-")) {
             const chatMsgJSON = message.replace('sentfrom-', '');
             const chatMsg = JSON.parse(chatMsgJSON) as ChatMessage;
+            setRecievedMessages(prev => {
+                return prev ? [...prev, chatMsg] : [chatMsg]
+            })
         }
 
     }, []);
@@ -223,7 +227,7 @@ export const WSProvider = ({ children, userProfile }: { children: React.ReactNod
 
         if (WS_LOGS) console.log('new Web Socket initializing', protocol);
         const suckItToMeBBy = new WebSocket(
-            `ws://172.20.10.12:6942/subscribe?id=e117adcb-f429-42f7-95d9-07f1c92a1c8b&lat=51.5073509&lon=-0.1277581999999997&head=51`,
+            `ws://192.168.1.101:6942/subscribe?id=e117adcb-f429-42f7-95d9-07f1c92a1c8b&lat=51.5073509&lon=-0.1277581999999997&head=51`,
             protocol
         );
 
@@ -287,7 +291,7 @@ export const WSProvider = ({ children, userProfile }: { children: React.ReactNod
         const posSubscrition = await ExpoLocation.watchPositionAsync(
             {
                 accuracy: ExpoLocation.Accuracy.BestForNavigation,
-                // timeInterval: 2000,
+                timeInterval: 1800,
             },
             (newPosition) => {
                 setPosition(newPosition);
@@ -308,6 +312,30 @@ export const WSProvider = ({ children, userProfile }: { children: React.ReactNod
         if (WS_LOGS) console.log('Setted heading subscriptions');
         headingSubscription.current = headSubscrition;
     }, [headingSubscription]);
+
+
+    const startTracking = useCallback(() => {
+        if (!positionSubscription.current) {
+            void trackPosition();
+        }
+        if (!headingSubscription.current) {
+            void trackHeading();
+        }
+
+        return () => {
+            if (WS_LOGS) console.log('removing position and heading subscriptions', positionSubscription, headingSubscription);
+            if (positionSubscription.current) {
+                positionSubscription.current.remove();
+                positionSubscription.current = null;
+                if (WS_LOGS) console.log('removed position subscriptions');
+            }
+            if (headingSubscription.current) {
+                headingSubscription.current.remove();
+                headingSubscription.current = null;
+                if (WS_LOGS) console.log('removed heading subscriptions');
+            }
+        };
+    }, [positionSubscription, trackPosition, headingSubscription, trackHeading]);
 
     const simulateRoutePosition = useCallback(async (coords: LatLng[]) => {
         if (positionSubscription.current) {
@@ -360,42 +388,19 @@ export const WSProvider = ({ children, userProfile }: { children: React.ReactNod
         if (WS_LOGS) console.log('Stopping route simulation');
     }, [/* positionSubscription, headingSubscription,  */simulationSubscription]);
 
-    useEffect(() => {
-        if (!positionSubscription.current) {
-            void trackPosition();
-        }
-        if (!headingSubscription.current) {
-            void trackHeading();
-        }
-
-        return () => {
-            if (WS_LOGS) console.log('removing position and heading subscriptions', positionSubscription, headingSubscription);
-            if (positionSubscription.current) {
-                positionSubscription.current.remove();
-                positionSubscription.current = null;
-                if (WS_LOGS) console.log('removed position subscriptions');
-            }
-            if (headingSubscription.current) {
-                headingSubscription.current.remove();
-                headingSubscription.current = null;
-                if (WS_LOGS) console.log('removed heading subscriptions');
-            }
-        };
-    }, []);
+    useEffect(startTracking, []);
     useEffect(openWSConnection, [isConnected]);
 
     const actions = useMemo(() => ({
         sendStringToServer,
         findTaxi,
         cancelTaxi,
-        simulateRoutePosition,
-        stopRouteSimulation,
-        // openWSConnection,
-        // trackPosition,
-    }), [sendStringToServer, findTaxi, cancelTaxi]);
+        /* simulateRoutePosition,
+        stopRouteSimulation, */
+    }), [sendStringToServer, findTaxi, cancelTaxi, /* simulateRoutePosition, stopRouteSimulation */]);
 
     return (
-        <WSStateContext.Provider value={{ ws: ws.current, wsTaxis, heading, position, confirmedTaxi }}>
+        <WSStateContext.Provider value={{ ws: ws.current, recievedMessages, wsTaxis, heading, position, confirmedTaxi }}>
             <WSActionsContext.Provider value={actions}>
                 {children}
             </WSActionsContext.Provider>
@@ -541,7 +546,7 @@ export const WSProvider = ({ children, userType }: { children: React.ReactNode, 
 
         if (WS_LOGS) console.log('new Web Socket initializing', protocol);
         const suckItToMeBBy = new WebSocket(
-            `ws://172.20.10.12:6942/subscribe?id=e117adcb-f429-42f7-95d9-07f1c92a1c8b&lat=51.5073509&lon=-0.1277581999999997&head=51`,
+            `ws://192.168.1.101:6942/subscribe?id=e117adcb-f429-42f7-95d9-07f1c92a1c8b&lat=51.5073509&lon=-0.1277581999999997&head=51`,
             protocol
         );
 

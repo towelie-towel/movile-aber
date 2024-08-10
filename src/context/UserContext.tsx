@@ -104,7 +104,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const getProfile = useCallback(async (id: string) => {
     try {
       const resp = await fetch(
-        `http://172.20.10.12:6942/profile?id=${id}`
+        `http://192.168.1.101:6942/profile?id=${id}`
       );
       const respJson = await resp.json();
 

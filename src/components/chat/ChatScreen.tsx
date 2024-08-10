@@ -28,7 +28,7 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import * as Clipboard from 'expo-clipboard';
 import { Image } from 'expo-image';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import ImageView from 'react-native-image-viewing';
 import NetInfo from '@react-native-community/netinfo';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -43,6 +43,7 @@ import { generateUniqueId, getFirstName, getLastName } from '~/utils';
 import { ScaleBtn } from '~/components/common';
 import Animated from 'react-native-reanimated';
 import ChatTitle from '~/components/chat/ChatTitle';
+import { useAppInactive } from '~/hooks/useAppInactive';
 
 const ChatScreen = () => {
     /* V A R I A B L E S */
@@ -76,8 +77,6 @@ const ChatScreen = () => {
     let userAvatar = profile?.avatar_url;
     let userPlayerID = generateUniqueId();
 
-    // const [emojiKeyboardOpened, setEmojiKeyboardOpened] = React.useState(false);
-
     /* F U N C T I O N S */
 
     /**
@@ -85,22 +84,6 @@ const ChatScreen = () => {
      * but not marked as sent.
      */
     const updateUserMessageSentStatus = useCallback(async () => {
-        /* const userMessageRef = await firestore()
-            .collection('users')
-            .doc(destinedUser)
-            .collection('messages')
-            .doc(auth()?.currentUser?.uid)
-            .collection('discussions')
-            .get();
-        const batchUpdate = firestore().batch();
-        userMessageRef?.docChanges()?.forEach(change => {
-            if (change?.doc?.data()?.sent === false) {
-                batchUpdate?.update(change?.doc?.ref, {
-                    sent: true,
-                });
-            }
-        });
-        return batchUpdate?.commit(); */
     }, [/* destinedUser */]);
 
     /**
@@ -108,22 +91,6 @@ const ChatScreen = () => {
      * but not marked as sent.
      */
     const updateMySentStatus = useCallback(async () => {
-        /* const userMessageRef = await firestore()
-            .collection('users')
-            .doc(auth()?.currentUser?.uid)
-            .collection('messages')
-            .doc(destinedUser)
-            .collection('discussions')
-            .get();
-        const batchUpdate = firestore().batch();
-        userMessageRef?.docChanges()?.forEach(change => {
-            if (change?.doc?.data()?.sent === false) {
-                batchUpdate?.update(change?.doc?.ref, {
-                    sent: true,
-                });
-            }
-        });
-        return batchUpdate?.commit(); */
     }, [/* destinedUser */]);
 
     /**
@@ -131,91 +98,23 @@ const ChatScreen = () => {
      * And we will need to mark messages as seen by `Me`
      */
     const updateSeenForHisMessages = useCallback(async () => {
-        /* const mySeenMessageRef = await firestore()
-            .collection('users')
-            .doc(destinedUser)
-            .collection('messages')
-            .doc(auth()?.currentUser?.uid)
-            .collection('discussions')
-            .get();
-        const batchUpdate = firestore().batch();
-        mySeenMessageRef?.docChanges()?.forEach(change => {
-            if (change?.doc?.data()?.seen === false) {
-                batchUpdate?.update(change?.doc?.ref, {
-                    seen: true,
-                });
-            }
-        });
-        return batchUpdate?.commit(); */
     }, [/* destinedUser */]);
 
     /**
      * If you are in a conversation, we must mark it as it have readed.
      */
     const updateMyLastChatsRead = useCallback(async () => {
-        /* const lastChatsMessageRef = await firestore()
-            .collection('chats')
-            .doc(auth()?.currentUser?.uid)
-            .collection('discussions')
-            .get();
-        const batchUpdate = firestore().batch();
-        lastChatsMessageRef?.docChanges()?.forEach(change => {
-            if (change?.doc?.id === destinedUser) {
-                if (change?.doc?.data()?.read === false) {
-                    batchUpdate?.update(change?.doc?.ref, {
-                        read: true,
-                    });
-                }
-            }
-        });
-        return batchUpdate?.commit(); */
     }, [/* destinedUser */]);
 
     /**
      * Delete `typing` status from database.
      */
     const deleteMyTypingRef = useCallback(async () => {
-        /* const myTypingRef = firestore()
-            .collection('chats')
-            .doc(destinedUser)
-            .collection('discussions')
-            .doc(auth()?.currentUser?.uid);
-        return await myTypingRef?.get()?.then(documentSnapshot => {
-            if (documentSnapshot?.exists) {
-                if (!isNull(documentSnapshot?.data()?.typing)) {
-                    documentSnapshot?.ref?.update({
-                        typing: null,
-                    });
-                }
-            }
-        }); */
     }, [/* destinedUser */]);
     /**
      * Fetch `typing` status from database..
      */
     const fetchUserIsTyping = useCallback(async () => {
-        /* const userTypingRef = await firestore()
-            .collection('chats')
-            .doc(auth()?.currentUser?.uid)
-            .collection('discussions')
-            .get();
-        userTypingRef?.docChanges()?.forEach(change => {
-            if (change?.doc?.id === destinedUser) {
-                if (!isNull(change?.doc?.data()?.typing)) {
-                    if (
-                        firestore.Timestamp.fromDate(new Date())?.toDate()?.getTime() -
-                        change?.doc?.data()?.typing?.toDate()?.getTime() <
-                        10000
-                    ) {
-                        setIsTyping(true);
-                    } else {
-                        setIsTyping(false);
-                    }
-                } else {
-                    setIsTyping(false);
-                }
-            }
-        }); */
     }, [/* destinedUser */]);
 
     /**
@@ -224,51 +123,6 @@ const ChatScreen = () => {
      * @param {boolean} forEveryone
      */
     async function deleteMessage(messageData: string, forEveryone: boolean) {
-        /* const meMessageRef = firestore()
-            .collection('users')
-            .doc(auth()?.currentUser?.uid)
-            .collection('messages')
-            .doc(destinedUser)
-            .collection('discussions');
-        const userMessageRef = firestore()
-            .collection('users')
-            .doc(destinedUser)
-            .collection('messages')
-            .doc(auth()?.currentUser?.uid)
-            .collection('discussions'); */
-        /* if (forEveryone) {
-            await meMessageRef?.get()?.then(collectionSnapshot => {
-                collectionSnapshot?.docs?.map(documentSnapshot => {
-                    if (documentSnapshot?.id === messageData?.id) {
-                        documentSnapshot?.ref?.delete();
-                        filter(mChatData, element => {
-                            return element?.id === messageData?.id;
-                        });
-                    }
-                });
-            });
-            await userMessageRef?.get()?.then(collectionSnapshot => {
-                collectionSnapshot?.docs.map(documentSnapshot => {
-                    if (documentSnapshot?.data()?._id === messageData?._id) {
-                        documentSnapshot?.ref?.delete();
-                        filter(mChatData, element => {
-                            return element?.id === messageData?.id;
-                        });
-                    }
-                });
-            });
-        } else {
-            return await meMessageRef?.get()?.then(collectionSnapshot => {
-                collectionSnapshot?.docs?.map(documentSnapshot => {
-                    if (documentSnapshot?.id === messageData?.id) {
-                        documentSnapshot?.ref?.delete();
-                        filter(mChatData, element => {
-                            element?.id === messageData?.id;
-                        });
-                    }
-                });
-            });
-        } */
     }
 
     function onLongPress(context: any, message: IMessage) {
@@ -290,13 +144,6 @@ const ChatScreen = () => {
                                 Clipboard?.setStringAsync(message?.text);
                             } catch (e) {
                                 console.error("error during copying message")
-                                /* new ErrorToast(
-                                    'bottom',
-                                    'Unexpected Error Occured',
-                                    `${e}`,
-                                    true,
-                                    1500,
-                                ); */
                             }
                             break;
                         case 1:
@@ -304,13 +151,6 @@ const ChatScreen = () => {
                                 deleteMessage(message._id.toString(), true);
                             } catch (e) {
                                 console.error("error during deleting message")
-                                /* new ErrorToast(
-                                    'bottom',
-                                    'Unexpected Error Occured',
-                                    `${e}`,
-                                    true,
-                                    1500,
-                                ); */
                             }
                             break;
                         case 2:
@@ -318,13 +158,6 @@ const ChatScreen = () => {
                                 deleteMessage(message._id.toString(), false);
                             } catch (e) {
                                 console.error("error during deleting message")
-                                /* new ErrorToast(
-                                    'bottom',
-                                    'Unexpected Error Occured',
-                                    `${e}`,
-                                    true,
-                                    1500,
-                                ); */
                             }
                             break;
                     }
@@ -334,13 +167,7 @@ const ChatScreen = () => {
                             try {
                                 Clipboard?.setStringAsync(message?.text);
                             } catch (e) {
-                                /* new ErrorToast(
-                                    'bottom',
-                                    'Unexcpected Error Occured',
-                                    `${e}`,
-                                    true,
-                                    1500,
-                                ); */
+                                console.error("error during deleting message")
                             }
                             break;
                         case 1:
@@ -348,13 +175,6 @@ const ChatScreen = () => {
                                 deleteMessage(message._id.toString(), false);
                             } catch (e) {
                                 console.error("error during deleting message")
-                                /* new ErrorToast(
-                                    'bottom',
-                                    'Unexcpected Error Occured',
-                                    `${e}`,
-                                    true,
-                                    1500,
-                                ); */
                             }
                             break;
                     }
@@ -378,85 +198,8 @@ const ChatScreen = () => {
                         try {
                             // Send message to user logic goes here.
                             // setMessageText(mMessageText?.trim()); // Message text already trimmed here!
-                            /* firestore()
-                                .collection('users')
-                                .doc(auth()?.currentUser?.uid)
-                                .collection('messages')
-                                .doc(destinedUser)
-                                .collection('discussions')
-                                .add({
-                                    _id: _id,
-                                    text: EncryptAES(mMessageText),
-                                    createdAt: Date.now(),
-                                    sent: false,
-                                    seen: false,
-                                    user: {
-                                        _id: auth()?.currentUser?.uid,
-                                    },
-                                });
-                            firestore()
-                                .collection('users')
-                                .doc(destinedUser)
-                                .collection('messages')
-                                .doc(auth()?.currentUser?.uid)
-                                .collection('discussions')
-                                .add({
-                                    _id: _id,
-                                    createdAt: Date.now(),
-                                    text: EncryptAES(mMessageText),
-                                    sent: false,
-                                    seen: false,
-                                    user: {
-                                        _id: auth()?.currentUser?.uid,
-                                    },
-                                }); */
-                            // setChatData(previousMessages =>
-                            //     GiftedChat.append(previousMessages, mChatData),
-                            // );
-                            // HomeScreen recent chats.
-
-                            /* firestore()
-                                .collection('chats')
-                                .doc(auth()?.currentUser?.uid)
-                                .collection('discussions')
-                                .doc(destinedUser)
-                                .set({
-                                    to_first_name: userFirstName,
-                                    to_last_name: userLastName,
-                                    to_message_text: EncryptAES(mMessageText),
-                                    to_avatar: userAvatar,
-                                    time: firestore?.Timestamp?.fromDate(new Date()),
-                                    type: 'message',
-                                    last_uid: auth()?.currentUser?.uid,
-                                    sent_to_uid: destinedUser,
-                                    read: false,
-                                    typing: null,
-                                });
-                            firestore()
-                                .collection('chats')
-                                .doc(destinedUser)
-                                .collection('discussions')
-                                .doc(auth()?.currentUser?.uid)
-                                .set({
-                                    to_first_name: Me?.first_name,
-                                    to_last_name: Me?.last_name,
-                                    to_message_text: EncryptAES(mMessageText),
-                                    to_avatar: Me?.avatar,
-                                    time: firestore?.Timestamp?.fromDate(new Date()),
-                                    type: 'message',
-                                    last_uid: auth()?.currentUser?.uid,
-                                    read: false,
-                                    typing: null,
-                                }); */
                         } catch (e) {
                             console.error("a problem occured when sending a message")
-                            /* new ErrorToast(
-                                'bottom',
-                                'Failed to send message',
-                                'a problem occured when sending a message',
-                                true,
-                                1000,
-                            ); */
                         }
                     }
                 } else {
@@ -471,147 +214,19 @@ const ChatScreen = () => {
                             createdAt: new Date()
                         }]),
                     );
-
-                    /* let pickedImage = `chats/images/${getRandomString(
-                        18,
-                    )}.${image?.substring(image?.lastIndexOf('.') + 1, 3)}`;
-
-                    const storageRef = storage().ref(pickedImage); */
-
-                    /**
-                     * Uploading image to Firebase Storage
-                     * @type {FirebaseStorageTypes.Task}
-                     */
-
-                    /* const uploadImageTask = storageRef?.putFile(image); */
-
-                    /**
-                     * Add observer to image uploading.
-                     */
-
-                    /* uploadImageTask.on('state_changed', taskSnapshot => {
-                        new InfoToast(
-                            'bottom',
-                            'Sending Image',
-                            `${bytesToSize(
-                                taskSnapshot?.bytesTransferred,
-                            )} transferred out of ${bytesToSize(taskSnapshot?.totalBytes)}`,
-                            true,
-                            500,
-                        );
-                    }); */
-
-                    /**
-                     * an async function to get {avatarUrl} and upload all user data.
-                     */
-                    /* uploadImageTask.then(async () => {
-                        const uploadedImageURL = await storage()
-                            .ref(pickedImage)
-                            .getDownloadURL();
-                        firestore()
-                            .collection('users')
-                            .doc(auth()?.currentUser?.uid)
-                            .collection('messages')
-                            .doc(destinedUser)
-                            .collection('discussions')
-                            .add({
-                                _id: _id,
-                                image: EncryptAES(uploadedImageURL),
-                                seen: false,
-                                sent: false,
-                                createdAt: Date.now(),
-                                user: {
-                                    _id: auth()?.currentUser?.uid,
-                                },
-                            });
-                        firestore()
-                            .collection('users')
-                            .doc(destinedUser)
-                            .collection('messages')
-                            .doc(auth()?.currentUser?.uid)
-                            .collection('discussions')
-                            .add({
-                                _id: _id,
-                                createdAt: Date.now(),
-                                image: EncryptAES(uploadedImageURL),
-                                seen: false,
-                                sent: false,
-                                user: {
-                                    _id: auth()?.currentUser?.uid,
-                                },
-                            });
-                        setChatData(previousMessage =>
-                            GiftedChat.append(previousMessage, mChatData),
-                        );
-                        // Chats messages on home screen goes here
-                        if (
-                            !isEmpty(userFirstName) &&
-                            !isEmpty(userLastName) &&
-                            !isEmpty(userAvatar)
-                        ) {
-                            firestore()
-                                .collection('chats')
-                                .doc(auth()?.currentUser?.uid)
-                                .collection('discussions')
-                                .doc(destinedUser)
-                                .set({
-                                    to_first_name: userFirstName,
-                                    to_last_name: userLastName,
-                                    to_message_image: EncryptAES(uploadedImageURL),
-                                    to_avatar: userAvatar,
-                                    time: firestore?.Timestamp?.fromDate(new Date()),
-                                    type: 'image',
-                                    last_uid: auth()?.currentUser?.uid,
-                                    sent_to_uid: destinedUser,
-                                    read: false,
-                                    typing: null,
-                                });
-                        }
-                        firestore()
-                            .collection('chats')
-                            .doc(destinedUser)
-                            .collection('discussions')
-                            .doc(auth()?.currentUser?.uid)
-                            .set({
-                                to_first_name: Me?.first_name,
-                                to_last_name: Me?.last_name,
-                                to_message_image: EncryptAES(uploadedImageURL),
-                                to_avatar: Me?.avatar,
-                                time: firestore?.Timestamp?.fromDate(new Date()),
-                                type: 'image',
-                                last_uid: auth()?.currentUser?.uid,
-                                read: false,
-                                typing: null,
-                            });
-                    }); */
                 }
             } else {
                 console.error("Please enable Wi-Fi or Mobile data to send messages")
-                /* new ErrorToast(
-                    'bottom',
-                    'Internet connection required',
-                    'Please enable Wi-Fi or Mobile data to send messages',
-                    true,
-                    1000,
-                ); */
             }
         },
         [
-            /* Me?.avatar,
-            Me?.first_name,
-            Me?.last_name, */
             _id,
-            /* destinedUser, */
             mMessageText,
             userAvatar,
             userFirstName,
             userLastName,
         ],
     );
-
-    /* const handlePick = emojiObject => {
-        setMessageText(mMessageText + emojiObject?.emoji);
-    }; */
 
     const mAttachPressCallback = async () => {
         try {
@@ -653,53 +268,7 @@ const ChatScreen = () => {
                         }, // some values ain't unsed, yet, but they will be used soon.
                     };
                     const stringifiedJSON = JSON.stringify(toSendNotification);
-                    /* OneSignal.postNotification(
-                        stringifiedJSON,
-                        success => {
-                            if (__DEV__) {
-                                ToastAndroid.show(
-                                    'Message notification sent',
-                                    ToastAndroid.SHORT,
-                                );
-                                console.log(success);
-                            }
-                        },
-                        error => {
-                            if (__DEV__) {
-                                console.error(error);
-                            }
-                        },
-                    ); */
                 });
-            /* const requestResult = await PermissionsAndroid.request(
-                PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-                {
-                    title: 'Storage Permission',
-                    message:
-                        'Moon Meet requires this permission to access your phone storage',
-                    buttonNegative: 'Deny',
-                    buttonPositive: 'Grant',
-                },
-            );
-            if (requestResult === PermissionsAndroid.RESULTS.GRANTED) {
-                
-                
-            } else if (
-                requestResult === PermissionsAndroid.RESULTS.DENY ||
-                PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN
-            ) {
-                try {
-                    Linking?.openSettings();
-                    ToastAndroid.show(
-                        'Please grant storage permission manually',
-                        ToastAndroid.SHORT,
-                    );
-                } catch (error) {
-                    if (__DEV__) {
-                        console.error(error);
-                    }
-                }
-            } */
         } catch (err) {
             // Maybe something weird or the app running on iOS.
             if (__DEV__) {
@@ -748,51 +317,7 @@ const ChatScreen = () => {
                         }, // some values ain't unsed, yet, but they will be used soon.
                     };
                     const stringifiedJSON = JSON.stringify(toSendNotification);
-                    /* OneSignal.postNotification(
-                        stringifiedJSON,
-                        success => {
-                            if (__DEV__) {
-                                ToastAndroid.show(
-                                    'Message notification sent',
-                                    ToastAndroid.SHORT,
-                                );
-                                console.log(success);
-                            }
-                        },
-                        error => {
-                            if (__DEV__) {
-                                console.error(error);
-                            }
-                        },
-                    ); */
                 });
-            /* const requestResult = await PermissionsAndroid.request(
-                PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-                {
-                    title: 'Camera Permission',
-                    message: 'Moon Meet requires this permission to access your camera',
-                    buttonNegative: 'Deny',
-                    buttonPositive: 'Grant',
-                },
-            );
-            if (requestResult === PermissionsAndroid.RESULTS.GRANTED) {
-                
-            } else if (
-                requestResult === PermissionsAndroid.RESULTS.DENY ||
-                PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN
-            ) {
-                try {
-                    Linking?.openSettings();
-                    ToastAndroid.show(
-                        'Please grant camera permission manually',
-                        ToastAndroid.SHORT,
-                    );
-                } catch (error) {
-                    if (__DEV__) {
-                        console.error(error);
-                    }
-                }
-            } */
         } catch (err) {
             // Maybe something weird or the app running on iOS.
             if (__DEV__) {
@@ -800,120 +325,6 @@ const ChatScreen = () => {
             }
         }
     };
-
-    /* H O O K S */
-
-    /* useEffect(() => {
-        const userSubscribe = firestore()
-            .collection('users')
-            .doc(destinedUser)
-            .onSnapshot(userSnapshot => {
-                if (userSnapshot?.exists) {
-                    if (
-                        userSnapshot?.data()?.avatar &&
-                        userSnapshot?.data()?.first_name &&
-                        userSnapshot?.data()?.last_name
-                    ) {
-                        setUserFirstName(userSnapshot?.data()?.first_name);
-                        setUserLastName(userSnapshot?.data()?.last_name);
-                        setUserAvatar(userSnapshot?.data()?.avatar);
-                        setUserActiveStatus(userSnapshot?.data()?.active_status);
-                        setUserPlayerID(userSnapshot?.data()?.OneSignalID);
-                        if (userSnapshot?.data()?.active_time === 'Last seen recently') {
-                            setUserActiveTime(userSnapshot?.data()?.active_time);
-                        } else {
-                            setUserActiveTime(userSnapshot?.data()?.active_time?.toDate());
-                        }
-                    }
-                }
-            });
-        return () => userSubscribe();
-    }, []); */
-
-    /* useEffect(() => {
-        const messagesSubscribe = firestore()
-            .collection('users')
-            .doc(auth()?.currentUser?.uid)
-            .collection('messages')
-            .doc(destinedUser)
-            .collection('discussions')
-            .onSnapshot(collectionSnapshot => {
-                if (collectionSnapshot?.empty) {
-                    setChatData([]);
-                } else {
-                    let collectionDocs = collectionSnapshot?.docs?.map(subMap => {
-                        if (subMap?.data()?.image) {
-                            return {
-                                ...subMap?.data(),
-                                id: subMap?.id,
-                                seen: subMap?.data()?.seen,
-                                sent: subMap?.data()?.sent,
-                                image: DecryptAES(subMap?.data()?.image),
-                                user: {
-                                    _id:
-                                        subMap?.data()?.user?._id === auth()?.currentUser?.uid
-                                            ? auth()?.currentUser?.uid
-                                            : destinedUser,
-                                    name:
-                                        subMap?.data()?.user?._id === auth()?.currentUser?.uid
-                                            ? auth()?.currentUser?.displayName
-                                            : userFirstName + ' ' + userLastName,
-                                    avatar:
-                                        subMap?.data()?.user?._id === auth()?.currentUser?.uid
-                                            ? auth()?.currentUser?.photoURL
-                                            : userAvatar,
-                                },
-                            };
-                        } else {
-                            return {
-                                ...subMap?.data(),
-                                id: subMap?.id,
-                                text: DecryptAES(subMap?.data()?.text),
-                                seen: subMap?.data()?.seen,
-                                sent: subMap?.data()?.sent,
-                                user: {
-                                    _id:
-                                        subMap?.data()?.user?._id === auth()?.currentUser?.uid
-                                            ? auth()?.currentUser?.uid
-                                            : destinedUser,
-                                    name:
-                                        subMap?.data()?.user?._id === auth()?.currentUser?.uid
-                                            ? auth()?.currentUser?.displayName
-                                            : userFirstName + ' ' + userLastName,
-                                    avatar:
-                                        subMap?.data()?.user?._id === auth()?.currentUser?.uid
-                                            ? auth()?.currentUser?.photoURL
-                                            : userAvatar,
-                                },
-                            };
-                        }
-                    });
-                    filter(collectionDocs, [
-                        (docs, index) => {
-                            if (docs?.image) {
-                                collectionDocs[index].text = '';
-                            }
-                        },
-                    ]);
-                    collectionDocs = sortBy(collectionDocs, [docs => docs?.createdAt]);
-                    collectionDocs = reverse(collectionDocs);
-                    setChatData(collectionDocs);
-                }
-                setLoading(false);
-            });
-        return () => {
-            messagesSubscribe();
-            setLoading(true);
-        };
-    }, [
-        Me?.avatar,
-        Me?.first_name,
-        Me?.last_name,
-        destinedUser,
-        userAvatar,
-        userFirstName,
-        userLastName,
-    ]); */
 
     useEffect(() => {
         setTimeout(() => {
@@ -924,7 +335,7 @@ const ChatScreen = () => {
         }
     }, [])
 
-    /* useFocusEffect(
+    useFocusEffect(
         useCallback(() => {
             const onBackPress = () => {
                 deleteMyTypingRef();
@@ -936,65 +347,36 @@ const ChatScreen = () => {
             return () =>
                 BackHandler.removeEventListener('hardwareBackPress', onBackPress);
         }, []),
-    ); */
+    );
 
-    /* useAppInactive(() => {
+    useAppInactive(() => {
         deleteMyTypingRef();
-    }); */
+    });
 
-    /* useEffect(() => {
+    useEffect(() => {
         fetchUserIsTyping();
-        return () => fetchUserIsTyping();
+        return () => void fetchUserIsTyping();
     }, [fetchUserIsTyping]);
 
     useEffect(() => {
         updateMySentStatus();
-        return () => updateMySentStatus();
+        return () => void updateMySentStatus();
     }, [updateMySentStatus]);
 
     useEffect(() => {
         updateMyLastChatsRead();
-        return () => updateMyLastChatsRead();
+        return () => void updateMyLastChatsRead();
     }, [updateMyLastChatsRead]);
 
     useEffect(() => {
         updateSeenForHisMessages();
-        return () => updateSeenForHisMessages();
+        return () => void updateSeenForHisMessages();
     }, [updateSeenForHisMessages]);
 
     useEffect(() => {
         updateUserMessageSentStatus();
-        return () => updateUserMessageSentStatus();
-    }, [updateUserMessageSentStatus]); */
-
-    /* useEffect(() => {
-        navigation?.setOptions({
-            headerTitle: props => (
-                <ChatTitle
-                    {...props}
-                    firstName={userFirstName}
-                    lastName={userLastName}
-                    avatar={userAvatar}
-                    myStatus={Me?.active_status}
-                    userStatus={userActiveStatus}
-                    userTime={userActiveTime}
-                />
-            ),
-        });
-        return () => {
-            navigation?.setOptions({
-                headerTitle: null,
-            });
-        };
-    }, [
-        Me?.active_status,
-        navigation,
-        userActiveStatus,
-        userActiveTime,
-        userAvatar,
-        userFirstName,
-        userLastName,
-    ]); */
+        return () => void updateUserMessageSentStatus();
+    }, [updateUserMessageSentStatus]);
 
     return (
         <View style={{ paddingBottom: insets.bottom + 48 }} className="flex-1 bg-[#F8F8F8] dark:bg-[#1b1b1b]">
@@ -1126,8 +508,6 @@ const ChatScreen = () => {
                             messageSetter={setMessageText}
                             attachPressCallback={() => void mAttachPressCallback()}
                             cameraPressCallback={() => void mCameraPressCallback()}
-                            // emojiGetter={emojiKeyboardOpened}
-                            // emojiSetter={setEmojiKeyboardOpened}
                             sendMessageCallback={() => {
                                 sendMessage([
                                     {
@@ -1160,23 +540,6 @@ const ChatScreen = () => {
                                         }, // some values ain't unsed, yet, but they will be used soon.
                                     };
                                     const stringifiedJSON = JSON.stringify(toSendNotification);
-                                    /* OneSignal.postNotification(
-                                        stringifiedJSON,
-                                        success => {
-                                            if (__DEV__) {
-                                                ToastAndroid.show(
-                                                    'Message notification sent',
-                                                    ToastAndroid.SHORT,
-                                                );
-                                                console.log(success);
-                                            }
-                                        },
-                                        error => {
-                                            if (__DEV__) {
-                                                console.error(error);
-                                            }
-                                        },
-                                    ); */
                                     setMessageText('');
                                 });
                             }}
@@ -1259,19 +622,7 @@ const ChatScreen = () => {
                 ) : (
                     <></>
                 )}
-                {/* <Divider leftInset={false} /> */}
-                {/* <View className='w-[100%] self-center mb-1 border border-gray-600' /> */}
 
-                {/* {emojiKeyboardOpened ? (
-                    <EmojiKeyboard
-                        emojiSize={28 - 0.1 * 28}
-                        onEmojiSelected={handlePick}
-                        enableRecentlyUsed
-                        containerStyles={{ borderRadius: 0 }}
-                    />
-                ) : (
-                    <></>
-                )} */}
                 <Animated.View></Animated.View>
                 <ImageView
                     images={[userAvatar ? { uri: userAvatar } : require('../../../assets/images/taxi_test.png')]}

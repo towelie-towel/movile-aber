@@ -45,7 +45,7 @@ export default function ClientMap() {
     const colorScheme = useColorScheme();
     const insets = useSafeAreaInsets();
     const router = useRouter();
-    const { profile, isSignedIn, signOut, toggleUserRole/* , ridesHistory */ } = useUser();
+    const { profile, isSignedIn, signOut/* , ridesHistory */ } = useUser();
     const [userMarkers] = useAtom(userMarkersAtom)
 
     if (Platform.OS === 'android') {
@@ -243,7 +243,6 @@ export default function ClientMap() {
                                 <View className="absolute w-[350px] h-[350px] top-[-50px] left-[-175px] rounded-full opacity-5 bg-black" />
 
                                 <View className="w-4/5 shadow" style={{ marginTop: insets.top }}>
-                                    <Switch trackColor={{ false: '#767577', true: '#81b0ff' }} thumbColor={profile?.role === "taxi" ? '#f5dd4b' : '#f4f3f4'} ios_backgroundColor="#3e3e3e" onValueChange={toggleUserRole} value={profile?.role === "taxi"} />
                                     <View className="rounded-full overflow-hidden w-20 h-20 border border-white" ><Image style={{ flex: 1 }} source={{ uri: isSignedIn ? 'https://lh3.googleusercontent.com/a/AAcHTtfPgVic8qF8hDw_WPE80JpGOkKASohxkUA8y272Ow=s1000-c' : 'https://avatars.githubusercontent.com/u/100803609?v=4', }} alt="Profile Image" /></View>
                                     <Text className="text-[#FFFFFF] text-xl font-semibold mt-2.5">{profile?.username ?? 'Not signed'}</Text>
                                     {!isSignedIn ? (

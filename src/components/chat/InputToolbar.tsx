@@ -255,28 +255,10 @@ const GiftedChatScreen = (props: GiftedChatScreenProps) => {
                         onChangeText={async text => {
                             props.messageSetter(text);
                             if (text?.trim()?.length === 0) {
-                                /* const typingRef = await firestore()
-                                    .collection('chats')
-                                    .doc(props.userUID)
-                                    .collection('discussions')
-                                    .doc(auth()?.currentUser?.uid)
-                                    .get();
-                                if (typingRef?.exists) {
-                                    await typingRef?.ref?.update({ typing: null });
-                                } */
+                                // set not typing
                             } else {
                                 if (text?.trim()?.length - lastLength > lastLength) {
-                                    /* const typingRef = await firestore()
-                                        .collection('chats')
-                                        .doc(props.userUID)
-                                        .collection('discussions')
-                                        .doc(auth()?.currentUser?.uid)
-                                        .get();
-                                    if (typingRef?.exists) {
-                                        await typingRef?.ref?.update({
-                                            typing: firestore?.Timestamp.fromDate(new Date()),
-                                        });
-                                    } */
+                                    // set typing
                                 }
                             }
                             setLastLength(text?.length);
