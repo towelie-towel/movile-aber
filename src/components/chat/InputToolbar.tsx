@@ -1,13 +1,13 @@
 import React, { useEffect } from 'react';
 import {
-    GestureResponderEvent,
     Keyboard,
     Platform,
-    Pressable,
     StyleSheet,
     TextInput,
     useColorScheme,
     View,
+    Text,
+    LayoutAnimation,
 } from 'react-native';
 import Animated, {
     Easing,
@@ -16,7 +16,7 @@ import Animated, {
     withSpring,
     withTiming,
 } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Audio } from 'expo-av';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import Colors from '~/constants/Colors';
@@ -25,26 +25,25 @@ import { ScaleBtn } from '../common';
 interface GiftedChatScreenProps {
     messageGetter: string;
     messageSetter: React.Dispatch<React.SetStateAction<string>>;
-    // emojiGetter: boolean;
-    // emojiSetter: React.Dispatch<React.SetStateAction<boolean>>;
     sendMessageCallback?: () => void | null | undefined;
-    cameraPressCallback?: (
-        event: GestureResponderEvent,
-    ) => void | null | undefined;
-    attachPressCallback?: (
-        event: GestureResponderEvent,
-    ) => void | null | undefined;
+    cameraPressCallback?: () => void | null | undefined;
+    attachPressCallback?: () => void | null | undefined;
     userUID?: string;
 }
 
 const GiftedChatScreen = (props: GiftedChatScreenProps) => {
     const colorScheme = useColorScheme();
-    const insets = useSafeAreaInsets();
+    const [permissionResponse, requestPermission] = Audio.usePermissions();
 
     const height = useSharedValue(70);
     const maxWidth = useSharedValue('100%');
-    // const opacity = useSharedValue(0);
-    const opacity = useSharedValue(1);
+
+    const [recordingStep, setRecordingStep] = React.useState<'recording' | 'recorded' | null>(null);
+    const [lastLength, setLastLength] = React.useState(0);
+    const recording = React.useRef<Audio.Recording | null>(null);
+    const [recordingCounter, setRecordingCounter] = React.useState(0);
+
+
 
     const heightAnimatedStyle = useAnimatedStyle(() => {
         return {
@@ -62,38 +61,6 @@ const GiftedChatScreen = (props: GiftedChatScreenProps) => {
             ),
         };
     });
-
-    const opacityAnimatedStyle = useAnimatedStyle(() => {
-        return {
-            opacity: withTiming(opacity?.value, {
-                duration: 250,
-                easing: Easing.circle,
-            }),
-        };
-    });
-
-    /**
-       const keyboard = useAnimatedKeyboard();
-  
-       const messageInputTranslate = useAnimatedStyle(() => {
-       return {
-       transform: [{translateY: -keyboard?.height?.value}],
-       };
-       });
-       */
-
-    const [lastLength, setLastLength] = React.useState(0);
-
-    /* useEffect(() => {
-        if (props.messageGetter?.trim()?.length > 0) {
-            maxWidth.value = '85%';
-            opacity.value = 1;
-        } else {
-            maxWidth.value = '100%';
-            opacity.value = 0;
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [props.messageGetter]); */
 
     /**
      * Some styles are tested and not shipped, we will use them soon.
@@ -208,99 +175,120 @@ const GiftedChatScreen = (props: GiftedChatScreenProps) => {
         },
     });
 
+    async function startRecording() {
+        try {
+
+            if (permissionResponse?.status !== 'granted') {
+                console.log('Requesting permission..');
+                await requestPermission();
+            }
+            await Audio.setAudioModeAsync({
+                allowsRecordingIOS: true,
+                playsInSilentModeIOS: true,
+            });
+
+            console.log('Starting recording..');
+            const { recording: aVRecording } = await Audio.Recording.createAsync(Audio.RecordingOptionsPresets.HIGH_QUALITY
+            );
+            setRecordingStep("recording");
+            recording.current = aVRecording
+            console.log('Recording started');
+        } catch (err) {
+            console.error('Failed to start recording', err);
+        }
+    }
+
+    async function stopRecording() {
+        console.log('Stopping recording..');
+        await recording.current?.stopAndUnloadAsync();
+        setRecordingStep("recorded");
+        await Audio.setAudioModeAsync(
+            {
+                allowsRecordingIOS: false,
+            }
+        );
+        const uri = recording.current?.getURI();
+        console.log('Recording stopped and stored at', uri);
+    }
+
+    useEffect(() => {
+        let recordingInterval: NodeJS.Timeout
+        if (recordingStep === "recording") {
+            recordingInterval = setInterval(() => {
+                setRecordingCounter(prev => prev + 1)
+            }, 1000)
+
+        } else if (!recordingStep) {
+            setRecordingCounter(0)
+        }
+        return () => {
+            recordingInterval && clearInterval(recordingInterval)
+        }
+    }, [recordingStep])
+
     return (
         <Animated.View
             style={[
                 styles.container,
-                heightAnimatedStyle /*messageInputTranslate*/,
+                heightAnimatedStyle,
             ]}>
             <View style={styles.innerContainer}>
                 <Animated.View
-                    style={[styles.inputAndMicrophone, widthAnimatedStyle]}>
-                    {/* <Pressable
-                        android_ripple={{
-                            color: Colors[colorScheme ?? "light"].btn_light_bg,
-                            borderless: true,
-                            foreground: true,
-                            radius: 30 - 0.1 * 30,
-                        }}
-                        style={styles.emoticonButton}
-                        onPress={() => {
-                            if (props.emojiGetter) {
-                                props?.emojiSetter(false);
-                            } else {
-                                props?.emojiSetter(true);
-                                Keyboard.dismiss();
-                            }
-                        }}
-                    >
-                        <MaterialCommunityIcons
-                            name={props.emojiGetter ? 'close' : 'emoticon-outline'}
-                            size={23}
-                            color={Colors[colorScheme ?? "light"].border}
-                        />
-                    </Pressable> */}
-                    <TextInput
-                        multiline
-                        numberOfLines={3}
-                        placeholder={'Send a text'}
-                        onBlur={() => Keyboard.dismiss()}
-                        onFocus={() => {
-                            /* if (props?.emojiGetter) {
-                                props?.emojiSetter(false);
-                            } */
-                        }}
-                        style={styles.input}
-                        value={props.messageGetter}
-                        onChangeText={async text => {
-                            props.messageSetter(text);
-                            if (text?.trim()?.length === 0) {
-                                // set not typing
-                            } else {
-                                if (text?.trim()?.length - lastLength > lastLength) {
-                                    // set typing
-                                }
-                            }
-                            setLastLength(text?.length);
-                        }}
-                    />
-                    <Pressable
-                        android_ripple={{
-                            color: Colors[colorScheme ?? "light"].btn_light_bg,
-                            borderless: true,
-                            radius: 30 - 0.1 * 30,
-                        }}
-                        style={styles.rightIconButtonStyle}
-                        onPress={props.attachPressCallback}>
-                        <MaterialCommunityIcons
-                            name="paperclip"
-                            size={23}
-                            color={Colors[colorScheme ?? "light"].border}
-                        />
-                    </Pressable>
-                    <Pressable
-                        hitSlop={10}
-                        android_ripple={{
-                            color: Colors[colorScheme ?? "light"].btn_light_bg,
-                            borderless: true,
-                            radius: 30 - 0.1 * 30,
-                        }}
-                        style={styles.rightIconButtonStyle}
-                        onPress={props.cameraPressCallback}>
-                        <MaterialCommunityIcons
-                            name="camera"
-                            size={23}
-                            color={Colors[colorScheme ?? "light"].border}
-                        />
-                    </Pressable>
+                    style={[styles.inputAndMicrophone, widthAnimatedStyle]}
+                >
+                    {
+                        !recordingStep ?
+                            <>
+                                <TextInput
+                                    multiline
+                                    numberOfLines={3}
+                                    placeholder={'Send a text'}
+                                    onBlur={() => Keyboard.dismiss()}
+                                    onFocus={() => { }}
+                                    style={styles.input}
+                                    value={props.messageGetter}
+                                    onChangeText={async text => {
+                                        props.messageSetter(text);
+                                        if (text?.trim()?.length === 0) {
+                                            // set not typing
+                                        } else {
+                                            if (text?.trim()?.length - lastLength > lastLength) {
+                                                // set typing
+                                            }
+                                        }
+                                        setLastLength(text?.length);
+                                    }}
+                                />
+                                <ScaleBtn
+                                    style={styles.rightIconButtonStyle}
+                                    onPress={props.attachPressCallback}>
+                                    <MaterialCommunityIcons
+                                        name="paperclip"
+                                        size={23}
+                                        color={Colors[colorScheme ?? "light"].border}
+                                    />
+                                </ScaleBtn>
+                                <ScaleBtn
+                                    style={styles.rightIconButtonStyle}
+                                    onPress={props.cameraPressCallback}>
+                                    <MaterialCommunityIcons
+                                        name="camera"
+                                        size={23}
+                                        color={Colors[colorScheme ?? "light"].border}
+                                    />
+                                </ScaleBtn>
+                            </>
+                            :
+                            <>
+                                <View style={{ height: 32 }} className='flex-1 justify-center pl-3'>
+                                    <Text className='text-lg text-gray-400 font-semibold'>
+                                        {recordingStep === "recording" ? `${recordingCounter} Recording Audio` : `${recordingCounter} Recording Audio`}
+                                    </Text>
+                                </View>
+                            </>
+                    }
                 </Animated.View>
                 <ScaleBtn
-                    hitSlop={10}
-                    android_ripple={{
-                        color: Colors[colorScheme ?? "light"].border_light,
-                        borderless: true,
-                        radius: 30 - 0.1 * 30,
-                    }}
                     style={styles.sendButton}
                     onPress={() => {
                         if (
@@ -308,25 +296,25 @@ const GiftedChatScreen = (props: GiftedChatScreenProps) => {
                             props.sendMessageCallback
                         ) {
                             props?.sendMessageCallback();
-                        } else {
-                            // TODO: implement send voice message.
                         }
-                    }}>
-                    {/* <Animated.View style={[opacityAnimatedStyle]}>
-                        <MaterialCommunityIcons
-                            adjustsFontSizeToFit
-                            allowFontScaling
-                            // name={props.messageGetter?.trim()?.length ? 'send' : 'microphone'}
-                            name={"send"}
-                            size={23}
-                            color={Colors[colorScheme ?? "light"].background_light}
-                        />
-                    </Animated.View> */}
+                    }}
+                    onPressIn={() => {
+                        if (
+                            props?.messageGetter?.trim()?.length === 0
+                        ) {
+                            LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                            startRecording()
+                        }
+                    }}
+                    onPressOut={() => {
+                        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                        stopRecording()
+                    }}
+                >
                     <MaterialCommunityIcons
                         adjustsFontSizeToFit
                         allowFontScaling
-                        // name={props.messageGetter?.trim()?.length ? 'send' : 'microphone'}
-                        name={"send"}
+                        name={props.messageGetter?.trim()?.length || recordingStep === "recorded" ? 'send' : 'microphone'}
                         size={23}
                         color={Colors[colorScheme ?? "light"].background_light}
                     />

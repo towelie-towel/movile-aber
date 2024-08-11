@@ -3,7 +3,7 @@
 // import auth from '@react-native-firebase/auth';
 // import firestore from '@react-native-firebase/firestore';
 // import storage from '@react-native-firebase/storage';
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import {
     BackHandler,
     Linking,
@@ -14,13 +14,14 @@ import {
     ToastAndroid,
     useColorScheme,
     View,
-    useWindowDimensions
+    useWindowDimensions,
+    FlatList,
+    StyleSheet
 } from 'react-native';
 import {
     Bubble,
     GiftedChat,
     IMessage,
-    MessageImage,
     MessageText,
     SystemMessage,
     Time,
@@ -32,26 +33,28 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import ImageView from 'react-native-image-viewing';
 import NetInfo from '@react-native-community/netinfo';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated from 'react-native-reanimated';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 // import { filter, isEmpty, isNull, reverse, sortBy } from 'lodash';
 
+import { LightBoxProvider, LightBox } from '~/lib/lightbox';
 import { useUser } from '~/context/UserContext';
+import { useWSActions, useWSState } from '~/context/WSContext';
+import { useAppInactive } from '~/hooks/useAppInactive';
+import { ScaleBtn } from '~/components/common';
 import MoonInputToolbar from '~/components/chat/InputToolbar';
 import BaseView from '~/components/chat/BaseView';
-import Colors from '~/constants/Colors';
 import { generateUniqueId, getFirstName, getLastName } from '~/utils';
-import { ScaleBtn } from '~/components/common';
-import Animated from 'react-native-reanimated';
-import ChatTitle from '~/components/chat/ChatTitle';
-import { useAppInactive } from '~/hooks/useAppInactive';
+import Colors from '~/constants/Colors';
 
 const ChatScreen = () => {
     /* V A R I A B L E S */
     const colorScheme = useColorScheme();
-    const insets = useSafeAreaInsets();
     const { width, height } = useWindowDimensions()
     const router = useRouter();
     const { profile } = useUser()
+    const { sendStringToServer } = useWSActions()
+    const { recievedMessages } = useWSState()
     /* const navigation = useNavigation();
     const stackRoute = useRoute();
     const destinedUser = useMemo(() => stackRoute?.params?.item, []); */
@@ -327,6 +330,25 @@ const ChatScreen = () => {
     };
 
     useEffect(() => {
+        const recievedMessage = recievedMessages && recievedMessages[recievedMessages.length - 1]
+        const recievedMessageText = recievedMessage?.message
+        const recievedMessageUserId = recievedMessage?.sender_id
+        if (recievedMessageText && recievedMessageUserId)
+            setChatData(previousMessages =>
+                GiftedChat.append(previousMessages, [
+                    {
+                        _id: generateUniqueId(),
+                        text: recievedMessageText.trim(),
+                        createdAt: Date.now(),
+                        user: {
+                            _id: recievedMessageUserId
+                        }
+                    }
+                ]),
+            );
+    }, [recievedMessages])
+
+    useEffect(() => {
         setTimeout(() => {
             setLoading(false);
         }, 1000)
@@ -379,26 +401,22 @@ const ChatScreen = () => {
     }, [updateUserMessageSentStatus]);
 
     return (
-        <View style={{ paddingBottom: insets.bottom + 48 }} className="flex-1 bg-[#F8F8F8] dark:bg-[#1b1b1b]">
-            <View className="w-[90%] self-center mt-5 h-20- flex-row justify-between items-center">
-                <View className="flex-row gap-3 items-center">
-                    <Image
-                        style={{ width: 50, height: 50 }}
-                        source={require('../../../assets/images/taxi_test.png')}
-                    />
-                    <View className="justify-center">
-                        <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-bold text-xl">{"Anonymous"}</Text>
-                        <View className="flex-row items-center">
-                            <Text className="text-[#1b1b1b] dark:text-[#C1C0C9]">last seen recently</Text>
+        <View className="flex-1 bg-[#F8F8F8] dark:bg-[#1b1b1b]">
+            <BaseView>
+                <View className="w-[90%] self-center mt-5 h-20- flex-row justify-between items-center">
+                    <View className="flex-row gap-3 items-center">
+                        <Image
+                            style={{ width: 50, height: 50 }}
+                            source={require('../../../assets/images/taxi_test.png')}
+                        />
+                        <View className="justify-center">
+                            <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-bold text-xl">{"Anonymous"}</Text>
+                            <View className="flex-row items-center">
+                                <Text className="text-[#1b1b1b] dark:text-[#C1C0C9]">{isTyping ? `${userFirstName} is typing...` : 'last seen recently'}</Text>
+                            </View>
                         </View>
                     </View>
                 </View>
-
-                <ScaleBtn onPress={() => router.back()}>
-                    <MaterialCommunityIcons name="close" size={28} color={Colors[colorScheme ?? "light"].border} />
-                </ScaleBtn>
-            </View>
-            <BaseView>
                 <GiftedChat
                     isLoadingEarlier={isLoading}
                     messageIdGenerator={() => generateUniqueId()}
@@ -420,7 +438,8 @@ const ChatScreen = () => {
                     showUserAvatar={false}
                     messages={mChatData}
                     onLongPress={onLongPress}
-                    /* renderTicks={(message: any) => {
+                    // @ts-ignore
+                    renderTicks={(message: any) => {
                         if (message?.user?._id === _id) {
                             return (
                                 <MaterialCommunityIcons
@@ -435,20 +454,26 @@ const ChatScreen = () => {
                         } else {
                             return null
                         }
-                    }} */
+                    }}
                     renderMessageImage={props => {
                         return (
-                            <MessageImage
-                                {...props}
-                                containerStyle={props.containerStyle}
-                                imageStyle={{
-                                    width: width * 0.5,
-                                    height: height * 0.2,
-                                    borderRadius: 13,
-                                    margin: 3,
-                                    resizeMode: 'cover',
-                                }}
-                            />
+                            <View
+                                style={props.containerStyle}
+                            >
+                                <LightBox
+                                    width={width * 0.5}
+                                    height={height * 0.2}
+                                    imgLayout={{ width, height: width }}
+                                >
+                                    <Image
+                                        source={{ uri: props.currentMessage?.image }}
+                                        style={[StyleSheet.absoluteFill, {
+                                            borderRadius: 12
+                                        }]}
+                                        contentFit='cover'
+                                    />
+                                </LightBox>
+                            </View>
                         );
                     }}
                     renderMessageText={props => {
@@ -509,6 +534,11 @@ const ChatScreen = () => {
                             attachPressCallback={() => void mAttachPressCallback()}
                             cameraPressCallback={() => void mCameraPressCallback()}
                             sendMessageCallback={() => {
+                                sendStringToServer(`messagetoall#${JSON.stringify({
+                                    message: mMessageText?.trim(),
+                                    sender_id: profile?.id,
+                                    target_id: "all",
+                                })}`)
                                 sendMessage([
                                     {
                                         _id: generateUniqueId(),
@@ -605,25 +635,7 @@ const ChatScreen = () => {
                     }}
                     scrollToBottom
                 />
-                {isTyping ? (
-                    <View
-                        style={{
-                            marginLeft: '2%',
-                            marginRight: '0.5%',
-                            marginBottom: '0.25%',
-                        }}>
-                        <Text
-                            style={{
-                                fontSize: 14,
-                                color: Colors[colorScheme ?? "light"].text_dark,
-                                opacity: 0.5,
-                            }}>{`${userFirstName} is typing...`}</Text>
-                    </View>
-                ) : (
-                    <></>
-                )}
 
-                <Animated.View></Animated.View>
                 <ImageView
                     images={[userAvatar ? { uri: userAvatar } : require('../../../assets/images/taxi_test.png')]}
                     imageIndex={0}

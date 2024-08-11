@@ -1,42 +1,56 @@
-import React, { useRef } from 'react';
-import { Animated, Pressable, PressableProps, ViewStyle } from 'react-native';
+import React from 'react';
+import { View, ViewStyle, ViewProps } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, {
+  runOnJS,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 
 export type PressBtnProps = {
   containerStyle?: ViewStyle;
   scaleReduction?: number;
   onPress?: () => void;
-  callback?: () => void;
+  onPressIn?: () => void;
+  onPressOut?: () => void;
   disabled?: boolean;
   children: React.ReactNode;
-} & PressableProps;
+} & ViewProps;
 
 const ScaleBtn: React.FC<PressBtnProps> = ({
   containerStyle,
   scaleReduction = 0.95,
   onPress,
+  onPressIn,
+  onPressOut,
   children,
-  callback,
   disabled = false,
-  ...props
+  ...restProps
 }) => {
-  const animatedValue = useRef(new Animated.Value(1)).current;
+  const animatedValue = useSharedValue(1);
 
-  const handlePressIn = () => {
-    Animated.timing(animatedValue, {
-      toValue: scaleReduction,
-      duration: 75,
-      useNativeDriver: true,
-    }).start();
-  };
-  const handlePressOut = () => {
-    Animated.timing(animatedValue, {
-      toValue: 1,
-      duration: 50,
-      useNativeDriver: true,
-    }).start(() => {
-      onPress && onPress();
-    });
-  };
+  const tapGesture = Gesture.Tap()
+    .onBegin(() => {
+      onPressIn && runOnJS(onPressIn)();
+      animatedValue.value = withTiming(scaleReduction, {
+        duration: 120,
+      });
+    })
+    .onEnd(() => {
+      animatedValue.value = withTiming(1, {
+        duration: 75,
+      }, () => {
+        onPress && runOnJS(onPress)();
+      });
+      onPressOut && runOnJS(onPressOut)();
+    })
+    .onTouchesCancelled(() => {
+      animatedValue.value = withTiming(1, {
+        duration: 75,
+      });
+      onPressOut && runOnJS(onPressOut)();
+    })
+    .maxDuration(20000)
 
   return (
     <Animated.View
@@ -47,14 +61,11 @@ const ScaleBtn: React.FC<PressBtnProps> = ({
         },
         containerStyle,
       ]}>
-      <Pressable
-        disabled={disabled}
-        onPress={callback}
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
-        {...props}>
-        {children}
-      </Pressable>
+      <View {...restProps}>
+        <GestureDetector gesture={tapGesture}>
+          {children}
+        </GestureDetector>
+      </View>
     </Animated.View>
   );
 };

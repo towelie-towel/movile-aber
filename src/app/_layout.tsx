@@ -1,4 +1,4 @@
-import 'react-native-gesture-handler';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import '~/styles/global.css';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
@@ -50,22 +50,25 @@ const RootLayout = () => {
     <UserProvider>
       <WSWrapper setIsUserInitialized={setIsUserInitialized} setIsUserSigned={setIsUserSigned} setUserRole={setUserRole} >
         <ToastProvider>
-          <SafeAreaProvider>
-            <Stack
-              screenOptions={{
-                headerShown: false,
-              }}
-              // ["(auth)/code", "(auth)/sign", "(client)/index", "(common)/chat", "(common)/profile", "(taxi)/taximap"]
-              initialRouteName={!isUserSigned ? "(auth)/sign" : getHomeRouteByRole(userRole ?? "client")}
-            >
-              <Stack.Screen
+          <GestureHandlerRootView style={{ flex: 1 }}>
+            <SafeAreaProvider>
+              <Stack
+                screenOptions={{
+                  headerShown: false,
+                }}
+                // ["(auth)/code", "(auth)/sign", "(client)/index", "(common)/chat", "(common)/profile", "(taxi)/taximap"]
+                initialRouteName={!isUserSigned ? "(auth)/sign" : getHomeRouteByRole(userRole ?? "client")}
+              />
+              {/* 
+            <Stack.Screen
                 name="(common)/chat"
                 options={{
                   presentation: 'modal',
                 }}
               />
-            </Stack>
-          </SafeAreaProvider>
+            */}
+            </SafeAreaProvider>
+          </GestureHandlerRootView>
         </ToastProvider>
       </WSWrapper>
     </UserProvider>
@@ -84,6 +87,8 @@ const WSWrapper = ({ children, setIsUserInitialized, setIsUserSigned, setUserRol
       setIsUserInitialized(true)
     }
   }, [isInitializing])
+
+  if (isInitializing) return null
 
   return (
     <WSProvider userProfile={profile}>

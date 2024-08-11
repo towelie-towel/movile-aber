@@ -39,6 +39,7 @@ interface WSStateContext {
 }
 interface WSActionsContext {
     sendStringToServer: (message: string) => void;
+    sendMessageTo: (message: ChatMessage) => void;
     findTaxi: (ride: RideInfo, taxiid?: string) => Promise<void>;
     cancelTaxi: () => Promise<void>;
     /* simulateRoutePosition: (coords: LatLng[]) => Promise<void>;
@@ -54,12 +55,6 @@ const stateInitialValue: WSStateContext = {
     heading: undefined,
 };
 const stateActionslValue: WSActionsContext = {
-    /* openWSConnection: async () => {
-        throw new Error('Function not initizaliced yet');
-    },
-    trackPosition: async () => {
-        throw new Error('Function not initizaliced yet');
-    }, */
     /* simulateRoutePosition: async () => {
         throw new Error('Function not initizaliced yet');
     },
@@ -67,6 +62,9 @@ const stateActionslValue: WSActionsContext = {
         throw new Error('Function not initizaliced yet');
     }, */
     sendStringToServer: async () => {
+        throw new Error('Function not initizaliced yet');
+    },
+    sendMessageTo: async () => {
         throw new Error('Function not initizaliced yet');
     },
     findTaxi: async () => {
@@ -215,12 +213,20 @@ export const WSProvider = ({ children, userProfile }: { children: React.ReactNod
         } else if (message.startsWith("sentfrom-")) {
             const chatMsgJSON = message.replace('sentfrom-', '');
             const chatMsg = JSON.parse(chatMsgJSON) as ChatMessage;
+
+            console.log(JSON.stringify({ chatMsg, userProfile }, null, 2))
+            // while development could be same sended message
+            if (chatMsg.sender_id === userProfile?.id) {
+                return
+            }
+
             setRecievedMessages(prev => {
                 return prev ? [...prev, chatMsg] : [chatMsg]
             })
         }
 
-    }, []);
+        // while development could be same sended message
+    }, [userProfile]);
 
     const asyncNewWebSocket = useCallback(() => {
         const protocol = `map-client`;
@@ -388,11 +394,16 @@ export const WSProvider = ({ children, userProfile }: { children: React.ReactNod
         if (WS_LOGS) console.log('Stopping route simulation');
     }, [/* positionSubscription, headingSubscription,  */simulationSubscription]);
 
+    const sendMessageTo = useCallback((message: ChatMessage) => {
+        sendStringToServer(`sendto-${JSON.stringify(message)}`)
+    }, [sendStringToServer]);
+
     useEffect(startTracking, []);
     useEffect(openWSConnection, [isConnected]);
 
     const actions = useMemo(() => ({
         sendStringToServer,
+        sendMessageTo,
         findTaxi,
         cancelTaxi,
         /* simulateRoutePosition,

@@ -29,6 +29,9 @@ const Ripple: React.FC<RippleProps> = ({ onTap, children, ...restProps }) => {
 
   const tapGesture = Gesture.Tap()
     .onBegin((tapEvent) => {
+      rippleOpacity.value = 1;
+      scale.value = 0;
+
       const layout = measure(aRef);
       if (!layout) return;
       width.value = layout.width;
