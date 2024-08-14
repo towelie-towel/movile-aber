@@ -34,7 +34,7 @@ import ImageView from 'react-native-image-viewing';
 import NetInfo from '@react-native-community/netinfo';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated from 'react-native-reanimated';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { MaterialCommunityIcons, FontAwesome6 } from '@expo/vector-icons';
 // import { filter, isEmpty, isNull, reverse, sortBy } from 'lodash';
 
 import { LightBoxProvider, LightBox } from '~/lib/lightbox';
@@ -46,6 +46,7 @@ import MoonInputToolbar from '~/components/chat/InputToolbar';
 import BaseView from '~/components/chat/BaseView';
 import { generateUniqueId, getFirstName, getLastName } from '~/utils';
 import Colors from '~/constants/Colors';
+import MessageAudio, { Memo } from './MessageAudio';
 
 const ChatScreen = () => {
     /* V A R I A B L E S */
@@ -53,8 +54,8 @@ const ChatScreen = () => {
     const { width, height } = useWindowDimensions()
     const router = useRouter();
     const { profile } = useUser()
-    const { sendStringToServer } = useWSActions()
-    const { recievedMessages } = useWSState()
+    // const { sendStringToServer } = useWSActions()
+    // const { recievedMessages } = useWSState()
     /* const navigation = useNavigation();
     const stackRoute = useRoute();
     const destinedUser = useMemo(() => stackRoute?.params?.item, []); */
@@ -70,6 +71,7 @@ const ChatScreen = () => {
      * Message Variables
      */
     const [mMessageText, setMessageText] = React.useState('');
+    const [mMessageAudio, setMessageAudio] = React.useState<Memo | null>(null);
     const [mChatData, setChatData] = React.useState<IMessage[]>([]);
     const [isLoading, setLoading] = React.useState(true);
 
@@ -192,6 +194,7 @@ const ChatScreen = () => {
                 GiftedChat.append(previousMessages, mChatData),
             );
             setMessageText(mMessageText?.trim());
+            setMessageAudio(null)
             let connectionStatus = await NetInfo?.fetch();
             if (connectionStatus?.isConnected) {
                 if (!image) {
@@ -329,7 +332,7 @@ const ChatScreen = () => {
         }
     };
 
-    useEffect(() => {
+    /* useEffect(() => {
         const recievedMessage = recievedMessages && recievedMessages[recievedMessages.length - 1]
         const recievedMessageText = recievedMessage?.message
         const recievedMessageUserId = recievedMessage?.sender_id
@@ -346,7 +349,7 @@ const ChatScreen = () => {
                     }
                 ]),
             );
-    }, [recievedMessages])
+    }, [recievedMessages]) */
 
     useEffect(() => {
         setTimeout(() => {
@@ -405,6 +408,9 @@ const ChatScreen = () => {
             <BaseView>
                 <View className="w-[90%] self-center mt-5 h-20- flex-row justify-between items-center">
                     <View className="flex-row gap-3 items-center">
+                        <ScaleBtn className='justify-center items-center' onPress={() => { router.back() }}>
+                            <FontAwesome6 name="chevron-left" size={24} color={Colors[colorScheme ?? "light"].text_dark} />
+                        </ScaleBtn>
                         <Image
                             style={{ width: 50, height: 50 }}
                             source={require('../../../assets/images/taxi_test.png')}
@@ -454,6 +460,20 @@ const ChatScreen = () => {
                         } else {
                             return null
                         }
+                    }}
+                    renderMessageAudio={props => {
+                        if (!props.currentMessage?.audio) return null;
+
+                        const audioMemo = JSON.parse(props.currentMessage.audio) as Memo
+                        return (
+                            <View
+                                style={[props.containerStyle, {
+                                    width: width * 0.8
+                                }]}
+                            >
+                                <MessageAudio memo={audioMemo} />
+                            </View>
+                        );
                     }}
                     renderMessageImage={props => {
                         return (
@@ -529,20 +549,23 @@ const ChatScreen = () => {
                     minInputToolbarHeight={0}
                     renderInputToolbar={_ => (
                         <MoonInputToolbar
-                            messageGetter={mMessageText}
-                            messageSetter={setMessageText}
+                            messageTextGetter={mMessageText}
+                            messageTextSetter={setMessageText}
+                            messageAudioGetter={mMessageAudio}
+                            messageAudioSetter={setMessageAudio}
                             attachPressCallback={() => void mAttachPressCallback()}
                             cameraPressCallback={() => void mCameraPressCallback()}
                             sendMessageCallback={() => {
-                                sendStringToServer(`messagetoall#${JSON.stringify({
+                                /* sendStringToServer(`messagetoall#${JSON.stringify({
                                     message: mMessageText?.trim(),
                                     sender_id: profile?.id,
                                     target_id: "all",
-                                })}`)
+                                })}`) */
                                 sendMessage([
                                     {
                                         _id: generateUniqueId(),
                                         text: mMessageText?.trim(),
+                                        audio: mMessageAudio ? JSON.stringify(mMessageAudio) : undefined,
                                         createdAt: Date.now(),
                                         user: {
                                             _id: _id

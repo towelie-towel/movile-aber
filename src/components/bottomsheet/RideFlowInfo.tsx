@@ -49,7 +49,7 @@ const RideFlowInfo: React.FC<IRideFlowInfo> = ({ routeInfo, pinedInfo, cancelRid
                 </View>
 
                 <View className="flex-row gap-4">
-                    <ScaleBtn>
+                    <ScaleBtn onPress={() => router.push('memos')}>
                         <View className="bg-[#25D366] p-2 rounded-full">
                             <FontAwesome6 name="phone" size={25} color="white" />
                         </View>

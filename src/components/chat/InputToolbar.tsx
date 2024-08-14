@@ -19,12 +19,16 @@ import Animated, {
 import { Audio } from 'expo-av';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
+import { ScaleBtn } from '~/components/common';
+import { Memo } from '~/components/chat/MessageAudio';
 import Colors from '~/constants/Colors';
-import { ScaleBtn } from '../common';
+import { formatTime } from '~/utils/time';
 
 interface GiftedChatScreenProps {
-    messageGetter: string;
-    messageSetter: React.Dispatch<React.SetStateAction<string>>;
+    messageTextGetter: string;
+    messageTextSetter: React.Dispatch<React.SetStateAction<string>>;
+    messageAudioGetter: Memo | null;
+    messageAudioSetter: React.Dispatch<React.SetStateAction<Memo | null>>;
     sendMessageCallback?: () => void | null | undefined;
     cameraPressCallback?: () => void | null | undefined;
     attachPressCallback?: () => void | null | undefined;
@@ -33,15 +37,18 @@ interface GiftedChatScreenProps {
 
 const GiftedChatScreen = (props: GiftedChatScreenProps) => {
     const colorScheme = useColorScheme();
-    const [permissionResponse, requestPermission] = Audio.usePermissions();
 
     const height = useSharedValue(70);
     const maxWidth = useSharedValue('100%');
 
+    const [recording, setRecording] = React.useState<Audio.Recording | null>(null);
+
+    const [audioMetering, setAudioMetering] = React.useState<number[]>([]);
+    const metering = useSharedValue(-100);
+
     const [recordingStep, setRecordingStep] = React.useState<'recording' | 'recorded' | null>(null);
-    const [lastLength, setLastLength] = React.useState(0);
-    const recording = React.useRef<Audio.Recording | null>(null);
     const [recordingCounter, setRecordingCounter] = React.useState(0);
+    const [lastLength, setLastLength] = React.useState(0);
 
 
 
@@ -177,38 +184,51 @@ const GiftedChatScreen = (props: GiftedChatScreenProps) => {
 
     async function startRecording() {
         try {
+            setAudioMetering([]);
 
-            if (permissionResponse?.status !== 'granted') {
-                console.log('Requesting permission..');
-                await requestPermission();
-            }
+            await Audio.requestPermissionsAsync();
             await Audio.setAudioModeAsync({
                 allowsRecordingIOS: true,
                 playsInSilentModeIOS: true,
             });
 
-            console.log('Starting recording..');
-            const { recording: aVRecording } = await Audio.Recording.createAsync(Audio.RecordingOptionsPresets.HIGH_QUALITY
+            const { recording } = await Audio.Recording.createAsync(
+                Audio.RecordingOptionsPresets.HIGH_QUALITY,
+                undefined,
+                100
             );
             setRecordingStep("recording");
-            recording.current = aVRecording
-            console.log('Recording started');
+            setRecording(recording);
+
+            recording.setOnRecordingStatusUpdate((status) => {
+                if (status.metering) {
+                    metering.value = status.metering;
+                    setAudioMetering((curVal) => [...curVal, status.metering || -100]);
+                }
+            });
         } catch (err) {
             console.error('Failed to start recording', err);
         }
     }
 
     async function stopRecording() {
+        if (!recording) {
+            return;
+        }
+
         console.log('Stopping recording..');
-        await recording.current?.stopAndUnloadAsync();
+        setRecording(null);
         setRecordingStep("recorded");
-        await Audio.setAudioModeAsync(
-            {
-                allowsRecordingIOS: false,
-            }
-        );
-        const uri = recording.current?.getURI();
+        await recording.stopAndUnloadAsync();
+        await Audio.setAudioModeAsync({
+            allowsRecordingIOS: false,
+        });
+        const uri = recording.getURI();
         console.log('Recording stopped and stored at', uri);
+        metering.value = -100;
+        if (uri) {
+            props.messageAudioSetter({ uri, metering: audioMetering });
+        }
     }
 
     useEffect(() => {
@@ -246,9 +266,9 @@ const GiftedChatScreen = (props: GiftedChatScreenProps) => {
                                     onBlur={() => Keyboard.dismiss()}
                                     onFocus={() => { }}
                                     style={styles.input}
-                                    value={props.messageGetter}
+                                    value={props.messageTextGetter}
                                     onChangeText={async text => {
-                                        props.messageSetter(text);
+                                        props.messageTextSetter(text);
                                         if (text?.trim()?.length === 0) {
                                             // set not typing
                                         } else {
@@ -281,9 +301,34 @@ const GiftedChatScreen = (props: GiftedChatScreenProps) => {
                             :
                             <>
                                 <View style={{ height: 32 }} className='flex-1 justify-center pl-3'>
-                                    <Text className='text-lg text-gray-400 font-semibold'>
-                                        {recordingStep === "recording" ? `${recordingCounter} Recording Audio` : `${recordingCounter} Recording Audio`}
-                                    </Text>
+                                    {recordingStep === "recording"
+                                        ?
+                                        <Text className='text-lg text-gray-400 font-semibold'>
+                                            {formatTime(recordingCounter)} Recording Audio
+                                        </Text>
+                                        :
+                                        <View className='flex-row justify-between'>
+                                            <Text className='text-lg text-gray-400 font-semibold'>
+                                                {formatTime(recordingCounter)} Recorded Audio
+                                            </Text>
+                                            <ScaleBtn
+                                                style={{
+                                                    marginRight: 12
+                                                }}
+                                                onPress={() => {
+                                                    props.messageAudioSetter(null)
+                                                    setAudioMetering([])
+                                                    setRecordingStep(null);
+                                                    setRecording(null)
+                                                    metering.value = -100
+                                                }}
+                                            >
+                                                <Text className='text-lg text-red-500 font-semibold'>
+                                                    Cancel
+                                                </Text>
+                                            </ScaleBtn>
+                                        </View>
+                                    }
                                 </View>
                             </>
                     }
@@ -292,29 +337,24 @@ const GiftedChatScreen = (props: GiftedChatScreenProps) => {
                     style={styles.sendButton}
                     onPress={() => {
                         if (
-                            props?.messageGetter?.trim()?.length > 0 &&
+                            (props?.messageTextGetter?.trim()?.length > 0 || props.messageAudioGetter) &&
                             props.sendMessageCallback
                         ) {
                             props?.sendMessageCallback();
-                        }
-                    }}
-                    onPressIn={() => {
-                        if (
-                            props?.messageGetter?.trim()?.length === 0
-                        ) {
+                            setRecordingStep(null)
+                        } else if (!recordingStep) {
                             LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
                             startRecording()
+                        } else if (recordingStep === "recording") {
+                            LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                            stopRecording()
                         }
-                    }}
-                    onPressOut={() => {
-                        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-                        stopRecording()
                     }}
                 >
                     <MaterialCommunityIcons
                         adjustsFontSizeToFit
                         allowFontScaling
-                        name={props.messageGetter?.trim()?.length || recordingStep === "recorded" ? 'send' : 'microphone'}
+                        name={props.messageTextGetter?.trim()?.length || recordingStep === "recorded" ? 'send' : recordingStep === "recording" ? "stop" : 'microphone'}
                         size={23}
                         color={Colors[colorScheme ?? "light"].background_light}
                     />
