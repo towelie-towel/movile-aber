@@ -13,3 +13,20 @@ export const getLastName = (fullName: string) => {
     else
         return temp[temp.length - 1]
 }
+
+export const capitalizeString = (text: string, allWords = false) => {
+    if (!text) return ""
+
+    const tempArr = text.split(" ")
+    if (tempArr.length < 2 || !allWords) {
+        const tempFirstLetter = text.slice(0, 1)
+        const tempRestLetter = text.slice(1)
+        return tempFirstLetter.toUpperCase() + tempRestLetter
+    } else {
+        return tempArr.map((word) => {
+            const tempFirstLetter = word.slice(0, 1)
+            const tempRestLetter = word.slice(1)
+            return tempFirstLetter.toUpperCase() + tempRestLetter
+        }).join(" ")
+    }
+}

@@ -237,7 +237,7 @@ export default function ClientMap() {
                 onClose={() => setDrawerOpen(false)}
                 renderDrawerContent={() => {
                     return (
-                        <View className="w-full h-full bg-[#F8F8F8] dark:bg-[#222222]">
+                        <View className="w-full h-full bg-[#F8F8F8] dark:bg-[#1b1b1b]">
                             <View className="h-[300px] w-full justify-center items-center bg-[#FCCB6F] dark:bg-[#947233]">
                                 <View className="absolute top-[-170px] left-[-40px] w-[300px] h-[300px] rounded-full opacity-5 bg-black" />
                                 <View className="absolute w-[350px] h-[350px] top-[-50px] left-[-175px] rounded-full opacity-5 bg-black" />
@@ -247,13 +247,13 @@ export default function ClientMap() {
                                     <Text className="text-[#FFFFFF] text-xl font-semibold mt-2.5">{profile?.username ?? 'Not signed'}</Text>
                                     {!isSignedIn ? (
                                         <ScaleBtn className="mt-4" onPress={() => router.push('sign')}>
-                                            <View className="bg-[#F8F8F8] dark:bg-[#222222] rounded-lg p-3 chevron-right-"><Text className="text-center font-semibold w-auto dark:text-[#fff]">Sign In</Text></View>
+                                            <View className="bg-[#F8F8F8] dark:bg-[#1b1b1b] rounded-lg p-3 chevron-right-"><Text className="text-center font-semibold w-auto dark:text-[#fff]">Sign In</Text></View>
                                         </ScaleBtn>
                                     ) : (
                                         <ScaleBtn className="mt-4 w-40 gap-3" onPress={() => router.push('profile')}>
-                                            <View className="flex-row items-center justify-center bg-[#F8F8F8] dark:bg-[#222222] rounded-lg p-3">
+                                            <View style={{ backgroundColor: Colors[colorScheme ?? "light"].background_light1 }} className="flex-row items-center justify-center bg-[#F8F8F8]- dark:bg-[#1b1b1b]- rounded-lg p-3">
                                                 <Text className="text-center font-semibold w-auto dark:text-[#fff]">User Profile</Text>
-                                                <MaterialCommunityIcons name="chevron-right" size={24} color="black" />
+                                                <MaterialCommunityIcons name="chevron-right" size={24} color={Colors[colorScheme ?? 'light'].text_dark} />
                                             </View>
                                         </ScaleBtn>
                                     )}
@@ -261,10 +261,10 @@ export default function ClientMap() {
                             </View>
 
                             {isSignedIn ? (
-                                <View className="ml-[-4px] flex-1 bg-[#F8F8F8] dark:bg-[#222222]">
+                                <View className="ml-[-4px] flex-1 bg-[#F8F8F8] dark:bg-[#1b1b1b]">
                                     {drawerItems.map((item, index) => {
                                         return (
-                                            <Ripple key={index} onTap={() => { console.log(item); }}>
+                                            <Ripple key={index} onTap={() => { /* router.push(item.route) */ router.push("history") }}>
                                                 <View className="w-full h-16 flex-row items-center justify-start px-[10%] gap-4">
                                                     <MaterialIcons // @ts-ignore
                                                         name={item.icon} size={30} color={Colors[colorScheme ?? 'light'].icons} />
@@ -281,7 +281,7 @@ export default function ClientMap() {
                                     </Ripple>
                                 </View>
                             ) : (
-                                <View className="flex-1 bg-[#F8F8F8] dark:bg-[#222222] justify-center items-center">
+                                <View className="flex-1 bg-[#F8F8F8] dark:bg-[#1b1b1b] justify-center items-center">
                                     <Text className="text-[#000] dark:text-[#fff] text-xl font-semibold">
                                         Please Sign In to use our services{' '}
                                     </Text>

@@ -1,10 +1,10 @@
 import { Feather, MaterialIcons } from '@expo/vector-icons';
-import { BlurView } from 'expo-blur';
-import { useState } from 'react';
-import { LayoutAnimation, Pressable, View, useColorScheme } from 'react-native';
+import { useEffect, useState } from 'react';
+import { LayoutAnimation, Pressable, View, useColorScheme, TouchableWithoutFeedback } from 'react-native';
 
 import { Text } from '~/components/common/Themed';
 import Colors from '~/constants/Colors';
+import ScaleBtn from './ScaleBtn';
 
 interface Action {
   onPress: () => void;
@@ -18,52 +18,59 @@ interface Action {
   loadingBackgroundColor?: string;
 }
 
-const AbsoluteDropdown = ({ actions }: { actions: Action[] }) => {
-  const [isOpen, setIsOpen] = useState(false);
+interface AbsoluteDropdownProps {
+  actions: Action[];
+  isOpen?: boolean;
+  setIsOpen?: (isOpen: boolean) => void;
+}
+
+
+const AbsoluteDropdown = ({ actions, isOpen = false, setIsOpen }: AbsoluteDropdownProps) => {
   const colorScheme = useColorScheme();
 
   const [width, setWidth] = useState(32);
   const [height, setHeight] = useState(32);
 
-  const handleOpenDropdown = () => {
-    LayoutAnimation.configureNext({
-      duration: 300,
-      update: {
-        type: 'easeInEaseOut',
-        property: 'scaleXY',
-      },
-      create: {
-        type: 'easeInEaseOut',
-        property: 'opacity',
-      },
-    });
-    setIsOpen(true);
-    setWidth(150);
-    setHeight(150);
-  };
-
-  const handleCloseDropdown = () => {
-    LayoutAnimation.configureNext({
-      duration: 300,
-      update: {
-        type: 'easeInEaseOut',
-        property: 'scaleXY',
-      },
-      delete: {
-        type: 'easeInEaseOut',
-        property: 'opacity',
-      },
-    });
-    setWidth(32);
-    setHeight(32);
-    setIsOpen(false);
-  };
+  useEffect(() => {
+    if (isOpen) {
+      LayoutAnimation.configureNext({
+        duration: 300,
+        update: {
+          type: 'easeInEaseOut',
+          property: 'scaleXY',
+        },
+        create: {
+          type: 'easeInEaseOut',
+          property: 'opacity',
+        },
+      });
+      setWidth(150);
+      setHeight(150);
+    } else {
+      LayoutAnimation.configureNext({
+        duration: 300,
+        update: {
+          type: 'easeInEaseOut',
+          property: 'scaleXY',
+        },
+        delete: {
+          type: 'easeInEaseOut',
+          property: 'opacity',
+        },
+      });
+      setWidth(32);
+      setHeight(32);
+    }
+  }, [isOpen])
 
   return (
-    <>
-      <Pressable
-        onPress={handleOpenDropdown}
+    <TouchableWithoutFeedback>
+      <View
         style={{
+          pointerEvents: "auto",
+          position: "absolute",
+          top: 0,
+          right: 0,
           backgroundColor: colorScheme === 'light' ? 'white' : 'black',
           width,
           height,
@@ -72,7 +79,9 @@ const AbsoluteDropdown = ({ actions }: { actions: Action[] }) => {
           alignItems: 'center',
         }}>
         {!isOpen && (
-          <Feather name="more-vertical" size={20} color={Colors[colorScheme ?? 'light'].text} />
+          <ScaleBtn onPress={() => setIsOpen && setIsOpen(true)}>
+            <Feather name="more-vertical" size={20} color={Colors[colorScheme ?? 'light'].text} />
+          </ScaleBtn>
         )}
 
         {isOpen &&
@@ -104,14 +113,8 @@ const AbsoluteDropdown = ({ actions }: { actions: Action[] }) => {
               </Text>
             </Pressable>
           ))}
-      </Pressable>
-
-      {isOpen && (
-        <Pressable onPress={handleCloseDropdown}>
-          <BlurView intensity={1} />
-        </Pressable>
-      )}
-    </>
+      </View>
+    </TouchableWithoutFeedback>
   );
 };
 

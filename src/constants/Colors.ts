@@ -1,6 +1,7 @@
 export default {
   light: {
     text: '#000',
+    text_i: '#fff',
     text_light: '#6C6C6C',
     text_light1: '#C8C7CC',
     text_light2: '#FFFFFF',
@@ -26,6 +27,7 @@ export default {
   },
   dark: {
     text: '#fff',
+    text_i: '#000',
     text_light: '#fff',
     text_light1: '#FFFFFF',
     text_light2: '#FFFFFF',
@@ -35,7 +37,7 @@ export default {
     background_light: '#1b1b1b',
     background_light1: '#333333',
     background_dark: '#1b1b1b',
-    primary: '#FCCB6F',
+    primary: '#947233',
     secondary: '#222222',
     border: '#A3A3A3',
     border_light: '#444444',
