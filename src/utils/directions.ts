@@ -33,7 +33,7 @@ export const getCoordinateAddress = async (latitude: number, longitude: number) 
 export const getDirections = async (startLoc: string, destinationLoc: string) => {
   try {
     const resp = await fetch(
-      `http://192.168.1.101:6942/route?from=${startLoc}&to=${destinationLoc}`
+      `http://192.168.1.100:6942/route?from=${startLoc}&to=${destinationLoc}`
     );
     const respJson = await resp.json();
     const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map((point, _) => ({

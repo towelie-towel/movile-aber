@@ -17,12 +17,12 @@ import { getData } from '~/lib/storage';
 export const selectableMarkerIcons = [
   {
     type: 'MCI',
-    name: 'Trabajo',
+    name: 'folder-marker',
     icon: 'folder-marker',
   },
   {
     type: 'MCI',
-    name: 'Casa',
+    name: 'home-map-marker',
     icon: 'home-map-marker',
   },
   {

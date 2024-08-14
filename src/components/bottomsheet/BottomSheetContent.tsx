@@ -488,7 +488,7 @@ export const BottomSheetContent = ({
           <View className="w-[95%] h-full self-center overflow-visible">
             <View className='flex-row justify-between mt-3'>
               <View className='h-10 flex-row gap-3- justify-center items-center'>
-                <ScaleBtn className='h-full pr-3 justify-center items-center' onPress={cancelPiningLocationHandler}>
+                <ScaleBtn className='h-full pl-1 pr-3 justify-center items-center scale-125' onPress={cancelPiningLocationHandler}>
                   <FontAwesome6 name="chevron-left" size={18} color={Colors[colorScheme ?? "light"].icons_link} />
                 </ScaleBtn>
                 <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-bold text-xl">Añadiendo Marcador</Text>
@@ -583,16 +583,18 @@ export const BottomSheetContent = ({
                         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
                         setPiningMarker({ ...piningMarker, icon: markerIcon.icon })
                       }}
-                      className='rounded-full w-14 h-14 items-center justify-center'
+                      className='w-14 h-14 rounded-full'
                     >
-                      {piningMarker?.icon === markerIcon.name && <View className='bg-[#D8D8D8]- dark:bg-[#444444]- bg-red-500 absolute w-full h-full top-0 rounded-full' style={{ backgroundColor: Colors[colorScheme === "light" ? "dark" : "light"].border_light }}></View>}
-                      <MaterialCommunityIcons
-                        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                        // @ts-ignore
-                        name={markerIcon.icon}
-                        size={34}
-                        color={piningMarker?.icon === markerIcon.name ? (colorScheme === "light" ? "#D8D8D8" : "#444444") : (colorScheme === "light" ? "#444444" : "#D8D8D8")}
-                      />
+                      <View className='flex-1 items-center justify-center'>
+                        {piningMarker?.icon === markerIcon.name && <View className='bg-[#D8D8D8]- dark:bg-[#444444]- bg-red-500- absolute w-full h-full top-0 rounded-full' style={{ backgroundColor: Colors[colorScheme === "light" ? "dark" : "light"].border_light }}></View>}
+                        <MaterialCommunityIcons
+                          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                          // @ts-ignore
+                          name={markerIcon.icon}
+                          size={34}
+                          color={piningMarker?.icon === markerIcon.name ? (colorScheme === "light" ? "#D8D8D8" : "#444444") : (colorScheme === "light" ? "#444444" : "#D8D8D8")}
+                        />
+                      </View>
                     </ScaleBtn>
                   );
                 })}
@@ -610,7 +612,7 @@ export const BottomSheetContent = ({
         (
           <View className="w-[95%] h-full self-center overflow-visible">
 
-            {currentStep >= ClientSteps.PICKUP || true ?
+            {currentStep >= ClientSteps.PICKUP ?
               (
                 <View className="mt-3 h-full self-center">
                   {currentStep === ClientSteps.FINISHED ?
@@ -760,7 +762,7 @@ export const BottomSheetContent = ({
                               listView: {
                                 position: 'absolute',
                                 maxHeight: 150,
-                                minHeight: 100,
+                                // minHeight: 100,
                                 width: "100%",
                                 zIndex: 10000,
                                 backgroundColor: Colors[colorScheme ?? 'light'].background_light,
@@ -872,7 +874,7 @@ export const BottomSheetContent = ({
                               listView: {
                                 position: 'absolute',
                                 maxHeight: 150,
-                                minHeight: 100,
+                                // minHeight: 100,
                                 width: "100%",
                                 zIndex: 10000,
                                 backgroundColor: Colors[colorScheme ?? 'light'].background_light,
