@@ -1,4 +1,4 @@
-import { StatusBar, useColorScheme, Text, View, Platform, Keyboard, useWindowDimensions, LayoutAnimation, Switch } from 'react-native';
+import { StatusBar, useColorScheme, Text, View, Platform, Keyboard, useWindowDimensions, LayoutAnimation } from 'react-native';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Image } from 'expo-image';
 import { useKeepAwake } from 'expo-keep-awake';
@@ -243,14 +243,14 @@ export default function ClientMap() {
                                 <View className="absolute w-[350px] h-[350px] top-[-50px] left-[-175px] rounded-full opacity-5 bg-black" />
 
                                 <View className="w-4/5 shadow" style={{ marginTop: insets.top }}>
-                                    <View className="rounded-full overflow-hidden w-20 h-20 border border-white" ><Image style={{ flex: 1 }} source={{ uri: isSignedIn ? 'https://lh3.googleusercontent.com/a/AAcHTtfPgVic8qF8hDw_WPE80JpGOkKASohxkUA8y272Ow=s1000-c' : 'https://avatars.githubusercontent.com/u/100803609?v=4', }} alt="Profile Image" /></View>
+                                    <ScaleBtn scaleReduction={0.99} className="rounded-full overflow-hidden w-20 h-20 border border-white" ><Image style={{ flex: 1 }} source={{ uri: isSignedIn ? 'https://lh3.googleusercontent.com/a/AAcHTtfPgVic8qF8hDw_WPE80JpGOkKASohxkUA8y272Ow=s1000-c' : 'https://avatars.githubusercontent.com/u/100803609?v=4', }} alt="Profile Image" /></ScaleBtn>
                                     <Text className="text-[#FFFFFF] text-xl font-semibold mt-2.5">{profile?.username ?? 'Not signed'}</Text>
                                     {!isSignedIn ? (
                                         <ScaleBtn className="mt-4" onPress={() => router.push('sign')}>
                                             <View className="bg-[#F8F8F8] dark:bg-[#1b1b1b] rounded-lg p-3 chevron-right-"><Text className="text-center font-semibold w-auto dark:text-[#fff]">Sign In</Text></View>
                                         </ScaleBtn>
                                     ) : (
-                                        <ScaleBtn className="mt-4 w-40 gap-3" onPress={() => router.push('profile')}>
+                                        <ScaleBtn scaleReduction={0.98} className="mt-4 w-40 gap-3" onPress={() => router.push('profile')}>
                                             <View style={{ backgroundColor: Colors[colorScheme ?? "light"].background_light1 }} className="flex-row items-center justify-center bg-[#F8F8F8]- dark:bg-[#1b1b1b]- rounded-lg p-3">
                                                 <Text className="text-center font-semibold w-auto dark:text-[#fff]">User Profile</Text>
                                                 <MaterialCommunityIcons name="chevron-right" size={24} color={Colors[colorScheme ?? 'light'].text_dark} />
@@ -262,21 +262,45 @@ export default function ClientMap() {
 
                             {isSignedIn ? (
                                 <View className="ml-[-4px] flex-1 bg-[#F8F8F8] dark:bg-[#1b1b1b]">
+                                    <Ripple key={0} onTap={() => { setDrawerOpen(false) }}>
+                                        <View className="w-full h-16 flex-row items-center justify-between px-[10%]">
+                                            <View className='h-full flex-row items-center justify-start gap-4'>
+                                                <MaterialIcons name="map" size={30} color={Colors[colorScheme ?? 'light'].icons} />
+                                                <Text style={{ color: Colors[colorScheme ?? 'light'].text_dark, fontSize: 18, fontWeight: '600' }}>Home</Text>
+                                            </View>
+                                            <View>
+                                                <FontAwesome6 name="chevron-right" size={20} color={Colors[colorScheme ?? 'light'].text_dark} />
+                                            </View>
+                                        </View>
+                                    </Ripple>
                                     {drawerItems.map((item, index) => {
                                         return (
-                                            <Ripple key={index} onTap={() => { /* router.push(item.route) */ router.push("history") }}>
-                                                <View className="w-full h-16 flex-row items-center justify-start px-[10%] gap-4">
-                                                    <MaterialIcons // @ts-ignore
-                                                        name={item.icon} size={30} color={Colors[colorScheme ?? 'light'].icons} />
-                                                    <Text style={{ color: Colors[colorScheme ?? 'light'].text_dark, fontSize: 18, fontWeight: '600' }}>{item.label}</Text>
+                                            <Ripple key={index + 1} onTap={() => { router.push(item.route) }}>
+                                                <View className="w-full h-16 flex-row items-center justify-between px-[10%]">
+                                                    <View className='h-full flex-row items-center justify-start gap-4'>
+                                                        <MaterialIcons
+                                                            // @ts-ignore
+                                                            name={item.icon}
+                                                            size={30} color={Colors[colorScheme ?? 'light'].icons}
+                                                        />
+                                                        <Text style={{ color: Colors[colorScheme ?? 'light'].text_dark, fontSize: 18, fontWeight: '600' }}>{item.label}</Text>
+                                                    </View>
+                                                    <View>
+                                                        <FontAwesome6 name="chevron-right" size={20} color={Colors[colorScheme ?? 'light'].text_dark} />
+                                                    </View>
                                                 </View>
                                             </Ripple>
                                         );
                                     })}
-                                    <Ripple onTap={signOut}>
-                                        <View className="w-full h-16 flex-row items-center justify-start px-[10%] gap-4">
-                                            <MaterialIcons name="logout" size={30} color={Colors[colorScheme ?? 'light'].icons} />
-                                            <Text style={{ color: Colors[colorScheme ?? 'light'].text_dark, fontSize: 18, fontWeight: '600' }}>Sign Out</Text>
+                                    <Ripple key={drawerItems.length + 1} onTap={signOut}>
+                                        <View className="w-full h-16 flex-row items-center justify-between px-[10%]">
+                                            <View className='h-full flex-row items-center justify-start gap-4'>
+                                                <MaterialIcons name="map" size={30} color={Colors[colorScheme ?? 'light'].icons} />
+                                                <Text style={{ color: Colors[colorScheme ?? 'light'].text_dark, fontSize: 18, fontWeight: '600' }}>Sign Out</Text>
+                                            </View>
+                                            <View>
+                                                <FontAwesome6 name="chevron-right" size={20} color={Colors[colorScheme ?? 'light'].text_dark} />
+                                            </View>
                                         </View>
                                     </Ripple>
                                 </View>

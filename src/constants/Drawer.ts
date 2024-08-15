@@ -6,11 +6,6 @@ export const drawerItems: {
     label: string;
 }[] = [
         {
-            icon: 'map',
-            route: 'index',
-            label: 'Home',
-        },
-        {
             icon: 'wallet-giftcard',
             route: 'wallet',
             label: 'Wallet',
