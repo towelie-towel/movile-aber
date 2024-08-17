@@ -38,9 +38,9 @@ export const MapMarkerSVG2 = ({ size = 48, color = "#000" }) => {
 
 */
 
-export const ColorInstagram = ({ color = false }) => {
+export const ColorInstagram = ({ color = false, dark = false }) => {
   const colorScheme = useColorScheme();
-  const lineColor = colorScheme === 'light' || color ? '#444444' : '#fff';
+  const lineColor = (colorScheme === 'light' && !dark) ? '#444444' : '#fff';
   return (
     <Svg x="0px" y="0px" width="30" height="30" viewBox="0,0,256,256">
       {color ? (

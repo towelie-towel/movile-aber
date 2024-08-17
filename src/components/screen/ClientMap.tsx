@@ -244,9 +244,9 @@ export default function ClientMap() {
 
                                 <View className="w-4/5 shadow" style={{ marginTop: insets.top }}>
                                     <ScaleBtn scaleReduction={0.99} className="rounded-full overflow-hidden w-20 h-20 border border-white" ><Image style={{ flex: 1 }} source={{ uri: isSignedIn ? 'https://lh3.googleusercontent.com/a/AAcHTtfPgVic8qF8hDw_WPE80JpGOkKASohxkUA8y272Ow=s1000-c' : 'https://avatars.githubusercontent.com/u/100803609?v=4', }} alt="Profile Image" /></ScaleBtn>
-                                    <Text className="text-[#FFFFFF] text-xl font-semibold mt-2.5">{profile?.username ?? 'Not signed'}</Text>
+                                    <Text className="text-[#FFFFFF] text-xl font-semibold mt-2.5">{profile?.username ? "@" + profile?.username : "Not signed"}</Text>
                                     {!isSignedIn ? (
-                                        <ScaleBtn className="mt-4" onPress={() => router.push('sign')}>
+                                        <ScaleBtn className="mt-4" onPressIn={() => router.push('sign')}>
                                             <View className="bg-[#F8F8F8] dark:bg-[#1b1b1b] rounded-lg p-3 chevron-right-"><Text className="text-center font-semibold w-auto dark:text-[#fff]">Sign In</Text></View>
                                         </ScaleBtn>
                                     ) : (
