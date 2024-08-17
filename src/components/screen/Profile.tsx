@@ -1,12 +1,10 @@
 import { Image } from 'expo-image';
-import { useRouter } from 'expo-router';
-import React, { useEffect } from 'react';
+import React from 'react';
 import {
     useWindowDimensions,
     View,
     useColorScheme,
     TextInput,
-    Text,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ImageView from 'react-native-image-viewing';
@@ -130,23 +128,25 @@ const ProfileScreen = () => {
 
     const userIntroContainerRef = useAnimatedRef<Animated.Text>();
     const userIntroNameRef = useAnimatedRef<Animated.Text>();
-    const [userIntroContainerWidth, setUserIntroContainerWidth] = React.useState(0);
-    const [userIntroContainerHeight, setUserIntroContainerHeight] = React.useState(0);
-    const [userIntroNameWidth, setUserIntroNameWidth] = React.useState(0);
-    const [userIntroNameHeight, setUserIntroNameHeight] = React.useState(0);
+
+    const userIntroContainerWidth = useSharedValue(0);
+    const userIntroContainerHeight = useSharedValue(0);
+    const userIntroNameWidth = useSharedValue(0);
+    const userIntroNameHeight = useSharedValue(0);
+
     const userIntroContainerStyles = useAnimatedStyle(() => ({
         position: "absolute",
-        height: userIntroNameHeight * 2,
+        height: userIntroNameHeight.value * 2,
         bottom: interpolate(
             headerAnim.value,
-            [0, 50, 100],
-            [0, (width / 6), (width / 3)],
+            [0, 100],
+            [12, (width / 2) - userIntroContainerHeight.value - 12],
             Extrapolation.CLAMP
         ),
         left: interpolate(
             headerAnim.value,
             [0, 100],
-            [0, (width / 2) - (userIntroContainerWidth / 2)],
+            [12, (width / 2) - (userIntroContainerWidth.value / 2)],
             Extrapolation.CLAMP
         ),
 
@@ -157,7 +157,7 @@ const ProfileScreen = () => {
         left: interpolate(
             headerAnim.value,
             [0, 100],
-            [0, (userIntroContainerWidth / 2) - (userIntroNameWidth / 2)],
+            [0, (userIntroContainerWidth.value / 2) - (userIntroNameWidth.value / 2)],
             Extrapolation.CLAMP
         ),
 
@@ -182,19 +182,19 @@ const ProfileScreen = () => {
                         />
                     </Animated.View>
 
-                    <Animated.View className={"border border-blue-500 items-start justify-end py-1"} ref={userIntroContainerRef} style={userIntroContainerStyles}>
+                    <Animated.View className={"items-start justify-end py-1"} ref={userIntroContainerRef} style={userIntroContainerStyles}>
                         <Animated.Text
-                            className='font-bold text-xl text-[#C1C0C9] border border-red-500'
+                            className='font-bold text-xl text-[#C1C0C9]'
                             ref={userIntroNameRef}
                             style={userIntroNameStyles}
                             onLayout={() => {
                                 userIntroContainerRef.current?.measure((_1, _2, wi, he) => {
-                                    setUserIntroContainerWidth(wi)
-                                    setUserIntroContainerHeight(he)
+                                    userIntroContainerWidth.value = wi;
+                                    userIntroContainerHeight.value = he;
                                 })
                                 userIntroNameRef.current?.measure((_1, _2, wi, he) => {
-                                    setUserIntroNameWidth(wi)
-                                    setUserIntroNameHeight(he)
+                                    userIntroNameWidth.value = wi;
+                                    userIntroNameHeight.value = he;
                                 })
                             }}
                         >
@@ -217,23 +217,6 @@ const ProfileScreen = () => {
                             style={{ backgroundColor: Colors[colorScheme ?? "light"].background_2 }}
                             className={"text-center p-4 mb-2"}
                         />
-
-                        <View style={{ backgroundColor: Colors[colorScheme ?? "light"].background_2 }}
-                            className={"p-4 mb-2"}>
-                            <Text className='text-center' >Info container width: {userIntroContainerWidth}</Text>
-                        </View>
-                        <View style={{ backgroundColor: Colors[colorScheme ?? "light"].background_2 }}
-                            className={"p-4 mb-2"}>
-                            <Text className='text-center' >Info container height: {userIntroContainerHeight}</Text>
-                        </View>
-                        <View style={{ backgroundColor: Colors[colorScheme ?? "light"].background_2 }}
-                            className={"p-4 mb-2"}>
-                            <Text className='text-center' >Info name width: {userIntroNameWidth}</Text>
-                        </View>
-                        <View style={{ backgroundColor: Colors[colorScheme ?? "light"].background_2 }}
-                            className={"p-4 mb-2"}>
-                            <Text className='text-center' >Info name height: {userIntroNameHeight}</Text>
-                        </View>
                     </View>
                 </View>
             </Animated.ScrollView>
