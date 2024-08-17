@@ -468,7 +468,7 @@ export default function ClientMap() {
                             backgroundColor: Colors[colorScheme ?? 'light'].border,
                         }}
                         handleStyle={{
-                            // backgroundColor: Colors[colorScheme ?? 'light'].background_bsheet,
+                            // backgroundColor: Colors[colorScheme ?? 'light'].background,
                             // backgroundColor: 'black',
                             borderTopRightRadius: 30,
                             borderTopLeftRadius: 30,

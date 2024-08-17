@@ -1,17 +1,20 @@
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
     useWindowDimensions,
     View,
     useColorScheme,
-    TextInput
+    TextInput,
+    Text,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ImageView from 'react-native-image-viewing';
 import Animated, { useSharedValue, runOnJS, useAnimatedScrollHandler, ScrollEvent, useAnimatedProps, useAnimatedStyle, withTiming, interpolate, Extrapolation, useAnimatedRef, useScrollViewOffset } from 'react-native-reanimated'
 
 import Colors from '~/constants/Colors';
+import { useUser } from '~/context/UserContext';
+import { getFirstName, getLastName } from '~/utils';
 
 
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
@@ -20,6 +23,12 @@ const ProfileScreen = () => {
     const insets = useSafeAreaInsets();
     const { width, height } = useWindowDimensions();
     const colorScheme = useColorScheme();
+    const { profile } = useUser()
+
+    if (!profile) {
+        // go to sign-in screen
+        return null
+    }
 
     const scrollRef = useAnimatedRef<Animated.ScrollView>();
     const offsetY = useSharedValue(0);
@@ -41,7 +50,7 @@ const ProfileScreen = () => {
                     headerAnim.value = withTiming(100, {
                         duration: 300
                     });
-                } if (offsetY.value <= -50) {
+                } if (offsetY.value <= -75) {
                     runOnJS(setImageViewVisible)(true)
                 }
             } else if (headerAnim.value === 100) {
@@ -71,6 +80,8 @@ const ProfileScreen = () => {
 
         justifyContent: "center",
         alignItems: "center",
+
+        backgroundColor: Colors[colorScheme ?? "light"].background_light1
     }));
     const imgContainerStyles = useAnimatedStyle(() => ({
         width: interpolate(
@@ -83,6 +94,14 @@ const ProfileScreen = () => {
             headerAnim.value,
             [0, 50, 100],
             [width, (width / 2), 100],
+            Extrapolation.CLAMP
+        ),
+
+        position: "absolute",
+        bottom: interpolate(
+            headerAnim.value,
+            [0, 50, 100],
+            [0, (width / 4), (width / 2)],
             Extrapolation.CLAMP
         ),
         transform: [
@@ -104,16 +123,48 @@ const ProfileScreen = () => {
             }
         ],
 
-        borderRadius: headerAnim.value,
         overflow: "hidden",
+        borderRadius: headerAnim.value,
 
-        position: "absolute",
-        bottom: 0,
     }));
 
+    const userIntroContainerRef = useAnimatedRef<Animated.Text>();
+    const userIntroNameRef = useAnimatedRef<Animated.Text>();
+    const [userIntroContainerWidth, setUserIntroContainerWidth] = React.useState(0);
+    const [userIntroContainerHeight, setUserIntroContainerHeight] = React.useState(0);
+    const [userIntroNameWidth, setUserIntroNameWidth] = React.useState(0);
+    const [userIntroNameHeight, setUserIntroNameHeight] = React.useState(0);
+    const userIntroContainerStyles = useAnimatedStyle(() => ({
+        position: "absolute",
+        height: userIntroNameHeight * 2,
+        bottom: interpolate(
+            headerAnim.value,
+            [0, 50, 100],
+            [0, (width / 6), (width / 3)],
+            Extrapolation.CLAMP
+        ),
+        left: interpolate(
+            headerAnim.value,
+            [0, 100],
+            [0, (width / 2) - (userIntroContainerWidth / 2)],
+            Extrapolation.CLAMP
+        ),
+
+    }));
+    const userIntroNameStyles = useAnimatedStyle(() => ({
+        position: "absolute",
+        top: 0,
+        left: interpolate(
+            headerAnim.value,
+            [0, 100],
+            [0, (userIntroContainerWidth / 2) - (userIntroNameWidth / 2)],
+            Extrapolation.CLAMP
+        ),
+
+    }));
 
     return (
-        <View className='flex-1'>
+        <View style={{ backgroundColor: Colors[colorScheme ?? "light"].background }} className='flex-1'>
             <Animated.ScrollView
                 showsVerticalScrollIndicator={false}
                 ref={scrollRef}
@@ -131,6 +182,26 @@ const ProfileScreen = () => {
                         />
                     </Animated.View>
 
+                    <Animated.View className={"border border-blue-500 items-start justify-end py-1"} ref={userIntroContainerRef} style={userIntroContainerStyles}>
+                        <Animated.Text
+                            className='font-bold text-xl text-[#C1C0C9] border border-red-500'
+                            ref={userIntroNameRef}
+                            style={userIntroNameStyles}
+                            onLayout={() => {
+                                userIntroContainerRef.current?.measure((_1, _2, wi, he) => {
+                                    setUserIntroContainerWidth(wi)
+                                    setUserIntroContainerHeight(he)
+                                })
+                                userIntroNameRef.current?.measure((_1, _2, wi, he) => {
+                                    setUserIntroNameWidth(wi)
+                                    setUserIntroNameHeight(he)
+                                })
+                            }}
+                        >
+                            {profile.full_name ? (getFirstName(profile.full_name) + " " + getLastName(profile.full_name)) : profile.username}
+                        </Animated.Text>
+                        <Animated.Text className='text-xl text-[#C1C0C9]'>{profile.phone + " - " + profile.username}</Animated.Text>
+                    </Animated.View>
                 </Animated.View>
 
                 <View
@@ -139,19 +210,29 @@ const ProfileScreen = () => {
                         zIndex: 10,
                     }}
                 >
+                    <View className='p-5' style={{ height: insets.bottom + height + 104 }} >
+                        <AnimatedTextInput
+                            animatedProps={scrollYTextProps}
+                            editable={false}
+                            style={{ backgroundColor: Colors[colorScheme ?? "light"].background_2 }}
+                            className={"text-center p-4 mb-2"}
+                        />
 
-                    <View className='bg-red-500 p-5' style={{ height: insets.bottom + height + 104 }} >
-                        <View className='bg-blue-500 w-full'>
-                            <AnimatedTextInput
-                                animatedProps={scrollYTextProps}
-                                editable={false}
-                                style={{
-                                    backgroundColor: '#f8f9ff',
-                                    paddingVertical: 16,
-                                    paddingHorizontal: 16,
-                                    textAlign: 'center',
-                                }}
-                            />
+                        <View style={{ backgroundColor: Colors[colorScheme ?? "light"].background_2 }}
+                            className={"p-4 mb-2"}>
+                            <Text className='text-center' >Info container width: {userIntroContainerWidth}</Text>
+                        </View>
+                        <View style={{ backgroundColor: Colors[colorScheme ?? "light"].background_2 }}
+                            className={"p-4 mb-2"}>
+                            <Text className='text-center' >Info container height: {userIntroContainerHeight}</Text>
+                        </View>
+                        <View style={{ backgroundColor: Colors[colorScheme ?? "light"].background_2 }}
+                            className={"p-4 mb-2"}>
+                            <Text className='text-center' >Info name width: {userIntroNameWidth}</Text>
+                        </View>
+                        <View style={{ backgroundColor: Colors[colorScheme ?? "light"].background_2 }}
+                            className={"p-4 mb-2"}>
+                            <Text className='text-center' >Info name height: {userIntroNameHeight}</Text>
                         </View>
                     </View>
                 </View>
