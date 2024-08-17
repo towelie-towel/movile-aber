@@ -108,11 +108,11 @@ export const ColorInstagram = ({ color = false }) => {
   );
 };
 
-export const ColorFacebook = ({ color = false }) => {
+export const ColorFacebook = ({ color = false, dark = false }) => {
   const colorScheme = useColorScheme();
 
-  const bgColor = colorScheme === 'light' ? '#444444' : '#fff';
-  const lineColor = colorScheme === 'light' ? '#fff' : '#444444';
+  const bgColor = (colorScheme === 'light' && !dark) ? '#444444' : '#fff';
+  const lineColor = (colorScheme === 'light' && !dark) ? '#fff' : '#444444';
 
   return (
     <Svg x="0px" y="0px" width="30" height="30" viewBox="0,0,256,256">
@@ -128,12 +128,11 @@ export const ColorFacebook = ({ color = false }) => {
           <G transform="scale(5.33333,5.33333)">
             <Path
               d="M42,37c0,2.762 -2.238,5 -5,5h-26c-2.761,0 -5,-2.238 -5,-5v-26c0,-2.762 2.239,-5 5,-5h26c2.762,0 5,2.238 5,5z"
-              // fill="#3f51b5"
-              fill={bgColor}
+              fill={color ? "#3f51b5" : bgColor}
             />
             <Path
               d="M34.368,25h-3.368v13h-5v-13h-3v-4h3v-2.41c0.002,-3.508 1.459,-5.59 5.592,-5.59h3.408v4h-2.287c-1.609,0 -1.713,0.6 -1.713,1.723v2.277h4z"
-              fill={lineColor}
+              fill={color ? "#fff" : lineColor}
             />
           </G>
         </G>
@@ -142,25 +141,52 @@ export const ColorFacebook = ({ color = false }) => {
   );
 };
 
-export const ColorTwitter = () => {
+export const ColorTwitter = ({ dark = false }) => {
   const colorScheme = useColorScheme();
-  const lineColor = colorScheme === 'light' ? '#444444' : '#fff';
+
+  const bgColor = (colorScheme === 'light' && !dark) ? '#444444' : '#fff';
+  const lineColor = (colorScheme === 'light' && !dark) ? '#fff' : '#444444';
   return (
     <Svg x="0px" y="0px" width="30" height="30" viewBox="0,0,256,256">
       <G transform="translate(-19.2,-19.2) scale(1.15,1.15)">
         <G
-          fill={lineColor}
+          stroke={lineColor}
           fillRule="nonzero"
           strokeWidth="1"
           strokeLinecap="butt"
           strokeLinejoin="miter"
           strokeMiterlimit="10"
           strokeDashoffset="0"
-          style="mix-blend-mode: normal">
+          style="mix-blend-mode: normal"
+        >
           <G transform="scale(5.12,5.12)">
-            <Path d="M11,4c-3.866,0 -7,3.134 -7,7v28c0,3.866 3.134,7 7,7h28c3.866,0 7,-3.134 7,-7v-28c0,-3.866 -3.134,-7 -7,-7zM13.08594,13h7.9375l5.63672,8.00977l6.83984,-8.00977h2.5l-8.21094,9.61328l10.125,14.38672h-7.93555l-6.54102,-9.29297l-7.9375,9.29297h-2.5l9.30859,-10.89648zM16.91406,15l14.10742,20h3.06445l-14.10742,-20z" />
+            <Path
+              d="M11,4c-3.866,0 -7,3.134 -7,7v28c0,3.866 3.134,7 7,7h28c3.866,0 7,-3.134 7,-7v-28c0,-3.866 -3.134,-7 -7,-7zM13.08594,13h7.9375l5.63672,8.00977l6.83984,-8.00977h2.5l-8.21094,9.61328l10.125,14.38672h-7.93555l-6.54102,-9.29297l-7.9375,9.29297h-2.5l9.30859,-10.89648zM16.91406,15l14.10742,20h3.06445l-14.10742,-20z"
+              fill={bgColor}
+            />
           </G>
         </G>
+      </G>
+    </Svg>
+  );
+};
+
+export const ColorLinkedin = ({ color = false, dark = false }) => {
+  const colorScheme = useColorScheme();
+
+  const bgColor = (colorScheme === 'light' && !dark) ? '#444444' : '#fff';
+  const lineColor = (colorScheme === 'light' && !dark) ? '#fff' : '#444444';
+  return (
+    <Svg x="0px" y="0px" width="30" height="30" viewBox="0,0,256,256">
+      <G fill="none">
+        <Path
+          d="M0 18.338C0 8.216 8.474 0 18.92 0h218.16C247.53 0 256 8.216 256 18.338v219.327C256 247.79 247.53 256 237.08 256H18.92C8.475 256 0 247.791 0 237.668V18.335z"
+          fill={color ? "#069" : bgColor}
+        />
+        <Path
+          d="M77.796 214.238V98.986H39.488v115.252H77.8zM58.65 83.253c13.356 0 21.671-8.85 21.671-19.91-.25-11.312-8.315-19.915-21.417-19.915-13.111 0-21.674 8.603-21.674 19.914 0 11.06 8.312 19.91 21.169 19.91h.248zM99 214.238h38.305v-64.355c0-3.44.25-6.889 1.262-9.346 2.768-6.885 9.071-14.012 19.656-14.012 13.858 0 19.405 10.568 19.405 26.063v61.65h38.304v-66.082c0-35.399-18.896-51.872-44.099-51.872-20.663 0-29.738 11.549-34.78 19.415h.255V98.99H99.002c.5 10.812-.003 115.252-.003 115.252z"
+          fill={color ? "#fff" : lineColor}
+        />
       </G>
     </Svg>
   );

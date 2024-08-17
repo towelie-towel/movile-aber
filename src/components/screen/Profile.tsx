@@ -1,18 +1,18 @@
 import { Image } from 'expo-image';
 import React from 'react';
-import {
-    useWindowDimensions,
-    View,
-    useColorScheme,
-    TextInput,
-} from 'react-native';
+import { useWindowDimensions, View, useColorScheme, TextInput, Text } from 'react-native';
+import Animated, { useSharedValue, runOnJS, useAnimatedScrollHandler, ScrollEvent, useAnimatedProps, useAnimatedStyle, withTiming, interpolate, clamp, Extrapolation, useAnimatedRef, useScrollViewOffset } from 'react-native-reanimated'
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ImageView from 'react-native-image-viewing';
-import Animated, { useSharedValue, runOnJS, useAnimatedScrollHandler, ScrollEvent, useAnimatedProps, useAnimatedStyle, withTiming, interpolate, Extrapolation, useAnimatedRef, useScrollViewOffset } from 'react-native-reanimated'
+import { BlurView } from 'expo-blur';
+import { FontAwesome6 } from '@expo/vector-icons';
 
 import Colors from '~/constants/Colors';
 import { useUser } from '~/context/UserContext';
+import { ColorLinkedin, ColorInstagram, ColorFacebook, ColorTwitter } from '~/components/svgs';
 import { getFirstName, getLastName } from '~/utils';
+import { ScaleBtn } from '../common';
+import { router } from 'expo-router';
 
 
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
@@ -72,13 +72,6 @@ const ProfileScreen = () => {
     const scrollStyles = useAnimatedStyle(() => ({
         overflow: "visible",
     }));
-    const navStyles = useAnimatedStyle(() => ({
-        height: width,
-        width: width,
-
-        justifyContent: "center",
-        alignItems: "center",
-    }));
     const imgContainerStyles = useAnimatedStyle(() => ({
         width: interpolate(
             headerAnim.value,
@@ -97,7 +90,7 @@ const ProfileScreen = () => {
         bottom: interpolate(
             headerAnim.value,
             [0, 100],
-            [0, (width / 2)],
+            [0, (width / 2 - 50)],
             Extrapolation.CLAMP
         ),
         transform: [
@@ -138,7 +131,7 @@ const ProfileScreen = () => {
         bottom: interpolate(
             headerAnim.value,
             [0, 100],
-            [12, (width / 2) - userIntroContainerHeight.value - 12],
+            [56, (width / 2 - 50) - userIntroContainerHeight.value - 12],
             Extrapolation.CLAMP
         ),
         left: interpolate(
@@ -161,6 +154,12 @@ const ProfileScreen = () => {
 
     }));
 
+
+    const headerBtnsStyles = useAnimatedStyle(() => ({
+        position: "absolute",
+        top: clamp(offsetY.value, 0, width - insets.top - 120) + insets.top,
+    }));
+
     return (
         <View style={{ backgroundColor: Colors[colorScheme ?? "light"].background }} className='flex-1'>
             <Animated.ScrollView
@@ -169,7 +168,15 @@ const ProfileScreen = () => {
                 onScroll={scrollHandler}
                 style={scrollStyles}
             >
-                <Animated.View style={navStyles}>
+                <View style={{
+                    height: width,
+                    width: width,
+
+                    justifyContent: "center",
+                    alignItems: "center",
+
+                    position: "relative",
+                }}>
                     <Animated.View style={imgContainerStyles}>
                         <Image
                             style={{ flex: 1 }}
@@ -182,7 +189,7 @@ const ProfileScreen = () => {
 
                     <Animated.View className={"items-start justify-end py-1"} ref={userIntroContainerRef} style={userIntroContainerStyles}>
                         <Animated.Text
-                            className='font-bold text-xl text-[#C1C0C9]'
+                            className='font-bold text-xl text-[#777] dark:text-[#C1C0C9]'
                             ref={userIntroNameRef}
                             style={userIntroNameStyles}
                             onLayout={() => {
@@ -198,9 +205,46 @@ const ProfileScreen = () => {
                         >
                             {profile.full_name ? (getFirstName(profile.full_name) + " " + getLastName(profile.full_name)) : profile.username}
                         </Animated.Text>
-                        <Animated.Text className='text-xl text-[#C1C0C9]'>{profile.phone + " - " + profile.username}</Animated.Text>
+                        <Animated.Text className='text-xl text-[#777] dark:text-[#C1C0C9]'>{profile.phone + " - @" + profile.username}</Animated.Text>
                     </Animated.View>
-                </Animated.View>
+
+                    <View className={"w-full absolute bottom-1 py-2 px-4 self-center flex-row items-center justify-between"}>
+                        <ScaleBtn className="">
+                            <BlurView className='h-12 w-12 justify-center items-center rounded-lg overflow-hidden' tint={colorScheme === "light" ? "dark" : "light"} intensity={20}>
+                                <ColorLinkedin />
+                            </BlurView>
+                        </ScaleBtn>
+                        <ScaleBtn className="">
+                            <BlurView className='h-12 w-12 justify-center items-center rounded-lg overflow-hidden' tint={colorScheme === "light" ? "dark" : "light"} intensity={20}>
+                                <ColorInstagram />
+                            </BlurView>
+                        </ScaleBtn>
+                        <ScaleBtn className="">
+                            <BlurView className='h-12 w-12 justify-center items-center rounded-lg overflow-hidden' tint={colorScheme === "light" ? "dark" : "light"} intensity={20}>
+                                <ColorFacebook />
+                            </BlurView>
+                        </ScaleBtn>
+                        <ScaleBtn className="">
+                            <BlurView className='h-12 w-12 justify-center items-center rounded-lg overflow-hidden' tint={colorScheme === "light" ? "dark" : "light"} intensity={20}>
+                                <ColorTwitter />
+                            </BlurView>
+                        </ScaleBtn>
+                    </View>
+
+                    <Animated.View style={headerBtnsStyles} className={"w-full py-2 px-4 self-center flex-row items-center justify-between"}>
+                        <ScaleBtn onPressIn={() => { router.back() }}>
+                            <BlurView className='h-12 w-12 justify-center items-center rounded-lg overflow-hidden' tint={colorScheme === "light" ? "dark" : "light"} intensity={20}>
+                                <FontAwesome6 name="chevron-left" size={24} color={Colors[colorScheme ?? "light"].text_dark} />
+                            </BlurView>
+                        </ScaleBtn>
+                        <ScaleBtn className="">
+                            <BlurView className='h-12 px-3 flex-row justify-center items-center gap-2 rounded-lg overflow-hidden' tint={colorScheme === "light" ? "dark" : "light"} intensity={20}>
+                                <Text className="font-bold text-xl text-[#777] dark:text-[#C1C0C9]'">Editar</Text>
+                                <FontAwesome6 name="edit" size={18} color={Colors[colorScheme ?? "light"].text_dark} />
+                            </BlurView>
+                        </ScaleBtn>
+                    </Animated.View>
+                </View>
 
                 <View
                     style={{
