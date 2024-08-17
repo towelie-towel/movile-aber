@@ -1,264 +1,174 @@
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { BlurView } from 'expo-blur';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
 import React from 'react';
 import {
-    Animated,
     useWindowDimensions,
-    Platform,
-    TouchableOpacity,
     View,
-    Text,
+    useColorScheme,
+    TextInput
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import ImageView from 'react-native-image-viewing';
+import Animated, { useSharedValue, runOnJS, useAnimatedScrollHandler, ScrollEvent, useAnimatedProps, useAnimatedStyle, withTiming, interpolate, Extrapolation, useAnimatedRef, useScrollViewOffset } from 'react-native-reanimated'
 
-import ScaleBtn from '~/components/common/ScaleBtn';
+import Colors from '~/constants/Colors';
+
+
+const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
 const ProfileScreen = () => {
     const insets = useSafeAreaInsets();
-    const router = useRouter();
-    const dimensions = useWindowDimensions();
-    const scrollY = React.useRef(new Animated.Value(0)).current;
+    const { width, height } = useWindowDimensions();
+    const colorScheme = useColorScheme();
 
-    const borderRadius = scrollY.interpolate({
-        inputRange: [0, 100, 150],
-        outputRange: [0, 50, 100],
-        extrapolate: 'clamp',
+    const scrollRef = useAnimatedRef<Animated.ScrollView>();
+    const offsetY = useSharedValue(0);
+    const headerAnim = useSharedValue(0);
+
+    const [imageViewVisible, setImageViewVisible] = React.useState(false);
+
+    const handlers = {
+        onScroll: (event: ScrollEvent) => {
+            'worklet';
+            offsetY.value = event.contentOffset.y;
+
+            if (offsetY.value === 0) {
+                scrollRef.current?.scrollTo(0)
+            }
+
+            if (headerAnim.value === 0) {
+                if (offsetY.value >= 25) {
+                    headerAnim.value = withTiming(100, {
+                        duration: 300
+                    });
+                } if (offsetY.value <= -50) {
+                    runOnJS(setImageViewVisible)(true)
+                }
+            } else if (headerAnim.value === 100) {
+                if (offsetY.value <= 0) {
+                    headerAnim.value = withTiming(0, {
+                        duration: 300
+                    });
+                }
+            }
+        },
+    };
+    const scrollHandler = useAnimatedScrollHandler(handlers);
+
+    const scrollYTextProps = useAnimatedProps(() => {
+        return {
+            text: `Outer Scroll offset: ${Math.round(offsetY.value)}px`,
+            defaultValue: `Outer Scroll offset: ${offsetY.value}px`,
+        };
     });
 
-    const animSize = scrollY.interpolate({
-        inputRange: [0, 100, 150],
-        outputRange: [dimensions.width, 100, 60],
-        extrapolate: 'clamp',
-    });
+    const scrollStyles = useAnimatedStyle(() => ({
+        overflow: "visible",
+    }));
+    const navStyles = useAnimatedStyle(() => ({
+        height: width,
+        width: width,
 
-    const animPadding = scrollY.interpolate({
-        inputRange: [0, 100, 150],
-        outputRange: [0, 3, 6],
-        extrapolate: 'clamp',
-    });
+        justifyContent: "center",
+        alignItems: "center",
+    }));
+    const imgContainerStyles = useAnimatedStyle(() => ({
+        width: interpolate(
+            headerAnim.value,
+            [0, 50, 100],
+            [width, (width / 2), 100],
+            Extrapolation.CLAMP
+        ),
+        height: interpolate(
+            headerAnim.value,
+            [0, 50, 100],
+            [width, (width / 2), 100],
+            Extrapolation.CLAMP
+        ),
+        transform: [
+            {
+                scale: interpolate(
+                    offsetY.value,
+                    [-height, 0],
+                    [5, 1],
+                    Extrapolation.CLAMP
+                )
+            },
+            {
+                translateY: interpolate(
+                    offsetY.value,
+                    [-height, 0],
+                    [-height / 2, 0],
+                    Extrapolation.CLAMP
+                )
+            }
+        ],
 
-    const animPosX = scrollY.interpolate({
-        inputRange: [0, 50, 100],
-        outputRange: [0, 24, 48],
-        extrapolate: 'clamp',
-    });
+        borderRadius: headerAnim.value,
+        overflow: "hidden",
 
-    const animOpacity = scrollY.interpolate({
-        inputRange: [0, 25, 50],
-        outputRange: [1, 0.5, 0],
-        extrapolate: 'clamp',
-    });
+        position: "absolute",
+        bottom: 0,
+    }));
 
-    const animMarginTop = scrollY.interpolate({
-        inputRange: [0, 100, 150],
-        outputRange: [dimensions.width, 100, 60],
-        extrapolate: 'clamp',
-    });
-    const animHeightCover = scrollY.interpolate({
-        inputRange: [0, 100, 150],
-        outputRange: [0, 100, 150],
-        extrapolate: 'clamp',
-    });
-
-    const bgColorAnim = scrollY.interpolate({
-        inputRange: [0, 150],
-        outputRange: ['white', 'black'],
-        extrapolate: 'clamp',
-    });
-    const textColorAnim = scrollY.interpolate({
-        inputRange: [0, 150],
-        outputRange: ['black', 'white'],
-        extrapolate: 'clamp',
-    });
-    const btnColorAnim = scrollY.interpolate({
-        inputRange: [0, 150],
-        outputRange: ['white', 'transparent'],
-        extrapolate: 'clamp',
-    });
 
     return (
-        <View className="flex-1 bg-white">
-            <View style={{ marginTop: insets.top }} className="bg-white flex-1">
-                <StatusBar style={Platform.OS === 'ios' ? 'light' : 'dark'} />
-                <Animated.View
-                    style={{
-                        width: 32,
-                        height: 32,
-                        position: 'absolute',
-                        top: Platform.OS === 'android' ? insets.top + 12 : 14,
-                        left: 18,
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        backgroundColor: Platform.OS === 'ios' ? btnColorAnim : 'white',
-                        zIndex: 1001,
-                        borderRadius: 32 / 2,
-                    }}>
-                    <TouchableOpacity
-                        style={{
-                            flex: 1,
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            backgroundColor: 'transparent',
-                            borderRadius: 32 / 2,
-                        }}
-                        onPress={() => {
-                            router.back();
-                        }}>
-                        <MaterialCommunityIcons name="chevron-left" size={22} color="black" />
-                    </TouchableOpacity>
-                </Animated.View>
-                {Platform.OS === 'ios' && (
-                    <>
-                        <Animated.View
-                            style={{
-                                width: dimensions.width,
-                                position: 'absolute',
-                                height: animSize,
-                                zIndex: 999,
-                                backgroundColor: 'transparent',
-                                // top: Platform.OS === "android" ? insets.top : 0,
-                            }}>
-                            <BlurView
-                                style={{
-                                    flex: 1,
-                                    position: 'relative',
-                                    zIndex: 1000,
-                                    width: dimensions.width,
-                                    flexDirection: 'row',
-                                    justifyContent: 'space-between',
-                                    shadowColor: 'black',
-                                    shadowOffset: { width: 0, height: 2 },
-                                    shadowOpacity: 0.25,
-                                    shadowRadius: 3.84,
-                                    elevation: 5,
-                                }}
-                                tint="light"
-                                intensity={100}>
-                                <Animated.View
-                                    style={{
-                                        position: 'absolute',
-                                        width: animSize,
-                                        height: animSize,
-                                        top: 0,
-                                        left: animPosX,
-                                        padding: animPadding,
-                                    }}>
-                                    <Animated.View style={{ flex: 1, borderRadius, overflow: 'hidden' }}>
-                                        <Image
-                                            style={{ flex: 1 }}
-                                            alt="avatar"
-                                            source={{
-                                                uri: 'https://lh3.googleusercontent.com/a/AAcHTtfPgVic8qF8hDw_WPE80JpGOkKASohxkUA8y272Ow=s1000-c',
-                                            }}
-                                        />
-                                    </Animated.View>
-                                </Animated.View>
-                                <View
-                                    style={{
-                                        flexDirection: 'row',
-                                        justifyContent: 'space-between',
-                                        width: '100%',
-                                        position: 'absolute',
-                                        bottom: 18,
-                                        paddingHorizontal: 18,
-                                    }}>
-                                    <Animated.View style={{ opacity: animOpacity }}>
-                                        <Text className="text-[#e6e6e6] text-2xl font-medium">Julio Lopez</Text>
-                                    </Animated.View>
-                                    <ScaleBtn
-                                        style={{
-                                            justifyContent: 'center',
-                                            alignSelf: 'flex-end',
-                                            minWidth: 100,
-                                            top: 8,
-                                        }}
-                                        onPress={() => {
-                                            router.back();
-                                        }}>
-                                        <Animated.View
-                                            style={{
-                                                height: 40,
-                                                backgroundColor: bgColorAnim,
-                                                borderRadius: 25,
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                            }}>
-                                            <Animated.Text
-                                                style={{
-                                                    fontWeight: '600',
-                                                    fontSize: 18,
-                                                    color: textColorAnim,
-                                                    padding: 4,
-                                                }}>
-                                                Edit
-                                            </Animated.Text>
-                                        </Animated.View>
-                                    </ScaleBtn>
-                                </View>
-                            </BlurView>
-                        </Animated.View>
-                    </>
-                )}
-                <Animated.ScrollView
-                    style={{
-                        backgroundColor: '#fff',
-                        marginTop: Platform.OS === 'ios' ? animMarginTop : insets.top,
-                        overflow: 'visible',
-                    }}
-                    onScroll={
-                        Platform.OS === 'ios'
-                            ? Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
-                                useNativeDriver: false,
-                            })
-                            : undefined
-                    }
-                    scrollEventThrottle={16}>
-                    {Platform.OS === 'ios' && <Animated.View style={{ height: animHeightCover }} />}
-                    {Platform.OS === 'android' && (
-                        <View
-                            style={{
-                                width: dimensions.width,
-                                height: dimensions.width,
-                                position: 'relative',
-                            }}>
-                            <View style={{ width: '100%', height: dimensions.width }}>
-                                <Image
-                                    source="https://lh3.googleusercontent.com/a/AAcHTtfPgVic8qF8hDw_WPE80JpGOkKASohxkUA8y272Ow=s1000-c"
-                                    alt="avatar"
-                                    style={{ width: '100%', height: '100%' }}
-                                />
-                            </View>
-                            <View
-                                style={{
-                                    flexDirection: 'row',
-                                    justifyContent: 'space-between',
-                                    width: '100%',
-                                    position: 'absolute',
-                                    bottom: 18,
-                                    paddingHorizontal: 18,
-                                }}>
-                                <View style={{}}>
-                                    <Text className="text-[#e6e6e6] text-2xl font-medium">Julio Lopez</Text>
-                                </View>
-                                <ScaleBtn
-                                    style={{ justifyContent: 'center', alignSelf: 'flex-end', minWidth: 100 }}
-                                    onPress={() => {
-                                        console.log('edit pressed');
-                                    }}>
-                                    <View className="flex-row items-center justify-center bg-white rounded-3xl">
-                                        <Text className="font-bold text-md text-black p-2">Edit</Text>
-                                    </View>
-                                </ScaleBtn>
-                            </View>
-                        </View>
-                    )}
+        <View className='flex-1'>
+            <Animated.ScrollView
+                showsVerticalScrollIndicator={false}
+                ref={scrollRef}
+                onScroll={scrollHandler}
+                style={scrollStyles}
+            >
+                <Animated.View style={navStyles}>
+                    <Animated.View style={imgContainerStyles}>
+                        <Image
+                            style={{ flex: 1 }}
+                            alt="avatar"
+                            source={{
+                                uri: 'https://lh3.googleusercontent.com/a/AAcHTtfPgVic8qF8hDw_WPE80JpGOkKASohxkUA8y272Ow=s1000-c',
+                            }}
+                        />
+                    </Animated.View>
 
-                    <View style={{ height: insets.bottom + dimensions.height }} />
-                </Animated.ScrollView>
-            </View>
+                </Animated.View>
+
+                <View
+                    style={{
+                        position: "relative",
+                        zIndex: 10,
+                    }}
+                >
+
+                    <View className='bg-red-500 p-5' style={{ height: insets.bottom + height + 104 }} >
+                        <View className='bg-blue-500 w-full'>
+                            <AnimatedTextInput
+                                animatedProps={scrollYTextProps}
+                                editable={false}
+                                style={{
+                                    backgroundColor: '#f8f9ff',
+                                    paddingVertical: 16,
+                                    paddingHorizontal: 16,
+                                    textAlign: 'center',
+                                }}
+                            />
+                        </View>
+                    </View>
+                </View>
+            </Animated.ScrollView>
+            <ImageView
+                images={[{
+                    uri: 'https://lh3.googleusercontent.com/a/AAcHTtfPgVic8qF8hDw_WPE80JpGOkKASohxkUA8y272Ow=s1000-c',
+                }]}
+                imageIndex={0}
+                visible={imageViewVisible}
+                animationType={'slide'}
+                onRequestClose={() => {
+                    setImageViewVisible(false);
+                }}
+                presentationStyle={'fullScreen'}
+            />
+
         </View>
     );
 };

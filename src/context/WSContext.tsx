@@ -233,7 +233,7 @@ export const WSProvider = ({ children, userProfile }: { children: React.ReactNod
 
         if (WS_LOGS) console.log('new Web Socket initializing', protocol);
         const suckItToMeBBy = new WebSocket(
-            `ws://192.168.1.100:6942/subscribe?id=e117adcb-f429-42f7-95d9-07f1c92a1c8b&lat=51.5073509&lon=-0.1277581999999997&head=51`,
+            `ws://172.20.10.12:6942/subscribe?id=e117adcb-f429-42f7-95d9-07f1c92a1c8b&lat=51.5073509&lon=-0.1277581999999997&head=51`,
             protocol
         );
 
@@ -557,7 +557,7 @@ export const WSProvider = ({ children, userType }: { children: React.ReactNode, 
 
         if (WS_LOGS) console.log('new Web Socket initializing', protocol);
         const suckItToMeBBy = new WebSocket(
-            `ws://192.168.1.100:6942/subscribe?id=e117adcb-f429-42f7-95d9-07f1c92a1c8b&lat=51.5073509&lon=-0.1277581999999997&head=51`,
+            `ws://172.20.10.12:6942/subscribe?id=e117adcb-f429-42f7-95d9-07f1c92a1c8b&lat=51.5073509&lon=-0.1277581999999997&head=51`,
             protocol
         );
 

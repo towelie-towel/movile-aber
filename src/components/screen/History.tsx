@@ -32,7 +32,7 @@ const HistoryScreen = () => {
                 {
                     TestRidesData.map((item) => {
                         return (
-                            <View key={item.id} className='mb-4 rounded-lg shadow-sm' style={{ backgroundColor: Colors[colorScheme ?? 'light'].background_light }} >
+                            <View key={item.id} className='mb-5 rounded-lg shadow-sm' style={{ backgroundColor: Colors[colorScheme ?? 'light'].background_light }} >
                                 <View className='px-2'>
                                     <View className="relative z-30 h-12 w-full mt-4 pr-[2.5%] flex-row items-center-">
                                         <MaterialCommunityIcons className='mt-1' name="map-marker-account" size={32} color={Colors[colorScheme ?? "light"].border} />
