@@ -33,7 +33,7 @@ export default {
     text_light2: '#FFFFFF',
     text_dark: '#C8C7CC',
     background: '#1b1b1b',
-    background_2: '#1b1b1b',
+    background_2: '#222222',
     background_light: '#1b1b1b',
     background_light1: '#333333',
     background_dark: '#1b1b1b',

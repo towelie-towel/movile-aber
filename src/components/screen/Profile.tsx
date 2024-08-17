@@ -78,28 +78,26 @@ const ProfileScreen = () => {
 
         justifyContent: "center",
         alignItems: "center",
-
-        backgroundColor: Colors[colorScheme ?? "light"].background_light1
     }));
     const imgContainerStyles = useAnimatedStyle(() => ({
         width: interpolate(
             headerAnim.value,
-            [0, 50, 100],
-            [width, (width / 2), 100],
+            [0, 100],
+            [width, 100],
             Extrapolation.CLAMP
         ),
         height: interpolate(
             headerAnim.value,
-            [0, 50, 100],
-            [width, (width / 2), 100],
+            [0, 100],
+            [width, 100],
             Extrapolation.CLAMP
         ),
 
         position: "absolute",
         bottom: interpolate(
             headerAnim.value,
-            [0, 50, 100],
-            [0, (width / 4), (width / 2)],
+            [0, 100],
+            [0, (width / 2)],
             Extrapolation.CLAMP
         ),
         transform: [
@@ -214,8 +212,8 @@ const ProfileScreen = () => {
                         <AnimatedTextInput
                             animatedProps={scrollYTextProps}
                             editable={false}
-                            style={{ backgroundColor: Colors[colorScheme ?? "light"].background_2 }}
-                            className={"text-center p-4 mb-2"}
+                            style={{ backgroundColor: Colors[colorScheme ?? "light"].background_2, color: Colors[colorScheme ?? "light"].text }}
+                            className={"text-center p-5 mb-2 rounded-md"}
                         />
                     </View>
                 </View>
