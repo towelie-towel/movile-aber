@@ -177,7 +177,14 @@ const ProfileScreen = () => {
 
     const headerBtnsStyles = useAnimatedStyle(() => ({
         position: "absolute",
-        top: clamp(offsetY.value, 0, width - insets.top - 120) + insets.top,
+        // top: clamp(offsetY.value, 0, width - insets.top - 120) + insets.top,
+        top: insets.top,
+
+        transform: [
+            {
+                translateY: clamp(offsetY.value, 0, width - 160)
+            }
+        ],
     }));
 
     return (
@@ -232,7 +239,7 @@ const ProfileScreen = () => {
                         <Animated.Text className='text-xl text-[#A1A1A1]'>{profile.phone + " - @" + profile.username}</Animated.Text>
                     </Animated.View>
 
-                    <View className={"w-full absolute z-20 bottom-2 py-2 px-4 self-center flex-row items-center justify-between"}>
+                    <View className={"w-full absolute z-20 bottom-1 py-2 px-4 self-center flex-row items-center justify-between"}>
                         <ScaleBtn className="">
                             <BlurView className='h-12 w-12 justify-center items-center rounded-lg overflow-hidden' tint={colorScheme === "light" ? "dark" : "light"} intensity={20}>
                                 <ColorLinkedin dark />
