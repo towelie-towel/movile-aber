@@ -31,6 +31,7 @@ const getHomeRouteByRole = (userRole: UserRole) => {
   }
 }
 
+
 const RootLayout = () => {
   const [userInitialized, setIsUserInitialized] = useState(false);
   const [isUserSigned, setIsUserSigned] = useState(false);
