@@ -54,6 +54,9 @@ const HistoryScreen = () => {
         overflow: "visible",
     }));
 
+    const navRef = useAnimatedRef<Animated.View>();
+    const navStyles = useAnimatedStyle(() => ({
+    }))
     const navTitleRef = useAnimatedRef<Animated.Text>();
     const navTitleWidth = useSharedValue(0);
     const navTitleHeight = useSharedValue(0);
@@ -71,15 +74,34 @@ const HistoryScreen = () => {
         bottom: interpolate(
             headerAnim.value,
             [0, 100],
-            [-navTitleHeight.value, 0],
+            [-navTitleHeight.value, 9],
             Extrapolation.CLAMP
         ),
         left: interpolate(
             headerAnim.value,
             [0, 100],
-            [0, 36],
+            [24, 60],
             Extrapolation.CLAMP
         ),
+
+        transform: [
+            {
+                scale: interpolate(
+                    offsetY.value,
+                    [-100, 0],
+                    [1.2, 1],
+                    Extrapolation.CLAMP
+                )
+            },
+            {
+                translateY: interpolate(
+                    offsetY.value,
+                    [-100, 0],
+                    [6, 0],
+                    Extrapolation.CLAMP
+                )
+            }
+        ],
     }))
 
     const getStatusColor = useCallback((status?: string | null) => {
@@ -97,7 +119,6 @@ const HistoryScreen = () => {
 
     return (
         <View className="flex-1" style={{ backgroundColor: Colors[colorScheme ?? 'light'].background_light }}>
-            {Platform.OS === 'ios' && <BlurView style={{ position: 'absolute', zIndex: 1000, height: insets.top, width, top: 0 }} tint="light" intensity={20} />}
             <View className={"absolute top-0 pt-24 justify-end z-0"} style={{ backgroundColor: Colors[colorScheme ?? 'light'].primary, }}>
                 <Svg width={width} height={(width * 258) / 375} viewBox="0 0 375 258" fill="none">
                     <Path
@@ -119,22 +140,37 @@ const HistoryScreen = () => {
                     />
                 </Svg>
             </View>
+
             <View className='flex-1 relative z-10 bg-transparent'>
-                <View className='flex-row justify-between bg-transparent w-full px-[5%] relative z-40' style={{ marginTop: insets.top + 12, marginBottom: 24 }}>
-                    <View className='flex-1 items-start border border-red-500'>
-                        <ScaleBtn className='h-10 w-10 items-center rounded-lg overflow-hidden border border-blue-500' onPressIn={() => { router.back() }}>
+
+                <Animated.View
+                    ref={navRef}
+                    className='flex-row justify-between bg-transparent w-full relative z-40'
+                    style={[{ height: insets.top + 48, marginBottom: 78, }, navStyles]}
+                >
+
+                    <BlurView style={{ paddingTop: insets.top, paddingBottom: 12, paddingHorizontal: 24 }} className='flex-1 items-start' tint="light" intensity={20}>
+                        <ScaleBtn style={{ width: 40, height: 40 }} className='items-center justify-center' onPressIn={() => { router.back() }}>
                             <FontAwesome6 name="chevron-left" size={28} color={Colors[colorScheme ?? "light"].border_light_i} />
                         </ScaleBtn>
-                        <Animated.Text onLayout={() => {
-                            navTitleRef.current?.measure((_1, _2, wi, he) => {
-                                navTitleWidth.value = wi;
-                                navTitleHeight.value = he;
-                            })
-                        }} ref={navTitleRef} numberOfLines={1} style={navTitleStyles} className='font-bold border border-black'>{"History"}</Animated.Text>
-                    </View>
+                        <Animated.Text
+                            onLayout={() => {
+                                navTitleRef.current?.measure((_1, _2, wi, he) => {
+                                    navTitleWidth.value = wi;
+                                    navTitleHeight.value = he;
+                                })
+                            }}
+                            ref={navTitleRef}
+                            numberOfLines={1}
+                            style={navTitleStyles}
+                            className='font-bold'
+                        >{"History"}</Animated.Text>
+                    </BlurView>
+
                     <View className=''>
                     </View>
-                </View>
+                </Animated.View>
+
                 <Animated.ScrollView ref={scrollRef} style={scrollStyles} onScroll={scrollHandler} showsVerticalScrollIndicator={false} className="px-[5%]">
                     {
                         TestRidesData.map((item) => {
