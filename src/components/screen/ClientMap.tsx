@@ -250,7 +250,7 @@ export default function ClientMap() {
                                             <View className="bg-[#F8F8F8] dark:bg-[#1b1b1b] rounded-lg p-3 chevron-right-"><Text className="text-center font-semibold w-auto dark:text-[#fff]">Sign In</Text></View>
                                         </ScaleBtn>
                                     ) : (
-                                        <ScaleBtn scaleReduction={0.98} className="mt-4 w-40 gap-3" onPress={() => router.push('profile')}>
+                                        <ScaleBtn scaleReduction={0.98} className="mt-4 w-40 gap-3" onPressIn={() => router.push('profile')}>
                                             <View style={{ backgroundColor: Colors[colorScheme ?? "light"].background_light1 }} className="flex-row items-center justify-center bg-[#F8F8F8]- dark:bg-[#1b1b1b]- rounded-lg p-3">
                                                 <Text className="text-center font-semibold w-auto dark:text-[#fff]">User Profile</Text>
                                                 <MaterialCommunityIcons name="chevron-right" size={24} color={Colors[colorScheme ?? 'light'].text_dark} />

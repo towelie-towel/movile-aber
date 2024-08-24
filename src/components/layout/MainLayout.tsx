@@ -41,7 +41,7 @@ const ThemeBg = ({ children, title, showHeader = true }: { children: React.React
             <View className='flex-1 relative z-10 bg-transparent'>
                 {showHeader && <View className='flex-row justify-between items-end bg-transparent h-40 w-full px-[5%] pb-3 relative z-40'>
                     <View className=''>
-                        <ScaleBtn className='pr-2' onPress={() => { router.back() }}>
+                        <ScaleBtn className='pr-2' onPressIn={() => { router.back() }}>
                             <FontAwesome6 name="chevron-left" size={28} color={Colors[colorScheme ?? "light"].border_light_i} />
                         </ScaleBtn>
                         {title && <Text style={{ color: Colors[colorScheme ?? "light"].border_light_i }} className='font-bold text-[2.5rem]'>{title}</Text>}

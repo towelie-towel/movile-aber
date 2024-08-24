@@ -12,10 +12,12 @@ import Animated, {
 
 type RippleProps = {
   onTap?: () => void;
+  onTapIn?: () => void;
+  onTapOut?: () => void;
   children: React.ReactNode;
 } & ViewProps;
 
-const Ripple: React.FC<RippleProps> = ({ onTap, children, ...restProps }) => {
+const Ripple: React.FC<RippleProps> = ({ onTap, onTapIn, onTapOut, children, ...restProps }) => {
   const colorSheme = useColorScheme();
   const centerX = useSharedValue(0);
   const centerY = useSharedValue(0);
@@ -29,6 +31,7 @@ const Ripple: React.FC<RippleProps> = ({ onTap, children, ...restProps }) => {
 
   const tapGesture = Gesture.Tap()
     .onBegin((tapEvent) => {
+      onTapIn && runOnJS(onTapIn)();
       rippleOpacity.value = 1;
       scale.value = 0;
 
@@ -50,6 +53,7 @@ const Ripple: React.FC<RippleProps> = ({ onTap, children, ...restProps }) => {
         }
         onTap && runOnJS(onTap)();
       });
+      onTapOut && runOnJS(onTapOut)();
     })
     .onTouchesCancelled(() => {
       rippleOpacity.value = withTiming(0, { duration: 500 }, () => {
