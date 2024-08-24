@@ -17,7 +17,7 @@ const ThemeBg = ({ children, title, showHeader = true }: { children: React.React
     return (
         <View className="flex-1" style={{ backgroundColor: Colors[colorScheme ?? 'light'].background_light }}>
             {Platform.OS === 'ios' && <BlurView style={{ position: 'absolute', zIndex: 1000, height: insets.top, width, top: 0 }} tint="light" intensity={20} />}
-            <View className={"absolute top-0 pt-24 justify-end z-0"} style={{ backgroundColor: Colors[colorScheme ?? 'light'].primary, }}>
+            <View className={"absolute top-0 pt-36 justify-end z-0"} style={{ backgroundColor: Colors[colorScheme ?? 'light'].primary, }}>
                 <Svg width={width} height={(width * 258) / 375} viewBox="0 0 375 258" fill="none">
                     <Path
                         d="M222.435 21.1065V1H220.695V21.1065H213.003V41.7377L205.684 49.0059V61.749H188.514V83.2732H183.859V92.0633H174.838V77.8885L168.093 69.4338V61.749H164.864V59.3752H143.843V61.749H140.617V82.1646H133.465V48.9485H130.237V46.5747H109.216V48.9485H105.989V106.631H99.4183V61.749H96.1913V59.3752H75.1698V61.749H71.9436V83.2732H62.8828V36.9786H51.0981V27.9991H39.3119V18.1915H27.5271V64.3303H7.67825L8.33252 96.2041H-1.00018V257H10.8594H14.3641H27.5271H30.2387H39.3119H51.0981H62.8828H71.9436H93.8127H99.4183H105.989H118.164H121.29H133.465H140.617H145.641H159.508H168.093H183.859H188.514H205.684H213.003H230.126H240.229H260.039H277.342H287.89H304.072H305.193H314.914H316.908H334.294H338.31H357.689H373.5V99.3495H357.689V75.2539L338.31 88.5727V107.712H336.584L337.475 64.3303H335.042V59.6909H333.24L331.798 31.6357L330.356 59.6909H320.983V64.3303H311.732L312.065 80.5288H304.072V119.569H294.426V110.003H287.89V60.779L273.965 39.7993L260.039 60.779V75.2539H257.188L245.549 69.4338V75.2539H240.229V99.3495H230.126V21.1065H222.435Z"
@@ -39,16 +39,27 @@ const ThemeBg = ({ children, title, showHeader = true }: { children: React.React
                 </Svg>
             </View>
             <View className='flex-1 relative z-10 bg-transparent'>
-                {showHeader && <View className='flex-row justify-between items-end bg-transparent h-40 w-full px-[5%] pb-3 relative z-40'>
-                    <View className=''>
-                        <ScaleBtn className='pr-2' onPressIn={() => { router.back() }}>
-                            <FontAwesome6 name="chevron-left" size={28} color={Colors[colorScheme ?? "light"].border_light_i} />
-                        </ScaleBtn>
-                        {title && <Text style={{ color: Colors[colorScheme ?? "light"].border_light_i }} className='font-bold text-[2.5rem]'>{title}</Text>}
+                {showHeader &&
+                    <View className='flex-row justify-between items-end bg-transparent h-40 w-full px-[5%] relative z-40'>
+                        <View className='gap-1'>
+                            <ScaleBtn
+                                style={{ width: 40, height: 40 }}
+                                className='justify-center pr-2'
+                                onPressIn={() => { router.back() }}
+                            >
+                                <FontAwesome6 name="chevron-left" size={28} color={Colors[colorScheme ?? "light"].border_light_i} />
+                            </ScaleBtn>
+                            {title &&
+                                <Text
+                                    style={{ color: Colors[colorScheme ?? "light"].border_light_i }}
+                                    className='font-bold text-[2.5rem]'
+                                >{title}</Text>
+                            }
+                        </View>
+                        <View className=''>
+                        </View>
                     </View>
-                    <View className=''>
-                    </View>
-                </View>}
+                }
                 {children}
             </View >
         </View>
