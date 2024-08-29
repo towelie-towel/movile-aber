@@ -40,7 +40,7 @@ const RideFlowInfo: React.FC<IRideFlowInfo> = ({ routeInfo, pinedInfo, cancelRid
                         source={require('../../../assets/images/taxi_test.png')}
                     />
                     <View className="justify-center">
-                        <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-bold text-xl">{confirmedTaxi?.name ?? "Anonymous"}</Text>
+                        <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-bold text-xl">{confirmedTaxi?.username ?? "Anonymous"}</Text>
                         <View className="flex-row items-center">
                             <Text className="text-[#FED141] text-[#1b1b1b]- dark:text-[#C1C0C9]- text-lg">★ </Text>
                             <Text className="text-[#1b1b1b] dark:text-[#C1C0C9]">4.9</Text>

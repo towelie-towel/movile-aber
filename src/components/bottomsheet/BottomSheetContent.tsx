@@ -100,13 +100,6 @@ export const BottomSheetContent = ({
   const originShakeAnimatedValue = useRef(new Animated.Value(0)).current;
   const destinationShakeAnimatedValue = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => {
-    if (currentStep === ClientSteps.SEARCH) restoreInputFromPinedInfo()
-  }, [currentStep]);
-  useEffect(() => {
-    handleActiveRouteTokio()
-  }, [pinedInfo])
-
   const emptyMarkerShake = useCallback(() => {
     markerShakeAnimatedValue.setValue(0);
     Animated.timing(markerShakeAnimatedValue, {
@@ -179,18 +172,21 @@ export const BottomSheetContent = ({
       setOriginLoading(false)
     }
   }, [getCurrentPositionWithAddressAsync, originInputViewRef, pinedInfo]);
-  const restoreInputFromPinedInfo = useCallback(() => {
-    fetchOrigin();
-    if (pinedInfo?.destination) destinationInputViewRef.current?.setAddressText(pinedInfo.destination.address);
-    stopAllLoadings()
-  }, [pinedInfo, destinationInputViewRef, fetchOrigin])
   const stopAllLoadings = useCallback(() => {
     setOriginLoading(false)
     setDestinationLoading(false)
     setRouteLoading(false)
   }, [])
+  const restoreInputFromPinedInfo = useCallback(() => {
+    console.log("currentStep: ", currentStep)
+    if (currentStep === ClientSteps.SEARCH) {
+      fetchOrigin();
+      if (pinedInfo?.destination) destinationInputViewRef.current?.setAddressText(pinedInfo.destination.address);
+      stopAllLoadings()
+    }
+  }, [currentStep, pinedInfo, destinationInputViewRef, fetchOrigin, stopAllLoadings])
 
-  const handleActiveRouteTokio = useCallback(async () => {
+  const handleActiveRouteTokio = useCallback(() => {
     if (pinedInfo?.destination && pinedInfo?.origin) {
       try {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -479,6 +475,9 @@ export const BottomSheetContent = ({
       });
     }
   }, [userMarkers, destinationInputViewRef, pinedInfo]);
+
+  useEffect(restoreInputFromPinedInfo, [currentStep]);
+  useEffect(handleActiveRouteTokio, [pinedInfo])
 
   return (
     <View className="flex-1 bg-[#F8F8F8] dark:bg-[#1b1b1b]">

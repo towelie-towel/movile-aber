@@ -10,7 +10,7 @@ import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
 
 import { PlaceMarkerIconType } from '~/components/markers/AddUserMarker';
-import { calculateDistance, calculateBearing, duplicateCoords } from '~/utils/directions';
+import { calculateDistance, calculateBearing, duplicateCoords, getTaxiProfile } from '~/utils/directions';
 import type { TaxiProfile } from '~/types/Taxi';
 import type { PlaceInfo } from '~/types/Places';
 import type { RideInfo, RideStatus } from '~/types/RideFlow';
@@ -227,13 +227,14 @@ export const WSProvider = ({ children, userProfile }: { children: React.ReactNod
         }
     }, [ws]);
 
-    const handleWebSocketMessage = useCallback((event: MessageEvent<string>) => {
+    const handleWebSocketMessage = useCallback(async (event: MessageEvent<string>) => {
         const message = event.data;
         if (typeof message !== 'string') {
             return;
         }
         if (WS_LOGS) console.log('handleWebSocketMessage: ', message);
         if (message.startsWith("taxis-")) {
+
             const taxis = message
                 .replace('taxis-', '')
                 .split('$')
@@ -264,40 +265,30 @@ export const WSProvider = ({ children, userProfile }: { children: React.ReactNod
                 return distanceA - distanceB;
             });
             setWsTaxis(sortedTaxis);
+
         } else if (message.startsWith("confirm-")) {
-            const taxistring = message.replace('confirm-', '');
+
+            const taxiUid = message.replace('confirm-', '');
             let taxi: TaxiProfile | undefined;
-            if (taxistring === 'test') {
-                taxi = {
-                    type: 'confort',
-                    userId: '123',
-                    name: 'Gregory Smith',
-                    phone: '+535 123 4567',
-                    car: 'Toyota Corolla',
-                    plate: 'HAB 123',
-                    stars: 4.9,
-                };
-            } else {
-                taxi = JSON.parse(taxistring) as TaxiProfile;
-            }
+            taxi = await getTaxiProfile(taxiUid)
             setConfirmedTaxi({ ...taxi, status: "confirmed" })
+
         } else if (message.startsWith("ridestart-")) {
-            const rideStartStatus = message.replace('ridestart-', '');
-            if (rideStartStatus === 'success') {
-                // @ts-ignore
-                setConfirmedTaxi(prevTaxi => ({ ...prevTaxi, status: "ongoing" }))
-            } else {
-                console.error("Ride started with invalid status")
-            }
+
+            const taxiUid = message.replace('ridestart-', '');
+            let taxi: TaxiProfile | undefined;
+            taxi = await getTaxiProfile(taxiUid)
+            setConfirmedTaxi({ ...taxi, status: "ongoing" })
+
         } else if (message.startsWith("completed-")) {
-            const completedStatus = message.replace('completed-', '');
-            if (completedStatus === 'success') {
-                // @ts-ignore
-                setConfirmedTaxi(prevTaxi => ({ ...prevTaxi, status: "completed" }))
-            } else {
-                console.error("Ride completed with invalid status")
-            }
+
+            const taxiUid = message.replace('completed-', '');
+            let taxi: TaxiProfile | undefined;
+            taxi = await getTaxiProfile(taxiUid)
+            setConfirmedTaxi({ ...taxi, status: "completed" })
+
         } else if (message.startsWith("sentfrom-")) {
+
             const chatMsgJSON = message.replace('sentfrom-', '');
             const chatMsg = JSON.parse(chatMsgJSON) as ChatMessage;
 
@@ -310,17 +301,18 @@ export const WSProvider = ({ children, userProfile }: { children: React.ReactNod
             setRecievedMessages(prev => {
                 return prev ? [...prev, chatMsg] : [chatMsg]
             })
+
         }
 
         // while development could be same sended message
-    }, [userProfile]);
+    }, [userProfile, confirmedTaxi]);
 
     const asyncNewWebSocket = useCallback(() => {
         const protocol = `map-client`;
 
         if (WS_LOGS) console.log('new Web Socket initializing', protocol);
         const suckItToMeBBy = new WebSocket(
-            `ws://192.168.1.102:6942/subscribe?id=e117adcb-f429-42f7-95d9-07f1c92a1c8b&lat=51.5073509&lon=-0.1277581999999997&head=51`,
+            `ws://172.20.10.12:6942/subscribe?id=e117adcb-f429-42f7-95d9-07f1c92a1c8b&lat=51.5073509&lon=-0.1277581999999997&head=51`,
             protocol
         );
 

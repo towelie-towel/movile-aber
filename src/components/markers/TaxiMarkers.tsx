@@ -38,12 +38,14 @@ const TaxisMarkers = ({ onPressTaxi, animateToRegion, taxiConfirm, startRide }: 
   const onConfirmedTaxiChangeHandler = useCallback(() => {
     if (confirmedTaxi) {
       if (confirmedTaxi.status === "confirmed") {
+        console.log("confirmedTaxi - confirmed: ", JSON.stringify(confirmedTaxi, null, 2))
         taxiConfirm()
       } else if (confirmedTaxi.status === "ongoing") {
+        console.log("confirmedTaxi - ongoing: ", JSON.stringify(confirmedTaxi, null, 2))
         startRide()
       }
     }
-  }, [confirmedTaxi])
+  }, [confirmedTaxi, taxiConfirm, startRide])
 
   useEffect(onWsTaxisChangeHandler, [wsTaxis]);
   useEffect(onTaxisChangeHandler, [taxis]);

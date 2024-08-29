@@ -88,7 +88,7 @@ const HistoryScreen = () => {
             {
                 scale: interpolate(
                     offsetY.value,
-                    [-100, 0],
+                    [-180, 0],
                     [1.2, 1],
                     Extrapolation.CLAMP
                 )
@@ -96,8 +96,8 @@ const HistoryScreen = () => {
             {
                 translateY: interpolate(
                     offsetY.value,
-                    [-100, 0],
-                    [6, 0],
+                    [-180, 0],
+                    [150, 0],
                     Extrapolation.CLAMP
                 )
             }

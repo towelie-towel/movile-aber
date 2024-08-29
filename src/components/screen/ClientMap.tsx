@@ -31,7 +31,7 @@ import Colors from '~/constants/Colors';
 import { NightMap } from '~/constants/NightMap';
 import { drawerItems } from '~/constants/Drawer';
 import { ClientSteps } from '~/constants/RideFlow';
-import { calculateMiddlePointAndDelta } from '~/utils/directions';
+import { calculateMiddlePointAndDelta, getLastUserRide } from '~/utils/directions';
 import type { TaxiType } from '~/types/Taxi';
 import type { RideInfo } from '~/types/RideFlow';
 import type { AddMarker } from '~/types/Marker';
@@ -194,25 +194,66 @@ export default function ClientMap() {
     }, []);
 
 
-    const taxiConfirm = useCallback(() => {
+    const taxiConfirm = useCallback(async () => {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         setFindingRide(false);
-        // @ts-ignore
-        setRideInfo({ ...rideInfo, status: "confirmed" })
-        setCurrentStep(ClientSteps.PICKUP)
-    }, [rideInfo]);
-    const startRide = useCallback(() => {
+        if (rideInfo) {
+            setRideInfo({ ...rideInfo, status: "confirmed" })
+            setCurrentStep(ClientSteps.PICKUP)
+            console.log("ride info setted with pickup step")
+        } else {
+            if (profile?.id) {
+                console.log("fetching last user ride")
+                try {
+                    const resLastUserRide = await getLastUserRide(profile.id, "pending")
+                    setRideInfo(resLastUserRide)
+                    setCurrentStep(ClientSteps.PICKUP)
+                    console.log("ride info not found, ride info fetched and setted with pickup step")
+                } catch (error) {
+                    console.error(error)
+                }
+            }
+        }
+    }, [rideInfo, profile]);
+    const startRide = useCallback(async () => {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-        // @ts-ignore
-        setRideInfo({ ...rideInfo, status: "ongoing" })
-        setCurrentStep(ClientSteps.RIDE)
-    }, [rideInfo]);
-    const completeRide = useCallback(() => {
+        if (rideInfo) {
+            setRideInfo({ ...rideInfo, status: "ongoing" })
+            setCurrentStep(ClientSteps.RIDE)
+            console.log("ride info setted with ride step")
+        } else {
+            if (profile?.id) {
+                console.log("fetching last user ride")
+                try {
+                    const resLastUserRide = await getLastUserRide(profile.id, "confirmed")
+                    setRideInfo(resLastUserRide)
+                    setCurrentStep(ClientSteps.RIDE)
+                    console.log("ride info not found, ride info fetched and setted with ride step")
+                } catch (error) {
+                    console.error(error)
+                }
+            }
+        }
+    }, [rideInfo, profile]);
+    const completeRide = useCallback(async () => {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-        // @ts-ignore
-        setRideInfo({ ...rideInfo, status: "completed" })
-        setCurrentStep(ClientSteps.FINISHED)
-    }, [rideInfo]);
+        if (rideInfo) {
+            setRideInfo({ ...rideInfo, status: "completed" })
+            setCurrentStep(ClientSteps.FINISHED)
+        } else {
+            if (profile?.id) {
+                console.log("fetching last user ride")
+                try {
+                    const resLastUserRide = await getLastUserRide(profile.id, "ongoing")
+                    setRideInfo(resLastUserRide)
+                    setCurrentStep(ClientSteps.FINISHED)
+                    console.log("ride info not found, ride info fetched and setted with completed step")
+                } catch (error) {
+                    console.error(error)
+                }
+            }
+        }
+    }, [rideInfo, profile]);
 
     const onPressTaxi = useCallback(async () => {
         try {

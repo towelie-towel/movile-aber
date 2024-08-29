@@ -32,7 +32,7 @@ const RideReview: React.FC<IRideFlowInfo> = ({ finishRide }) => {
                     />
                     <View className="py-2- gap-1 justify-between- justify-center ">
                         <View className="flex-row justify-start items-center gap-2 ">
-                            <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-bold text-xl">{confirmedTaxi?.name ?? "Anonymous"}</Text>
+                            <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-bold text-xl">{confirmedTaxi?.username ?? "Anonymous"}</Text>
                             <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-bold text-xl">{"-"}</Text>
                             <View className="flex-row justify-center items-center">
                                 <Text className="text-[#FED141] text-[#1b1b1b]- dark:text-[#C1C0C9]- text-lg">★ </Text>
@@ -41,9 +41,9 @@ const RideReview: React.FC<IRideFlowInfo> = ({ finishRide }) => {
                         </View>
 
                         <View className='flex-row justify-start items-center mb-3- '>
-                            <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] text-md">{confirmedTaxi?.name ?? "Anonymous"}</Text>
+                            <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] text-md">{confirmedTaxi?.username ?? "Anonymous"}</Text>
                             <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-semibold text-lg">{" - "}</Text>
-                            <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-medium text-lg">{confirmedTaxi?.name ?? "Anonymous"}</Text>
+                            <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-medium text-lg">{confirmedTaxi?.username ?? "Anonymous"}</Text>
                         </View>
                     </View>
                 </View>
@@ -60,11 +60,11 @@ const RideReview: React.FC<IRideFlowInfo> = ({ finishRide }) => {
                         style={{ width: 100, height: 100 }}
                         source={require('../../../assets/images/taxi_test.png')}
                       />
-                      <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-bold text-xl">{confirmedTaxi?.name ?? "Anonymous"}</Text>
+                      <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-bold text-xl">{confirmedTaxi?.username ?? "Anonymous"}</Text>
                       <View className='flex-row justify-center items-center'>
-                        <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] text-md">{confirmedTaxi?.name ?? "Anonymous"}</Text>
+                        <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] text-md">{confirmedTaxi?.username ?? "Anonymous"}</Text>
                         <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-semibold text-lg">{" - "}</Text>
-                        <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-medium text-lg">{confirmedTaxi?.name ?? "Anonymous"}</Text>
+                        <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-medium text-lg">{confirmedTaxi?.username ?? "Anonymous"}</Text>
                       </View> */}
             <View className='w-full items-center justify-center mt-3'>
                 <StarRating
