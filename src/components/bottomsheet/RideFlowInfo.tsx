@@ -12,17 +12,15 @@ import Colors from '~/constants/Colors';
 
 interface IRideFlowInfo {
     routeInfo: {
-        distance: { value: number; text: string };
-        duration: { value: number; text: string };
-    } | null,
-    pinedInfo: {
         origin: { latitude: number, longitude: number, address: string } | null,
         destination: { latitude: number, longitude: number, address: string } | null,
+        distance: { value: number; text: string };
+        duration: { value: number; text: string };
     } | null,
     cancelRide: () => void,
 }
 
-const RideFlowInfo: React.FC<IRideFlowInfo> = ({ routeInfo, pinedInfo, cancelRide }) => {
+const RideFlowInfo: React.FC<IRideFlowInfo> = ({ routeInfo, cancelRide }) => {
     const colorScheme = useColorScheme();
     const router = useRouter();
     const { confirmedTaxi } = useWSState()
@@ -84,7 +82,7 @@ const RideFlowInfo: React.FC<IRideFlowInfo> = ({ routeInfo, pinedInfo, cancelRid
 
             <View className="relative z-[1000] w-full mt-4 py-1 pr-[2.5%] flex-row items-center-">
                 <MaterialCommunityIcons className='mt-1' name="map-marker-account" size={32} color={Colors[colorScheme ?? "light"].border} />
-                <Text className="ml-2 font-bold text-lg text-[#1b1b1b] dark:text-[#C1C0C9] ">{pinedInfo?.origin?.address}</Text>
+                <Text className="ml-2 font-bold text-lg text-[#1b1b1b] dark:text-[#C1C0C9] ">{routeInfo?.origin?.address}</Text>
             </View>
             <View className="relative z-[999] w-full pr-[2.5%] mb-3 items-end flex-row">
                 <DashedLine
@@ -102,7 +100,7 @@ const RideFlowInfo: React.FC<IRideFlowInfo> = ({ routeInfo, pinedInfo, cancelRid
                     size={32}
                     color={Colors[colorScheme ?? "light"].border}
                 />
-                <Text className="ml-2 font-bold text-lg text-[#1b1b1b] dark:text-[#C1C0C9]">{pinedInfo?.destination?.address}</Text>
+                <Text className="ml-2 font-bold text-lg text-[#1b1b1b] dark:text-[#C1C0C9]">{routeInfo?.destination?.address}</Text>
             </View>
 
             <ScaleBtn className="mt-4 w-full gap-3" onPress={cancelRideHandler}>

@@ -42,6 +42,7 @@ import TestTaxiTypesInfo from '~/constants/TestTaxiTypesInfo.json'
 interface BottomSheetContentProps {
   currentStep: ClientSteps;
   setCurrentStep: React.Dispatch<ClientSteps>;
+  rideInfo: RideInfo | null;
   setRideInfo: React.Dispatch<RideInfo | null>;
   setActiveRoute: React.Dispatch<{ coords: LatLng[] } | null>;
   startPiningLocation: () => void;
@@ -59,6 +60,7 @@ export const BottomSheetContent = ({
   piningMarker,
   setPiningMarker,
   setCurrentStep,
+  rideInfo,
   setRideInfo,
   setActiveRoute,
   piningLocation,
@@ -78,16 +80,21 @@ export const BottomSheetContent = ({
   const [viewPinOnMap, setViewPinOnMap] = useState(false);
   const [editingMarkers, setEditingMarkers] = useState(false);
   const [piningInput, setPiningInput] = useState<'origin' | 'destination' | null>(null);
+
+  const [markerName, setMarkerName] = useState<string | null>(null);
+  // const [markerImage, setMarkerImage] = useState<ImagePicker.ImagePickerResult | null>(null);
+
   const [pinedInfo, setPinedInfo] = useState<{
     origin: { latitude: number, longitude: number, address: string } | null,
     destination: { latitude: number, longitude: number, address: string } | null,
   } | null>(null);
   const [routeInfo, setRouteInfo] = useState<{
+    origin: { latitude: number, longitude: number, address: string } | null;
+    destination: { latitude: number, longitude: number, address: string } | null;
     distance: { value: number; text: string };
     duration: { value: number; text: string };
+    price: number;
   } | null>(null);
-  const [markerName, setMarkerName] = useState<string | null>(null);
-  // const [markerImage, setMarkerImage] = useState<ImagePicker.ImagePickerResult | null>(null);
 
   const [routeLoading, setRouteLoading] = useState(false);
   const [originLoading, setOriginLoading] = useState(false);
@@ -195,13 +202,6 @@ export const BottomSheetContent = ({
         // snapToIndex(1);
         const { overview_polyline, distance, duration } = TestRideSimulation
 
-        setActiveRoute({
-          coords: polylineDecode(overview_polyline.points).map((point, _) => ({
-            latitude: point[0]!,
-            longitude: point[1]!,
-          }))
-        });
-        setRouteInfo({ distance: distance, duration: duration });
         setRideInfo({
           status: "pending",
           name: "Undefiend",
@@ -225,6 +225,23 @@ export const BottomSheetContent = ({
       }
     }
   }, [pinedInfo, profile])
+
+  const handleRideInfoChange = useCallback(() => {
+    if (!rideInfo) return;
+    setActiveRoute({
+      coords: polylineDecode(rideInfo.overview_polyline.points).map((point, _) => ({
+        latitude: point[0]!,
+        longitude: point[1]!,
+      }))
+    });
+    setRouteInfo({
+      origin: rideInfo.origin,
+      destination: rideInfo.destination,
+      distance: rideInfo.distance,
+      duration: rideInfo.duration,
+      price: rideInfo.price
+    });
+  }, [rideInfo])
 
   /* const pickMarkerImage = useCallback(async () => {
     // No permissions request is necessary for launching the image library
@@ -478,6 +495,7 @@ export const BottomSheetContent = ({
 
   useEffect(restoreInputFromPinedInfo, [currentStep]);
   useEffect(handleActiveRouteTokio, [pinedInfo])
+  useEffect(handleRideInfoChange, [rideInfo])
 
   return (
     <View className="flex-1 bg-[#F8F8F8] dark:bg-[#1b1b1b]">
@@ -617,7 +635,7 @@ export const BottomSheetContent = ({
                   {currentStep === ClientSteps.FINISHED ?
                     <RideReview finishRide={finishRide} />
                     :
-                    <RideFlowInfo routeInfo={routeInfo} pinedInfo={pinedInfo} cancelRide={cancelRide} />
+                    <RideFlowInfo routeInfo={routeInfo} cancelRide={cancelRide} />
                   }
                 </View>
               )

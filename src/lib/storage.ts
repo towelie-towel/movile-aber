@@ -5,7 +5,7 @@ export const storeData = async (key: string, value: any) => {
     const jsonValue = JSON.stringify(value);
     await AsyncStorage.setItem(key, jsonValue);
   } catch (e) {
-    // saving error
+    console.error("storeData error", e)
   }
 };
 
@@ -14,7 +14,7 @@ export const getData = async (key: string) => {
     const jsonValue = await AsyncStorage.getItem(key);
     return jsonValue != null ? JSON.parse(jsonValue) : null;
   } catch (e) {
-    // error reading value
+    console.error("getData error", e)
   }
 };
 
@@ -24,7 +24,7 @@ const storage = {
       const jsonValue = await AsyncStorage.getItem(key);
       return jsonValue != null ? JSON.parse(jsonValue) : null;
     } catch (e) {
-      // error reading value
+      console.error("storage.get error", e)
       throw e
     }
   }
@@ -35,7 +35,7 @@ const storage = {
       const res = jsonValue != null ? JSON.parse(jsonValue) as boolean : null;
       return res
     } catch (e) {
-      // error reading value
+      console.error("storage.getBoolean error", e)
       throw e
     }
   },
@@ -44,7 +44,7 @@ const storage = {
       const jsonValue = await AsyncStorage.getItem(key);
       return jsonValue != null ? JSON.parse(jsonValue) : null;
     } catch (e) {
-      // error reading value
+      console.error("storage.set error", e)
       throw e
     }
   },
@@ -53,7 +53,7 @@ const storage = {
       const jsonValue = await AsyncStorage.getItem(key);
       return jsonValue != null ? JSON.parse(jsonValue) : null;
     } catch (e) {
-      // error reading value
+      console.error("storage.delete error", e)
       throw e
     }
   },
@@ -62,7 +62,7 @@ const storage = {
       const jsonValue = await AsyncStorage.getItem(key);
       return jsonValue != null ? JSON.parse(jsonValue) : null;
     } catch (e) {
-      // error reading value
+      console.error("storage.getString error", e)
       throw e
     }
   }

@@ -235,7 +235,12 @@ export const GooglePlacesAutocomplete = forwardRef((props, ref) => {
         if (request.readyState !== 4) return;
 
         if (request.status === 200) {
-          const responseJSON = JSON.parse(request.responseText);
+          let responseJSON
+          try {
+            responseJSON = JSON.parse(request.responseText);
+          } catch (error) {
+            console.error("GooglePlacesAutocomplete _onPress error", error)
+          }
 
           if (responseJSON.status === 'OK') {
             // if (_isMounted === true) {
@@ -390,7 +395,12 @@ export const GooglePlacesAutocomplete = forwardRef((props, ref) => {
         }
 
         if (request.status === 200) {
-          const responseJSON = JSON.parse(request.responseText);
+          let responseJSON
+          try {
+            responseJSON = JSON.parse(request.responseText);
+          } catch (error) {
+            console.error("_requestNearby error", error)
+          }
 
           _disableRowLoaders();
 
@@ -466,7 +476,13 @@ export const GooglePlacesAutocomplete = forwardRef((props, ref) => {
         }
 
         if (request.status === 200) {
-          const responseJSON = JSON.parse(request.responseText);
+          let responseJSON
+          try {
+            responseJSON = JSON.parse(request.responseText);
+          } catch (error) {
+            console.error("GooglePlacesAutocomplete _request error", error)
+          }
+
           if (typeof responseJSON.predictions !== 'undefined') {
             // if (_isMounted === true) {
             const results =

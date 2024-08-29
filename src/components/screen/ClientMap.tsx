@@ -200,7 +200,6 @@ export default function ClientMap() {
         if (rideInfo) {
             setRideInfo({ ...rideInfo, status: "confirmed" })
             setCurrentStep(ClientSteps.PICKUP)
-            console.log("ride info setted with pickup step")
         } else {
             if (profile?.id) {
                 console.log("fetching last user ride")
@@ -208,7 +207,7 @@ export default function ClientMap() {
                     const resLastUserRide = await getLastUserRide(profile.id, "pending")
                     setRideInfo(resLastUserRide)
                     setCurrentStep(ClientSteps.PICKUP)
-                    console.log("ride info not found, ride info fetched and setted with pickup step")
+                    console.log("ride info not found, ride info fetched and setted with pickup step", JSON.stringify(resLastUserRide, null, 2))
                 } catch (error) {
                     console.error(error)
                 }
@@ -220,7 +219,6 @@ export default function ClientMap() {
         if (rideInfo) {
             setRideInfo({ ...rideInfo, status: "ongoing" })
             setCurrentStep(ClientSteps.RIDE)
-            console.log("ride info setted with ride step")
         } else {
             if (profile?.id) {
                 console.log("fetching last user ride")
@@ -228,7 +226,7 @@ export default function ClientMap() {
                     const resLastUserRide = await getLastUserRide(profile.id, "confirmed")
                     setRideInfo(resLastUserRide)
                     setCurrentStep(ClientSteps.RIDE)
-                    console.log("ride info not found, ride info fetched and setted with ride step")
+                    console.log("ride info not found, ride info fetched and setted with ride step", JSON.stringify(resLastUserRide, null, 2))
                 } catch (error) {
                     console.error(error)
                 }
@@ -247,7 +245,7 @@ export default function ClientMap() {
                     const resLastUserRide = await getLastUserRide(profile.id, "ongoing")
                     setRideInfo(resLastUserRide)
                     setCurrentStep(ClientSteps.FINISHED)
-                    console.log("ride info not found, ride info fetched and setted with completed step")
+                    console.log("ride info not found, ride info fetched and setted with completed step", JSON.stringify(resLastUserRide, null, 2))
                 } catch (error) {
                     console.error(error)
                 }
@@ -545,6 +543,7 @@ export default function ClientMap() {
                             piningLocation={piningLocation}
                             piningMarker={piningMarker}
                             setPiningMarker={setPiningMarker}
+                            rideInfo={rideInfo}
                             setRideInfo={setRideInfo}
                             setActiveRoute={setActiveRoute}
                             selectedTaxiType={selectedTaxiType}
