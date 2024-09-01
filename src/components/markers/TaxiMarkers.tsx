@@ -12,12 +12,13 @@ interface ITaxiMarkers {
     longitudeDelta: number;
     latitude: number;
     longitude: number;
-  }) => void;
+  }, duration?: number) => void;
+  followLocation: React.MutableRefObject<"user" | "taxi" | null>;
   taxiConfirm: () => void;
   startRide: () => void;
 }
 
-const TaxisMarkers = ({ onPressTaxi, animateToRegion, taxiConfirm, startRide }: ITaxiMarkers) => {
+const TaxisMarkers = ({ onPressTaxi, animateToRegion, followLocation, taxiConfirm, startRide }: ITaxiMarkers) => {
   const [taxis, setTaxis] = useState<WSTaxi[]>([]);
   const { wsTaxis, confirmedTaxi } = useWSState();
 
@@ -25,8 +26,8 @@ const TaxisMarkers = ({ onPressTaxi, animateToRegion, taxiConfirm, startRide }: 
     setTaxis(wsTaxis ?? []);
   }, [wsTaxis])
   const onTaxisChangeHandler = useCallback(() => {
-    if (confirmedTaxi) {
-      if (confirmedTaxi.status === "confirmed" || confirmedTaxi.status === "ongoing") {
+    if (followLocation.current === "taxi") {
+      if (confirmedTaxi && (confirmedTaxi?.status === "confirmed" || confirmedTaxi?.status === "ongoing")) {
         animateToRegion({
           latitudeDelta: 0.00922, longitudeDelta: 0.009121,
           latitude: taxis[0].latitude,
@@ -34,7 +35,7 @@ const TaxisMarkers = ({ onPressTaxi, animateToRegion, taxiConfirm, startRide }: 
         })
       }
     } else { }
-  }, [taxis, confirmedTaxi, animateToRegion])
+  }, [taxis, confirmedTaxi, animateToRegion, followLocation])
   const onConfirmedTaxiChangeHandler = useCallback(() => {
     if (confirmedTaxi) {
       if (confirmedTaxi.status === "confirmed") {
@@ -46,10 +47,20 @@ const TaxisMarkers = ({ onPressTaxi, animateToRegion, taxiConfirm, startRide }: 
       }
     }
   }, [confirmedTaxi, taxiConfirm, startRide])
+  const onFollowLocationChangeHandler = useCallback(() => {
+    if (followLocation.current === "taxi") {
+      animateToRegion({
+        latitudeDelta: 0.00922, longitudeDelta: 0.009121,
+        latitude: taxis[0].latitude,
+        longitude: taxis[0].longitude,
+      })
+    }
+  }, [followLocation])
 
   useEffect(onWsTaxisChangeHandler, [wsTaxis]);
   useEffect(onTaxisChangeHandler, [taxis]);
   useEffect(onConfirmedTaxiChangeHandler, [confirmedTaxi]);
+  useEffect(onFollowLocationChangeHandler, [followLocation]);
 
   return (
     <>

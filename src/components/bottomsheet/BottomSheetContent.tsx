@@ -25,7 +25,7 @@ import { ClientSteps } from '~/constants/RideFlow';
 import { defaultMarkers } from '~/constants/Markers';
 // import ColorsPalettes from '~/constants/ColorsPalettes.json'
 import { generateUniqueId } from '~/utils';
-import { getCoordinateAddress/* , getDirections */, polylineDecode } from '~/utils/directions';
+import { addReview, getCoordinateAddress/* , getDirections */, polylineDecode } from '~/utils/directions';
 import type { TaxiTypesInfo, TaxiType } from '~/types/Taxi';
 import type { RideInfo } from '~/types/RideFlow';
 import type { AddMarker } from '~/types/Marker';
@@ -341,6 +341,7 @@ export const BottomSheetContent = ({
       setPiningMarker(null)
     }
   }, [getMiddlePoint, endPiningLocation, piningInput, pinedInfo, piningMarker, originInputViewRef, destinationInputViewRef]);
+
   const cancelRide = useCallback(() => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     // setPinedInfo({
@@ -355,7 +356,7 @@ export const BottomSheetContent = ({
     // setSelectedTaxiType(null)
     // collapse();
   }, [cancelTaxi]);
-  const finishRide = useCallback(() => {
+  const finishRide = useCallback((review?: { stars?: number, comment?: string }) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setPiningInput(null)
     setRideInfo(null)
@@ -363,8 +364,12 @@ export const BottomSheetContent = ({
     setSelectedTaxiType(null)
     setPinedInfo(null)
     setRouteInfo(null)
+
     setCurrentStep(ClientSteps.SEARCH);
-  }, []);
+
+    review && profile?.id && addReview({ client_id: profile?.id, overall_rating: review?.stars, comment: review?.comment })
+
+  }, [profile]);
 
   const goBackToSearch = useCallback(() => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -496,6 +501,21 @@ export const BottomSheetContent = ({
   useEffect(restoreInputFromPinedInfo, [currentStep]);
   useEffect(handleActiveRouteTokio, [pinedInfo])
   useEffect(handleRideInfoChange, [rideInfo])
+
+  /* return (
+
+    <View className="flex-1 bg-[#F8F8F8] dark:bg-[#1b1b1b]">
+
+      <View className="w-[95%] h-full self-center overflow-visible">
+
+        <View className="mx-1.5 mt-7-">
+
+        </View>
+
+      </View>
+
+    </View>
+  ) */
 
   return (
     <View className="flex-1 bg-[#F8F8F8] dark:bg-[#1b1b1b]">
@@ -635,7 +655,7 @@ export const BottomSheetContent = ({
                   {currentStep === ClientSteps.FINISHED ?
                     <RideReview finishRide={finishRide} />
                     :
-                    <RideFlowInfo routeInfo={routeInfo} cancelRide={cancelRide} />
+                    <RideFlowInfo currentStep={currentStep} routeInfo={routeInfo} cancelRide={cancelRide} />
                   }
                 </View>
               )
@@ -1067,6 +1087,14 @@ export const BottomSheetContent = ({
                       }
                     </ScrollView>
                   </View>
+                </View>
+              )
+            }
+
+            {currentStep === ClientSteps.FINDING &&
+              (
+                <View className="mx-1.5 mt-7-">
+
                 </View>
               )
             }

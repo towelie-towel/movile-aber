@@ -4,22 +4,25 @@ import { Image } from 'expo-image';
 import StarRating from 'react-native-star-rating-widget';
 import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
 
+import FloatingLabelInput from '~/lib/floating-label-input';
 import { useWSState } from '~/context/WSContext';
 import { ScaleBtn } from '~/components/common';
 import Colors from '~/constants/Colors';
 
 interface IRideFlowInfo {
-    finishRide: () => void,
+    finishRide: (review?: { stars?: number, comment?: string }) => void,
 }
 
 const RideReview: React.FC<IRideFlowInfo> = ({ finishRide }) => {
     const colorScheme = useColorScheme();
     const { confirmedTaxi } = useWSState()
-    const [rating, setRating] = useState(0);
+
+    const [rating, setRating] = useState<number | null>(0);
+    const [comment, setComment] = useState<string | null>(null);
 
     const finishRideHandler = useCallback(() => {
-        finishRide()
-    }, [finishRide])
+        finishRide({ stars: rating ?? undefined, comment: comment ?? undefined })
+    }, [finishRide, rating, comment])
 
     return (
         <View className='w-full- mx-1.5- justify-center items-center-'>
@@ -66,47 +69,48 @@ const RideReview: React.FC<IRideFlowInfo> = ({ finishRide }) => {
                         <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-semibold text-lg">{" - "}</Text>
                         <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-medium text-lg">{confirmedTaxi?.username ?? "Anonymous"}</Text>
                       </View> */}
-            <View className='w-full items-center justify-center mt-3'>
+            <View className='w-full items-center- justify-center mt-3'>
                 <StarRating
-                    rating={rating}
+                    rating={rating ?? 0}
                     onChange={setRating}
                 />
             </View>
-            <View
-                style={{
-                    position: 'relative',
-                    zIndex: 1000,
-                    overflow: 'hidden',
+            <FloatingLabelInput
+                label={"Añade un comentario"}
+                value={comment ?? undefined}
+                onChangeText={value => setComment(value)}
+
+                containerStyles={{
+                    paddingTop: 24,
                     height: 96,
                     borderRadius: 10,
                     width: "100%",
                     marginTop: 24,
-                    alignSelf: "center",
+
+                    backgroundColor: Colors[colorScheme ?? 'light'].background_light1,
                 }}
-            >
-                <BottomSheetTextInput
-                    style={{
-                        position: 'relative',
-                        zIndex: 1000,
-
-                        padding: 12,
-                        height: '100%',
-                        fontWeight: '400',
-                        borderRadius: 10,
-                        fontSize: 16,
-                        textAlignVertical: 'center',
-                        color: Colors[colorScheme ?? 'light'].text_dark,
-                        backgroundColor: Colors[colorScheme ?? 'light'].background_light1,
-
-                        borderTopRightRadius: 10,
-                        borderBottomRightRadius: 10,
-                    }}
-                    multiline
-                    numberOfLines={4}
-                    placeholderTextColor={colorScheme === 'light' ? 'black' : '#6C6C6C'}
-                    placeholder='Añade un comentario'
-                />
-            </View>
+                customLabelStyles={{
+                    colorFocused: Colors[colorScheme ?? "light"].border,
+                    colorBlurred: Colors[colorScheme ?? "light"].border,
+                    fontSizeFocused: 18,
+                    fontSizeBlurred: 20,
+                }}
+                labelStyles={{
+                    backgroundColor: Colors[colorScheme ?? 'light'].background_light1,
+                    paddingLeft: 8,
+                }}
+                inputStyles={{
+                    paddingHorizontal: 12,
+                    paddingBottom: 12,
+                    fontWeight: '400',
+                    fontSize: 16,
+                    color: Colors[colorScheme ?? 'light'].text_dark,
+                }}
+                multiline
+                numberOfLines={4}
+                placeholderTextColor={colorScheme === 'light' ? 'black' : '#6C6C6C'}
+                placeholder='Añade un comentario'
+            />
 
             <ScaleBtn className="mt-4 w-full gap-3" onPress={finishRideHandler}>
                 <View className="h-18 flex-row items-center justify-center bg-[#242E42] rounded-xl p-3">

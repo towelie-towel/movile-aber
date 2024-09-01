@@ -14,6 +14,7 @@ import MapView, { type LatLng, PROVIDER_GOOGLE, PROVIDER_DEFAULT, Polyline, Mark
 import Animated, { Extrapolation, interpolate, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAtom } from 'jotai/react';
+import * as Haptics from 'expo-haptics';
 
 import { userMarkersAtom, useUser } from '~/context/UserContext';
 import { BottomSheetContent } from '~/components/bottomsheet/BottomSheetContent';
@@ -56,7 +57,18 @@ export default function ClientMap() {
     // map & markers
     const mapViewRef = useRef<MapView>(null);
 
+    // bottom sheet
+    const animatedPosition = useSharedValue(0);
+    const animatedIndex = useSharedValue(0);
+    const sheetCurrentSnapRef = useRef(1);
+    const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+    const [snapPoints, setSnapPoints] = useState<number[]>([195, 360, 550]);
+
+    // drawer
+    const [drawerOpen, setDrawerOpen] = useState(false);
+
     // search bar & taxi flow
+    const followLocation = useRef<"user" | "taxi" | null>(null);
     const [currentStep, setCurrentStep] = useState<ClientSteps>(ClientSteps.SEARCH);
     const [activeRoute, setActiveRoute] = useState<{ coords: LatLng[] } | null>(null);
     const [piningLocation, setPiningLocation] = useState(false);
@@ -66,19 +78,27 @@ export default function ClientMap() {
     const [rideInfo, setRideInfo] = useState<RideInfo | null>(null);
     // const [confirmedTaxi, setConfirmedTaxi] = useState<TaxiProfile | null>(null);
 
-    // drawer
-    const [drawerOpen, setDrawerOpen] = useState(false);
 
-    // bottom sheet
-    const [snapPoints, setSnapPoints] = useState<number[]>([195, 360, 550]);
-    const animatedPosition = useSharedValue(0);
-    const animatedIndex = useSharedValue(0);
-    const sheetCurrentSnapRef = useRef(1);
-    const bottomSheetModalRef = useRef<BottomSheetModal>(null);
 
+    useEffect(() => {
+        let unsubscribeInterval: NodeJS.Timeout;
+        unsubscribeInterval = setInterval(() => {
+            if (followLocation.current === "user") {
+                animateToUserLocation()
+            }
+        }, 2000)
+        return () => {
+            if (unsubscribeInterval) {
+                clearInterval(unsubscribeInterval)
+            }
+        }
+    }, [followLocation])
     useEffect(() => {
         if (RIDE_FLOW_LOGS) console.log(currentStep)
         if (RIDE_FLOW_LOGS) console.log(selectedTaxiType)
+
+        if (Platform.OS === "ios") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+
         switch (currentStep) {
             case ClientSteps.SEARCH:
                 setSnapPoints([210, 390, 700])
@@ -91,6 +111,10 @@ export default function ClientMap() {
             case ClientSteps.TAXI:
                 setSnapPoints([210, 360])
                 //bottomSheetModalRef.current?.expand();
+                break;
+            case ClientSteps.FINDING:
+                setSnapPoints([120, 240])
+                bottomSheetModalRef.current?.collapse()
                 break;
             case ClientSteps.PICKUP:
                 setSnapPoints([330, 400])
@@ -133,11 +157,24 @@ export default function ClientMap() {
         // [width, height, snapPoints, animatedIndex, /* sheetCurrentSnapRef, animatedPosition, sheetCurrentSnap */]
     );
 
+    const animateToRegion = useCallback(
+        (region: {
+            latitudeDelta: number;
+            longitudeDelta: number;
+            latitude: number;
+            longitude: number;
+        }, duration?: number) => {
+            mapViewRef.current?.animateToRegion(region, duration);
+        },
+        [mapViewRef]
+    );
     const animateToUserLocation = useCallback(async () => {
+        // TODO: find a more performant way to fetch user coordinates
         const position = await ExpoLocation.getCurrentPositionAsync({ accuracy: ExpoLocation.Accuracy.Highest });
-        mapViewRef.current?.animateToRegion({ latitude: position?.coords.latitude - 0.0025 * sheetCurrentSnapRef.current, longitude: position?.coords.longitude, latitudeDelta: 0.00922, longitudeDelta: 0.009121, });
-    }, [sheetCurrentSnapRef]);
+        animateToRegion({ latitude: position?.coords.latitude - 0.0025 * sheetCurrentSnapRef.current, longitude: position?.coords.longitude, latitudeDelta: 0.00922, longitudeDelta: 0.009121, });
+    }, [sheetCurrentSnapRef, animateToRegion, followLocation]);
     const animateToActiveRoute = useCallback(() => {
+        followLocation.current = null;
         activeRoute && animateToRegion(calculateMiddlePointAndDelta(
             { latitude: activeRoute.coords[0].latitude, longitude: activeRoute.coords[0].longitude },
             {
@@ -145,14 +182,15 @@ export default function ClientMap() {
                 longitude: activeRoute.coords[activeRoute.coords.length - 1].longitude,
             }
         ));
-    }, [activeRoute]);
+    }, [activeRoute, animateToRegion]);
     const animateToRoute = useCallback(
         (
             origin: { latitude: number; longitude: number },
             destination: { latitude: number; longitude: number }
         ) => {
+            followLocation.current = null;
             animateToRegion(calculateMiddlePointAndDelta(origin, destination));
-        }, []);
+        }, [animateToRegion]);
 
     // renders
     const renderCustomHandle = useCallback((props: BottomSheetHandleProps) => <CustomHandle title="Custom Handle Example" {...props} />, []);
@@ -171,17 +209,7 @@ export default function ClientMap() {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         setPiningLocation(false);
     }, []);
-    const animateToRegion = useCallback(
-        (region: {
-            latitudeDelta: number;
-            longitudeDelta: number;
-            latitude: number;
-            longitude: number;
-        }) => {
-            mapViewRef.current?.animateToRegion(region);
-        },
-        [mapViewRef]
-    );
+
     const startFindingRide = useCallback(() => {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         setFindingRide(true);
@@ -277,7 +305,7 @@ export default function ClientMap() {
                 renderDrawerContent={() => {
                     return (
                         <View className="w-full h-full bg-[#F8F8F8] dark:bg-[#1b1b1b]">
-                            <View className="h-[300px] w-full justify-center items-center bg-[#FCCB6F] dark:bg-[#947233]">
+                            <View className="h-[300px] w-full justify-center items-center bg-[#FCCB6F] dark:bg-[#fab526]">
                                 <View className="absolute top-[-170px] left-[-40px] w-[300px] h-[300px] rounded-full opacity-5 bg-black" />
                                 <View className="absolute w-[350px] h-[350px] top-[-50px] left-[-175px] rounded-full opacity-5 bg-black" />
 
@@ -366,7 +394,9 @@ export default function ClientMap() {
                         // showsUserLocation
                         showsUserLocation={currentStep !== ClientSteps.RIDE}
                         style={{ flex: 1 }}
-                        onTouchMove={() => { }}
+                        onTouchMove={() => {
+                            followLocation.current = null;
+                        }}
                         onTouchStart={() => { }}
                         onTouchEnd={() => { }}
                         onPress={() => {
@@ -384,7 +414,7 @@ export default function ClientMap() {
                         customMapStyle={colorScheme === 'dark' ? NightMap : undefined}
                     >
                         {activeRoute && <Polyline coordinates={activeRoute.coords} strokeWidth={5} strokeColor="#000" />}
-                        <TaxisMarkers taxiConfirm={taxiConfirm} startRide={startRide} animateToRegion={animateToRegion} onPressTaxi={onPressTaxi} />
+                        <TaxisMarkers taxiConfirm={taxiConfirm} startRide={startRide} animateToRegion={animateToRegion} followLocation={followLocation} onPressTaxi={onPressTaxi} />
                         <UserMarker findingRide={findingRide} completeRide={completeRide} />
 
                         <AnimatedRouteMarker key={2} />
@@ -439,8 +469,8 @@ export default function ClientMap() {
 
                                 {currentStep <= ClientSteps.FINDING && currentStep !== ClientSteps.PINNING &&
                                     <FindRideBtn rideInfo={rideInfo} startFindingRide={startFindingRide} errorFindingRide={errorFindingRide} disabled={(findingRide || !selectedTaxiType)} >
-                                        <View className="bg-[#FCCB6F] w-40 h-14 rounded-lg p-3">
-                                            <Text className="text-center text-lg font-bold w-auto text-[#fff]">
+                                        <View className="bg-[#FCCB6F] dark:bg-[#fab526] w-40 h-14 rounded-lg p-3">
+                                            <Text className="text-center text-lg font-bold w-auto text-[#fff] dark:text-[#222]">
                                                 {findingRide ? 'Finding Ride' : 'Request Ride'}
                                             </Text>
                                         </View>
@@ -464,12 +494,25 @@ export default function ClientMap() {
                                 </ScaleBtn>
                             )}
 
-                            <ScaleBtn onPress={animateToUserLocation}>
-                                <View className="bg-transparent rounded-lg p-3 shadow">
-                                    {/* <MagnometerArrow cardinalDirection={CardinalDirections.NORTH} /> */}
-                                    <FontAwesome6 /* FontAwesome location-arrow-up */ name="location-arrow" size={24} color={Colors[colorScheme ?? 'light'].text_dark} />
-                                </View>
-                            </ScaleBtn>
+                            {(currentStep === ClientSteps.PICKUP || currentStep === ClientSteps.RIDE) && (
+                                <ScaleBtn onPress={() => { followLocation.current = "taxi" }}>
+                                    <View className="bg-transparent rounded-lg p-3 ">
+                                        <MaterialCommunityIcons name="taxi" size={24} color={Colors[colorScheme ?? 'light'].text_dark} />
+                                    </View>
+                                </ScaleBtn>
+                            )}
+
+                            {currentStep !== ClientSteps.RIDE && (
+                                <ScaleBtn onPress={() => {
+                                    followLocation.current = "user";
+                                    animateToUserLocation()
+                                }}>
+                                    <View className="bg-transparent rounded-lg p-3 shadow">
+                                        {/* <MagnometerArrow cardinalDirection={CardinalDirections.NORTH} /> */}
+                                        <FontAwesome6 /* FontAwesome location-arrow-up */ name="location-arrow" size={24} color={Colors[colorScheme ?? 'light'].text_dark} />
+                                    </View>
+                                </ScaleBtn>
+                            )}
                         </View>
                     </TopSheetButtonsAnimStyle>
 

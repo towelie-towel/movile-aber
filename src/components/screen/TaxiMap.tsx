@@ -203,7 +203,7 @@ export default function ClientMap() {
         try {
             console.log(`fetching route from ${startLatitude},${startLongitude} to ${destination.latitude},${destination.longitude}`)
             const resp = await fetch(
-                `http://172.20.10.12:6942/route?from=${startLatitude},${startLongitude}&to=${destination.latitude},${destination.longitude}`
+                `http://192.168.1.102:6942/route?from=${startLatitude},${startLongitude}&to=${destination.latitude},${destination.longitude}`
             );
             const respJson = await resp.json();
             const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map(
@@ -309,7 +309,7 @@ export default function ClientMap() {
                 renderDrawerContent={() => {
                     return (
                         <View className="w-full h-full bg-[#F8F8F8] dark:bg-[#222222]">
-                            <View className="h-[300px] w-full justify-center items-center bg-[#FCCB6F] dark:bg-[#947233]">
+                            <View className="h-[300px] w-full justify-center items-center bg-[#FCCB6F] dark:bg-[#fab526]">
                                 <View className="absolute top-[-170px] left-[-40px] w-[300px] h-[300px] rounded-full opacity-5 bg-black" />
                                 <View className="absolute w-[350px] h-[350px] top-[-50px] left-[-175px] rounded-full opacity-5 bg-black" />
 

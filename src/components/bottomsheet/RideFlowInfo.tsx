@@ -9,8 +9,10 @@ import { ScaleBtn } from '~/components/common';
 import { ConfortSVG } from '~/components/svgs';
 import DashedLine from '~/components/bottomsheet/DashedLine';
 import Colors from '~/constants/Colors';
+import { ClientSteps } from '~/constants/RideFlow';
 
 interface IRideFlowInfo {
+    currentStep: ClientSteps;
     routeInfo: {
         origin: { latitude: number, longitude: number, address: string } | null,
         destination: { latitude: number, longitude: number, address: string } | null,
@@ -20,7 +22,7 @@ interface IRideFlowInfo {
     cancelRide: () => void,
 }
 
-const RideFlowInfo: React.FC<IRideFlowInfo> = ({ routeInfo, cancelRide }) => {
+const RideFlowInfo: React.FC<IRideFlowInfo> = ({ currentStep, routeInfo, cancelRide }) => {
     const colorScheme = useColorScheme();
     const router = useRouter();
     const { confirmedTaxi } = useWSState()
@@ -46,7 +48,7 @@ const RideFlowInfo: React.FC<IRideFlowInfo> = ({ routeInfo, cancelRide }) => {
                     </View>
                 </View>
 
-                <View className="flex-row gap-4">
+                {currentStep !== ClientSteps.RIDE && <View className="flex-row gap-4">
                     <ScaleBtn onPress={() => router.push('memos')}>
                         <View className="bg-[#25D366] p-2 rounded-full">
                             <FontAwesome6 name="phone" size={25} color="white" />
@@ -57,7 +59,7 @@ const RideFlowInfo: React.FC<IRideFlowInfo> = ({ routeInfo, cancelRide }) => {
                             <AntDesign name="message1" size={25} color="white" />
                         </View>
                     </ScaleBtn>
-                </View>
+                </View>}
             </View>
 
             <View

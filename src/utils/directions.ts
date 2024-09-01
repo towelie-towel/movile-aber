@@ -36,7 +36,7 @@ export const getCoordinateAddress = async (latitude: number, longitude: number) 
 export const getLastUserRide = async (userId: string, status?: string) => {
   try {
     const resp = await fetch(
-      `http://172.20.10.12:6942/lastride?client_id=${userId}${status ? `&status=${status}` : ""}`
+      `http://192.168.1.102:6942/lastride?client_id=${userId}${status ? `&status=${status}` : ""}`
     );
     const respJson = await resp.json();
     return respJson as RideInfo;
@@ -46,10 +46,33 @@ export const getLastUserRide = async (userId: string, status?: string) => {
   }
 };
 
+export async function addReview(review: {
+  reviewable_id?: number;
+  client_id?: string;
+  comment?: string;
+  overall_rating?: number;
+}) {
+  const response = await fetch('http://192.168.1.102:6942/savereview', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(review),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Failed to add review: ${error}`);
+  }
+
+  const data = await response.json();
+  console.log('Review added with ID:', data.review_id);
+}
+
 export const getTaxiProfile = async (taxiId: string) => {
   try {
     const resp = await fetch(
-      `http://172.20.10.12:6942/taxiprofile?id=${taxiId}`
+      `http://192.168.1.102:6942/taxiprofile?id=${taxiId}`
     );
     const respJson = await resp.json();
     return respJson as TaxiProfile;
@@ -62,7 +85,7 @@ export const getTaxiProfile = async (taxiId: string) => {
 export const getDirections = async (startLoc: string, destinationLoc: string) => {
   try {
     const resp = await fetch(
-      `http://172.20.10.12:6942/route?from=${startLoc}&to=${destinationLoc}`
+      `http://192.168.1.102:6942/route?from=${startLoc}&to=${destinationLoc}`
     );
     const respJson = await resp.json();
     const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map((point, _) => ({

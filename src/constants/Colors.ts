@@ -40,7 +40,7 @@ export default {
     background_light: '#1b1b1b',
     background_light1: '#333333',
     background_dark: '#1b1b1b',
-    primary: '#947233',
+    primary: '#fab526',
     secondary: '#222222',
     border: '#A3A3A3',
     border_light: '#444444',
