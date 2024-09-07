@@ -32,7 +32,7 @@ import Colors from '~/constants/Colors';
 import { NightMap } from '~/constants/NightMap';
 import { drawerItems } from '~/constants/Drawer';
 import { ClientSteps } from '~/constants/RideFlow';
-import { calculateMiddlePointAndDelta, getLastUserRide } from '~/utils/directions';
+import { calculateMiddlePointAndDelta, getLastUserRide, polylineDecode } from '~/utils/directions';
 import type { TaxiType } from '~/types/Taxi';
 import type { RideInfo } from '~/types/RideFlow';
 import type { AddMarker } from '~/types/Marker';
@@ -70,7 +70,6 @@ export default function ClientMap() {
     // search bar & taxi flow
     const followLocation = useRef<"user" | "taxi" | null>(null);
     const [currentStep, setCurrentStep] = useState<ClientSteps>(ClientSteps.SEARCH);
-    const [activeRoute, setActiveRoute] = useState<{ coords: LatLng[] } | null>(null);
     const [piningLocation, setPiningLocation] = useState(false);
     const [piningMarker, setPiningMarker] = useState<AddMarker | null>(null);
     const [selectedTaxiType, setSelectedTaxiType] = useState<TaxiType | null>(null);
@@ -78,7 +77,10 @@ export default function ClientMap() {
     const [rideInfo, setRideInfo] = useState<RideInfo | null>(null);
     // const [confirmedTaxi, setConfirmedTaxi] = useState<TaxiProfile | null>(null);
 
-
+    const activeRoute = rideInfo && polylineDecode(rideInfo.overview_polyline.points).map((point, _) => ({
+        latitude: point[0]!,
+        longitude: point[1]!,
+    }));
 
     useEffect(() => {
         let unsubscribeInterval: NodeJS.Timeout;
@@ -102,6 +104,7 @@ export default function ClientMap() {
         switch (currentStep) {
             case ClientSteps.SEARCH:
                 setSnapPoints([210, 390, 700])
+                bottomSheetModalRef.current?.collapse()
                 break;
             case ClientSteps.PINNING:
                 if (piningLocation) setSnapPoints([150, 420])
@@ -110,7 +113,7 @@ export default function ClientMap() {
                 break;
             case ClientSteps.TAXI:
                 setSnapPoints([210, 360])
-                //bottomSheetModalRef.current?.expand();
+                bottomSheetModalRef.current?.collapse();
                 break;
             case ClientSteps.FINDING:
                 setSnapPoints([120, 240])
@@ -118,24 +121,28 @@ export default function ClientMap() {
                 break;
             case ClientSteps.PICKUP:
                 setSnapPoints([330, 400])
+                bottomSheetModalRef.current?.expand();
                 break;
             case ClientSteps.RIDE:
                 setSnapPoints([330, 400])
+                bottomSheetModalRef.current?.expand();
                 break;
             case ClientSteps.FINISHED:
                 setSnapPoints([380, 700])
+                bottomSheetModalRef.current?.collapse()
                 break;
             default:
                 break;
         }
     }, [currentStep])
     useEffect(() => {
-        if (activeRoute) (
+        if (activeRoute) {
+
             animateToRoute(
-                { latitude: activeRoute.coords[0].latitude, longitude: activeRoute.coords[0].longitude },
-                { latitude: activeRoute.coords[activeRoute.coords.length - 1].latitude, longitude: activeRoute.coords[activeRoute.coords.length - 1].longitude }
+                { latitude: activeRoute[0].latitude, longitude: activeRoute[0].longitude },
+                { latitude: activeRoute[activeRoute.length - 1].latitude, longitude: activeRoute[activeRoute.length - 1].longitude }
             )
-        )
+        }
     }, [activeRoute])
     useEffect(() => {
         if (isSignedIn) {
@@ -175,11 +182,12 @@ export default function ClientMap() {
     }, [sheetCurrentSnapRef, animateToRegion, followLocation]);
     const animateToActiveRoute = useCallback(() => {
         followLocation.current = null;
-        activeRoute && animateToRegion(calculateMiddlePointAndDelta(
-            { latitude: activeRoute.coords[0].latitude, longitude: activeRoute.coords[0].longitude },
+        if (!activeRoute) return 
+        animateToRegion(calculateMiddlePointAndDelta(
+            { latitude: activeRoute[0].latitude, longitude: activeRoute[0].longitude },
             {
-                latitude: activeRoute.coords[activeRoute.coords.length - 1].latitude,
-                longitude: activeRoute.coords[activeRoute.coords.length - 1].longitude,
+                latitude: activeRoute[activeRoute.length - 1].latitude,
+                longitude: activeRoute[activeRoute.length - 1].longitude,
             }
         ));
     }, [activeRoute, animateToRegion]);
@@ -413,7 +421,7 @@ export default function ClientMap() {
                         provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : PROVIDER_DEFAULT}
                         customMapStyle={colorScheme === 'dark' ? NightMap : undefined}
                     >
-                        {activeRoute && <Polyline coordinates={activeRoute.coords} strokeWidth={5} strokeColor="#000" />}
+                        {activeRoute && <Polyline coordinates={activeRoute} strokeWidth={5} strokeColor="#000" />}
                         <TaxisMarkers taxiConfirm={taxiConfirm} startRide={startRide} animateToRegion={animateToRegion} followLocation={followLocation} onPressTaxi={onPressTaxi} />
                         <UserMarker findingRide={findingRide} completeRide={completeRide} />
 
@@ -425,12 +433,12 @@ export default function ClientMap() {
                             </Marker>
                         ))}
 
-                        {activeRoute && activeRoute.coords.length > 0 && (
+                        {activeRoute && activeRoute.length > 0 && (
                             <>
-                                <Marker coordinate={activeRoute.coords[0]}>
+                                <Marker coordinate={activeRoute[0]}>
                                     <MaterialCommunityIcons name="map-marker-account" size={24} color={Colors[colorScheme ?? 'light'].text} />
                                 </Marker>
-                                <Marker coordinate={activeRoute.coords[activeRoute.coords.length - 1]}>
+                                <Marker coordinate={activeRoute[activeRoute.length - 1]}>
                                     <MaterialCommunityIcons name="map-marker-radius" size={24} color={Colors[colorScheme ?? 'light'].text} />
                                 </Marker>
                             </>
@@ -454,7 +462,7 @@ export default function ClientMap() {
                     )}
 
                     <TopSheetButtonsAnimStyle animatedIndex={animatedIndex} snapPoints={snapPoints} >
-                        {activeRoute && activeRoute.coords.length > 0 && (
+                        {activeRoute && activeRoute.length > 0 && (
                             <>
                                 {/* <ScaleBtn
                                     containerStyle={{}}
@@ -486,7 +494,7 @@ export default function ClientMap() {
                                 </View>
                             </ScaleBtn>
 
-                            {activeRoute && activeRoute.coords.length > 0 && (
+                            {activeRoute && activeRoute.length > 0 && (
                                 <ScaleBtn onPress={animateToActiveRoute}>
                                     <View className="bg-transparent rounded-lg p-3 ">
                                         <FontAwesome6 name="route" size={24} color={Colors[colorScheme ?? 'light'].text_dark} />
@@ -588,7 +596,6 @@ export default function ClientMap() {
                             setPiningMarker={setPiningMarker}
                             rideInfo={rideInfo}
                             setRideInfo={setRideInfo}
-                            setActiveRoute={setActiveRoute}
                             selectedTaxiType={selectedTaxiType}
                             setSelectedTaxiType={setSelectedTaxiType}
                         />

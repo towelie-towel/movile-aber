@@ -18,6 +18,7 @@ interface IRideFlowInfo {
         destination: { latitude: number, longitude: number, address: string } | null,
         distance: { value: number; text: string };
         duration: { value: number; text: string };
+        price: number;
     } | null,
     cancelRide: () => void,
 }
@@ -36,25 +37,26 @@ const RideFlowInfo: React.FC<IRideFlowInfo> = ({ currentStep, routeInfo, cancelR
             <View className="h-20 flex-row justify-between items-center">
                 <View className="flex-row gap-3 items-center">
                     <Image
-                        style={{ width: 50, height: 50 }}
-                        source={require('../../../assets/images/taxi_test.png')}
+                        style={{ width: 50, height: 50, borderRadius: 50 }}
+                        // TODO: find a placeholder image
+                        source={confirmedTaxi?.avatar_url ? { uri: confirmedTaxi?.avatar_url } : ""}
                     />
                     <View className="justify-center">
-                        <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-bold text-xl">{confirmedTaxi?.username ?? "Anonymous"}</Text>
+                        <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-bold text-xl">{confirmedTaxi?.username}</Text>
                         <View className="flex-row items-center">
                             <Text className="text-[#FED141] text-[#1b1b1b]- dark:text-[#C1C0C9]- text-lg">★ </Text>
-                            <Text className="text-[#1b1b1b] dark:text-[#C1C0C9]">4.9</Text>
+                            <Text className="text-[#1b1b1b] dark:text-[#C1C0C9]">{confirmedTaxi?.stars}</Text>
                         </View>
                     </View>
                 </View>
 
                 {currentStep !== ClientSteps.RIDE && <View className="flex-row gap-4">
-                    <ScaleBtn onPress={() => router.push('memos')}>
+                    <ScaleBtn onPress={() => { }}>
                         <View className="bg-[#25D366] p-2 rounded-full">
                             <FontAwesome6 name="phone" size={25} color="white" />
                         </View>
                     </ScaleBtn>
-                    <ScaleBtn onPress={() => router.push('chat')}>
+                    <ScaleBtn onPress={() => router.push(`chat/${confirmedTaxi?.id}`)}>
                         <View className="bg-[#4252FF] p-2 rounded-full">
                             <AntDesign name="message1" size={25} color="white" />
                         </View>
@@ -69,15 +71,15 @@ const RideFlowInfo: React.FC<IRideFlowInfo> = ({ currentStep, routeInfo, cancelR
                 <View className="flex-row items-center justify-around flex-1 ml-1">
                     <View className="gap-1">
                         <Text className="text-lg font-medium text-center text-[#1b1b1b] dark:text-[#C1C0C9]">Distance</Text>
-                        <Text className="text-xl font-bold text-[#1b1b1b] dark:text-[#C1C0C9]">{routeInfo?.distance.text ?? "3.5km"}</Text>
+                        <Text className="text-xl font-bold text-[#1b1b1b] dark:text-[#C1C0C9]">{routeInfo?.distance.text}</Text>
                     </View>
                     <View className="gap-1">
                         <Text className="text-lg font-medium text-center text-[#1b1b1b] dark:text-[#C1C0C9]">Time</Text>
-                        <Text className="text-xl font-bold text-[#1b1b1b] dark:text-[#C1C0C9]">{routeInfo?.duration.text ?? "20min"}</Text>
+                        <Text className="text-xl font-bold text-[#1b1b1b] dark:text-[#C1C0C9]">{routeInfo?.duration.text}</Text>
                     </View>
                     <View className="gap-1">
                         <Text className="text-lg font-medium text-center text-[#1b1b1b] dark:text-[#C1C0C9]">Price</Text>
-                        <Text className="text-xl font-bold text-[#1b1b1b] dark:text-[#C1C0C9]">3000 CUP</Text>
+                        <Text className="text-xl font-bold text-[#1b1b1b] dark:text-[#C1C0C9]">{routeInfo?.price}</Text>
                     </View>
                 </View>
             </View>

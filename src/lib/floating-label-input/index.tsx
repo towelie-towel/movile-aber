@@ -589,7 +589,7 @@ const FloatingLabelInput: React.ForwardRefRenderFunction<InputRef, Props> = (
       onPress={setFocus}
       onLayout={onLayout}
     >
-      <View style={{ flexDirection: 'row', flexGrow: 1 }}>
+      <View style={{ flexDirection: 'row'/* , flexGrow: 1 */ }}>
         {staticLabel && (
           <AnimatedText
             {...labelProps}

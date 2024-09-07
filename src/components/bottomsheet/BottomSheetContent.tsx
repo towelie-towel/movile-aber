@@ -44,7 +44,6 @@ interface BottomSheetContentProps {
   setCurrentStep: React.Dispatch<ClientSteps>;
   rideInfo: RideInfo | null;
   setRideInfo: React.Dispatch<RideInfo | null>;
-  setActiveRoute: React.Dispatch<{ coords: LatLng[] } | null>;
   startPiningLocation: () => void;
   endPiningLocation: () => void;
   getMiddlePoint: () => Promise<{ latitude: number; longitude: number }>;
@@ -62,7 +61,6 @@ export const BottomSheetContent = ({
   setCurrentStep,
   rideInfo,
   setRideInfo,
-  setActiveRoute,
   piningLocation,
   startPiningLocation,
   endPiningLocation,
@@ -73,9 +71,16 @@ export const BottomSheetContent = ({
   const colorScheme = useColorScheme();
   const { width } = useWindowDimensions();
   const { profile } = useUser()
-  const { snapToIndex } = useBottomSheet();
+  const { snapToIndex, expand, collapse } = useBottomSheet();
   const { cancelTaxi } = useWSActions()
   const [userMarkers, setUserMarkers] = useAtom(userMarkersAtom)
+
+  const markerNameInputViewRef = useRef<ComponentRef<typeof FloatingLabelInput>>(null);
+  const originInputViewRef = useRef<GooglePlacesAutocompleteRef>(null);
+  const destinationInputViewRef = useRef<GooglePlacesAutocompleteRef>(null);
+  const markerShakeAnimatedValue = useRef(new Animated.Value(0)).current;
+  const originShakeAnimatedValue = useRef(new Animated.Value(0)).current;
+  const destinationShakeAnimatedValue = useRef(new Animated.Value(0)).current;
 
   const [viewPinOnMap, setViewPinOnMap] = useState(false);
   const [editingMarkers, setEditingMarkers] = useState(false);
@@ -88,24 +93,10 @@ export const BottomSheetContent = ({
     origin: { latitude: number, longitude: number, address: string } | null,
     destination: { latitude: number, longitude: number, address: string } | null,
   } | null>(null);
-  const [routeInfo, setRouteInfo] = useState<{
-    origin: { latitude: number, longitude: number, address: string } | null;
-    destination: { latitude: number, longitude: number, address: string } | null;
-    distance: { value: number; text: string };
-    duration: { value: number; text: string };
-    price: number;
-  } | null>(null);
 
   const [routeLoading, setRouteLoading] = useState(false);
   const [originLoading, setOriginLoading] = useState(false);
   const [destinationLoading, setDestinationLoading] = useState(false);
-
-  const markerNameInputViewRef = useRef<ComponentRef<typeof FloatingLabelInput>>(null);
-  const originInputViewRef = useRef<GooglePlacesAutocompleteRef>(null);
-  const destinationInputViewRef = useRef<GooglePlacesAutocompleteRef>(null);
-  const markerShakeAnimatedValue = useRef(new Animated.Value(0)).current;
-  const originShakeAnimatedValue = useRef(new Animated.Value(0)).current;
-  const destinationShakeAnimatedValue = useRef(new Animated.Value(0)).current;
 
   const emptyMarkerShake = useCallback(() => {
     markerShakeAnimatedValue.setValue(0);
@@ -214,7 +205,8 @@ export const BottomSheetContent = ({
           overview_polyline: overview_polyline,
           // navigationInfo: respJson[0].legs[0],
         })
-        // setCurrentStep(ClientSteps.TAXI)
+
+        setCurrentStep(ClientSteps.TAXI)
       } catch (error) {
         if (error instanceof Error) {
           console.error(error.message);
@@ -225,24 +217,6 @@ export const BottomSheetContent = ({
       }
     }
   }, [pinedInfo, profile])
-
-  const handleRideInfoChange = useCallback(() => {
-    if (!rideInfo) return;
-    setActiveRoute({
-      coords: polylineDecode(rideInfo.overview_polyline.points).map((point, _) => ({
-        latitude: point[0]!,
-        longitude: point[1]!,
-      }))
-    });
-    setRouteInfo({
-      origin: rideInfo.origin,
-      destination: rideInfo.destination,
-      distance: rideInfo.distance,
-      duration: rideInfo.duration,
-      price: rideInfo.price
-    });
-  }, [rideInfo])
-
   /* const pickMarkerImage = useCallback(async () => {
     // No permissions request is necessary for launching the image library
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -360,10 +334,8 @@ export const BottomSheetContent = ({
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setPiningInput(null)
     setRideInfo(null)
-    setActiveRoute(null)
     setSelectedTaxiType(null)
     setPinedInfo(null)
-    setRouteInfo(null)
 
     setCurrentStep(ClientSteps.SEARCH);
 
@@ -387,7 +359,7 @@ export const BottomSheetContent = ({
       destinationInputViewRef.current?.setAddressText(pinedInfo.destination.address);
     } */
     // fetchOrigin()
-  }, [/* fetchOrigin, originInputViewRef, destinationInputViewRef, pinedInfo */]);;
+  }, [endPiningLocation,/* fetchOrigin, originInputViewRef, destinationInputViewRef, pinedInfo */]);;
   const goToPinnedRouteTaxi = useCallback(() => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     // snapToIndex(1)
@@ -498,19 +470,29 @@ export const BottomSheetContent = ({
     }
   }, [userMarkers, destinationInputViewRef, pinedInfo]);
 
-  useEffect(restoreInputFromPinedInfo, [currentStep]);
+  // useEffect(restoreInputFromPinedInfo, [currentStep]);
   useEffect(handleActiveRouteTokio, [pinedInfo])
-  useEffect(handleRideInfoChange, [rideInfo])
+
+  useEffect(() => {
+    Keyboard.addListener("keyboardDidHide", () => {
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+      setViewPinOnMap(false);
+      setPiningInput(null);
+    })
+    fetchOrigin()
+
+    return () => {
+      Keyboard.removeAllListeners("keyboardDidHide")
+    }
+  }, [])
 
   /* return (
 
     <View className="flex-1 bg-[#F8F8F8] dark:bg-[#1b1b1b]">
 
-      <View className="w-[95%] h-full self-center overflow-visible">
+      <View className="w-[95%] mt-3 h-full self-center overflow-visible">
 
-        <View className="mx-1.5 mt-7-">
-
-        </View>
+        <RideReview finishRide={finishRide} />
 
       </View>
 
@@ -647,15 +629,15 @@ export const BottomSheetContent = ({
         )
         :
         (
-          <View className="w-[95%] h-full self-center overflow-visible">
+          <View className="w-[95%] h-full- self-center overflow-visible">
 
             {currentStep >= ClientSteps.PICKUP ?
               (
-                <View className="mt-3 h-full self-center">
+                <View className="mt-3 h-full- self-center">
                   {currentStep === ClientSteps.FINISHED ?
                     <RideReview finishRide={finishRide} />
                     :
-                    <RideFlowInfo currentStep={currentStep} routeInfo={routeInfo} cancelRide={cancelRide} />
+                    <RideFlowInfo currentStep={currentStep} routeInfo={rideInfo} cancelRide={cancelRide} />
                   }
                 </View>
               )
@@ -667,7 +649,11 @@ export const BottomSheetContent = ({
                       currentStep === ClientSteps.TAXI &&
                       (
                         <>
-                          <ScaleBtn className='h-full pr-3 justify-center items-center' onPress={goBackToSearch}>
+                          <ScaleBtn className='h-full pr-3 justify-center items-center' onPress={() => {
+                            console.log(pinedInfo)
+                            console.log(rideInfo)
+                            goBackToSearch()
+                          }}>
                             <FontAwesome6 name="chevron-left" size={18} color={Colors[colorScheme ?? "light"].icons_link} />
                           </ScaleBtn>
                           <Text className="font-bold text-xl text-[#1b1b1b] dark:text-[#C1C0C9]">Cómo quieres ir?</Text>
@@ -725,14 +711,20 @@ export const BottomSheetContent = ({
                         {
                           originLoading ? <ActivityIndicator color={Colors[colorScheme ?? "light"].border} size={32} /> : <MaterialCommunityIcons className='mt-1' name="map-marker-account" size={32} color={Colors[colorScheme ?? "light"].border} />
                         }
-                        <Animated.View style={{
-                          transform: [{
-                            translateX: originShakeAnimatedValue.interpolate({
-                              inputRange: [0, 0.25, 0.50, 0.75, 1],
-                              outputRange: [0, 5, -5, 5, 0]
-                            })
-                          }]
-                        }}>
+                        <Animated.View
+                          onLayout={() => {
+                            if (pinedInfo?.origin) originInputViewRef.current?.setAddressText(pinedInfo.origin.address)
+                            if (pinedInfo?.destination) destinationInputViewRef.current?.setAddressText(pinedInfo.destination.address)
+                          }}
+                          style={{
+                            transform: [{
+                              translateX: originShakeAnimatedValue.interpolate({
+                                inputRange: [0, 0.25, 0.50, 0.75, 1],
+                                outputRange: [0, 5, -5, 5, 0]
+                              })
+                            }]
+                          }}
+                        >
                           <GooglePlacesAutocomplete
                             ref={originInputViewRef}
                             predefinedPlaces={userMarkers.map((marker) => ({
@@ -756,12 +748,12 @@ export const BottomSheetContent = ({
                                 setPiningInput('origin');
                                 console.log(JSON.stringify(e.nativeEvent, null, 2))
                               },
-                              onBlur: () => {
+                              /* onBlur: () => {
                                 LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
                                 setViewPinOnMap(false);
                                 setPiningInput(null);
                                 // if (currentStep !== ClientSteps.PICKUP) setPiningInput(null);
-                              },
+                              }, */
                             }}
                             enablePoweredByContainer={false}
                             onPress={handleOriginMarkerTarget}
@@ -868,12 +860,12 @@ export const BottomSheetContent = ({
                                 setPiningInput('destination');
                                 console.log(JSON.stringify(e.nativeEvent, null, 2))
                               },
-                              onBlur: () => {
+                              /* onBlur: () => {
                                 LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
                                 setViewPinOnMap(false);
                                 setPiningInput(null);
                                 // if (currentStep !== ClientSteps.PICKUP) setPiningInput(null);
-                              },
+                              }, */
                             }}
                             enablePoweredByContainer={false}
                             onPress={handleDestinationMarkerTarget}

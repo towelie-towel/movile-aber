@@ -1,8 +1,7 @@
-import { View, Text, useColorScheme } from 'react-native';
-import React, { useCallback, useState } from 'react';
+import { View, Text, useColorScheme, Keyboard, TextInput } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Image } from 'expo-image';
 import StarRating from 'react-native-star-rating-widget';
-import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
 
 import FloatingLabelInput from '~/lib/floating-label-input';
 import { useWSState } from '~/context/WSContext';
@@ -17,6 +16,8 @@ const RideReview: React.FC<IRideFlowInfo> = ({ finishRide }) => {
     const colorScheme = useColorScheme();
     const { confirmedTaxi } = useWSState()
 
+    const inputRef = useRef<TextInput>(null)
+
     const [rating, setRating] = useState<number | null>(0);
     const [comment, setComment] = useState<string | null>(null);
 
@@ -26,16 +27,18 @@ const RideReview: React.FC<IRideFlowInfo> = ({ finishRide }) => {
 
     return (
         <View className='w-full- mx-1.5- justify-center items-center-'>
+
             <Text className="font-bold text-xl text-[#1b1b1b] dark:text-[#C1C0C9]">Califica al chofer</Text>
             <View className="h-20- mt-3 mx-1.5 flex-row justify-between items-center">
                 <View className="w-full flex-row gap-3 items-center- ">
                     <Image
-                        style={{ width: 65, height: 65 }}
-                        source={require('../../../assets/images/taxi_test.png')}
+                        style={{ width: 65, height: 65, borderRadius: 50 }}
+                        // TODO: find a placeholder image
+                        source={confirmedTaxi?.avatar_url ? { uri: confirmedTaxi?.avatar_url } : ""}
                     />
                     <View className="py-2- gap-1 justify-between- justify-center ">
                         <View className="flex-row justify-start items-center gap-2 ">
-                            <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-bold text-xl">{confirmedTaxi?.username ?? "Anonymous"}</Text>
+                            <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-bold text-xl">{confirmedTaxi?.username}</Text>
                             <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-bold text-xl">{"-"}</Text>
                             <View className="flex-row justify-center items-center">
                                 <Text className="text-[#FED141] text-[#1b1b1b]- dark:text-[#C1C0C9]- text-lg">★ </Text>
@@ -44,9 +47,9 @@ const RideReview: React.FC<IRideFlowInfo> = ({ finishRide }) => {
                         </View>
 
                         <View className='flex-row justify-start items-center mb-3- '>
-                            <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] text-md">{confirmedTaxi?.username ?? "Anonymous"}</Text>
+                            <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-medium text-lg">{confirmedTaxi?.car_model}</Text>
                             <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-semibold text-lg">{" - "}</Text>
-                            <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-medium text-lg">{confirmedTaxi?.username ?? "Anonymous"}</Text>
+                            <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] text-md">{confirmedTaxi?.color}</Text>
                         </View>
                     </View>
                 </View>
@@ -76,6 +79,7 @@ const RideReview: React.FC<IRideFlowInfo> = ({ finishRide }) => {
                 />
             </View>
             <FloatingLabelInput
+                ref={inputRef}
                 label={"Añade un comentario"}
                 value={comment ?? undefined}
                 onChangeText={value => setComment(value)}
@@ -117,6 +121,8 @@ const RideReview: React.FC<IRideFlowInfo> = ({ finishRide }) => {
                     <Text className="text-white font-bold text-xl">Finish</Text>
                 </View>
             </ScaleBtn>
+
+            <View className='flex-1'></View>
         </View>
     );
 };
