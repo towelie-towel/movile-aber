@@ -96,8 +96,8 @@ export default function ClientMap() {
         }
     }, [followLocation])
     useEffect(() => {
-        if (RIDE_FLOW_LOGS) console.log(currentStep)
-        if (RIDE_FLOW_LOGS) console.log(selectedTaxiType)
+        if (RIDE_FLOW_LOGS) console.log("currentStep: ", currentStep)
+        if (RIDE_FLOW_LOGS) console.log("selectedTaxiType: ", selectedTaxiType)
 
         if (Platform.OS === "ios") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
 
@@ -182,7 +182,7 @@ export default function ClientMap() {
     }, [sheetCurrentSnapRef, animateToRegion, followLocation]);
     const animateToActiveRoute = useCallback(() => {
         followLocation.current = null;
-        if (!activeRoute) return 
+        if (!activeRoute) return
         animateToRegion(calculateMiddlePointAndDelta(
             { latitude: activeRoute[0].latitude, longitude: activeRoute[0].longitude },
             {

@@ -36,7 +36,7 @@ export const getCoordinateAddress = async (latitude: number, longitude: number) 
 export const getLastUserRide = async (userId: string, status?: string) => {
   try {
     const resp = await fetch(
-      `http://192.168.1.102:6942/lastride?client_id=${userId}${status ? `&status=${status}` : ""}`
+      `http://192.168.1.101:6942/lastride?client_id=${userId}${status ? `&status=${status}` : ""}`
     );
     const respJson = await resp.json();
     return respJson as RideInfo;
@@ -52,7 +52,7 @@ export async function addReview(review: {
   comment?: string;
   overall_rating?: number;
 }) {
-  const response = await fetch('http://192.168.1.102:6942/savereview', {
+  const response = await fetch('http://192.168.1.101:6942/savereview', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -72,7 +72,7 @@ export async function addReview(review: {
 export const getTaxiProfile = async (taxiId: string) => {
   try {
     const resp = await fetch(
-      `http://192.168.1.102:6942/taxiprofile?id=${taxiId}`
+      `http://192.168.1.101:6942/taxiprofile?id=${taxiId}`
     );
     const respJson = await resp.json();
     return respJson as TaxiProfile;
@@ -85,7 +85,7 @@ export const getTaxiProfile = async (taxiId: string) => {
 export const getDirections = async (startLoc: string, destinationLoc: string) => {
   try {
     const resp = await fetch(
-      `http://192.168.1.102:6942/route?from=${startLoc}&to=${destinationLoc}`
+      `http://192.168.1.101:6942/route?from=${startLoc}&to=${destinationLoc}`
     );
     const respJson = await resp.json();
     const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map((point, _) => ({

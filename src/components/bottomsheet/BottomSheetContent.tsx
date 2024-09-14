@@ -206,6 +206,8 @@ export const BottomSheetContent = ({
           // navigationInfo: respJson[0].legs[0],
         })
 
+        setViewPinOnMap(false);
+        setPiningInput(null);
         setCurrentStep(ClientSteps.TAXI)
       } catch (error) {
         if (error instanceof Error) {
@@ -240,20 +242,12 @@ export const BottomSheetContent = ({
     startPiningLocation();
     setCurrentStep(ClientSteps.PINNING);
     setViewPinOnMap(false);
+    console.log("piningInput: ", piningInput)
     // setPiningInput(null);
     Keyboard.dismiss();
     // originInputViewRef.current?.blur();
     // destinationInputViewRef.current?.blur();
   }, [startPiningLocation, originInputViewRef, destinationInputViewRef]);
-  const cancelPiningLocationHandler = useCallback(() => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    endPiningLocation();
-    setSelectedTaxiType(null)
-    setPiningInput(null)
-    setPiningMarker(null)
-    setMarkerName(null)
-    setCurrentStep(ClientSteps.SEARCH);
-  }, [endPiningLocation]);
   const confirmPiningLocationHandler = useCallback(async () => {
     if (piningInput === "origin") {
       setOriginLoading(true)
@@ -474,16 +468,7 @@ export const BottomSheetContent = ({
   useEffect(handleActiveRouteTokio, [pinedInfo])
 
   useEffect(() => {
-    Keyboard.addListener("keyboardDidHide", () => {
-      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-      setViewPinOnMap(false);
-      setPiningInput(null);
-    })
     fetchOrigin()
-
-    return () => {
-      Keyboard.removeAllListeners("keyboardDidHide")
-    }
   }, [])
 
   /* return (
@@ -502,12 +487,12 @@ export const BottomSheetContent = ({
   return (
     <View className="flex-1 bg-[#F8F8F8] dark:bg-[#1b1b1b]">
 
-      {!piningLocation && !piningInput/*  && piningMarker */ && currentStep === ClientSteps.PINNING ?
+      {(!piningLocation && !piningInput/*  && piningMarker */ && currentStep === ClientSteps.PINNING) ?
         (
           <View className="w-[95%] h-full self-center overflow-visible">
             <View className='flex-row justify-between mt-3'>
               <View className='h-10 flex-row gap-3- justify-center items-center'>
-                <ScaleBtn className='h-full pl-1 pr-3 justify-center items-center scale-125' onPress={cancelPiningLocationHandler}>
+                <ScaleBtn className='h-full pl-1 pr-3 justify-center items-center scale-125' onPress={goBackToSearch}>
                   <FontAwesome6 name="chevron-left" size={18} color={Colors[colorScheme ?? "light"].icons_link} />
                 </ScaleBtn>
                 <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-bold text-xl">Añadiendo Marcador</Text>
@@ -629,7 +614,7 @@ export const BottomSheetContent = ({
         )
         :
         (
-          <View className="w-[95%] h-full- self-center overflow-visible">
+          <View className="w-[95%] h-full self-center overflow-visible">
 
             {currentStep >= ClientSteps.PICKUP ?
               (
@@ -649,11 +634,7 @@ export const BottomSheetContent = ({
                       currentStep === ClientSteps.TAXI &&
                       (
                         <>
-                          <ScaleBtn className='h-full pr-3 justify-center items-center' onPress={() => {
-                            console.log(pinedInfo)
-                            console.log(rideInfo)
-                            goBackToSearch()
-                          }}>
+                          <ScaleBtn className='h-full pr-3 justify-center items-center' onPress={goBackToSearch}>
                             <FontAwesome6 name="chevron-left" size={18} color={Colors[colorScheme ?? "light"].icons_link} />
                           </ScaleBtn>
                           <Text className="font-bold text-xl text-[#1b1b1b] dark:text-[#C1C0C9]">Cómo quieres ir?</Text>
@@ -665,7 +646,7 @@ export const BottomSheetContent = ({
                       <Text className="font-bold text-xl text-[#1b1b1b] dark:text-[#C1C0C9]">A dónde quieres ir?</Text>
                     }
 
-                    {currentStep === ClientSteps.PINNING && piningLocation &&
+                    {(currentStep === ClientSteps.PINNING && piningLocation) &&
                       (
                         <>
                           <ScaleBtn className='h-full pr-3 justify-center items-center' onPress={goBackToSearch}>
@@ -689,7 +670,7 @@ export const BottomSheetContent = ({
                     )
                   }
 
-                  {!viewPinOnMap && !piningLocation && currentStep === ClientSteps.SEARCH && (pinedInfo?.origin && pinedInfo.destination || routeLoading) &&
+                  {(!viewPinOnMap && !piningLocation && currentStep === ClientSteps.SEARCH && (pinedInfo?.origin && pinedInfo.destination || routeLoading)) &&
                     (
                       <ScaleBtn onPress={goToPinnedRouteTaxi} disabled={routeLoading} >
                         <View style={{ borderColor: Colors[colorScheme ?? "light"].icons_link }} className="flex-row items-center justify-center p-1 border rounded-lg">
@@ -742,18 +723,16 @@ export const BottomSheetContent = ({
                               placeholderTextColor: colorScheme === 'light' ? 'black' : '#6C6C6C',
                               onFocus: (e) => {
                                 LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-                                if (piningLocation) cancelPiningLocationHandler();
+                                if (piningLocation) goBackToSearch();
                                 if (editingMarkers) endEditingMarkers();
                                 setViewPinOnMap(true);
                                 setPiningInput('origin');
-                                console.log(JSON.stringify(e.nativeEvent, null, 2))
                               },
-                              /* onBlur: () => {
+                              onBlur: () => {
                                 LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
                                 setViewPinOnMap(false);
                                 setPiningInput(null);
-                                // if (currentStep !== ClientSteps.PICKUP) setPiningInput(null);
-                              }, */
+                              },
                             }}
                             enablePoweredByContainer={false}
                             onPress={handleOriginMarkerTarget}
@@ -854,18 +833,16 @@ export const BottomSheetContent = ({
                               placeholderTextColor: colorScheme === 'light' ? 'black' : '#6C6C6C',
                               onFocus: (e) => {
                                 LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-                                if (piningLocation) cancelPiningLocationHandler();
+                                if (piningLocation) goBackToSearch();
                                 if (editingMarkers) endEditingMarkers();
                                 setViewPinOnMap(true);
                                 setPiningInput('destination');
-                                console.log(JSON.stringify(e.nativeEvent, null, 2))
                               },
-                              /* onBlur: () => {
+                              onBlur: () => {
                                 LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
                                 setViewPinOnMap(false);
                                 setPiningInput(null);
-                                // if (currentStep !== ClientSteps.PICKUP) setPiningInput(null);
-                              }, */
+                              },
                             }}
                             enablePoweredByContainer={false}
                             onPress={handleDestinationMarkerTarget}
@@ -941,22 +918,22 @@ export const BottomSheetContent = ({
               </>
             }
 
-            {/* {currentStep === ClientSteps.PINNING && piningLocation &&
+            {(currentStep === ClientSteps.PINNING && piningLocation) &&
               <View className="mx-1.5 flex-row justify-between mt-5 gap-5">
+                <ScaleBtn containerStyle={{ flex: 1 }} className="h-18" onPress={goBackToSearch}>
+                  <View className="w-full flex-row items-center justify-center bg-[#242E42] rounded-xl p-3">
+                    <Text className="text-white font-bold text-xl">Cancelar</Text>
+                  </View>
+                </ScaleBtn>
                 <ScaleBtn containerStyle={{ flex: 1 }} className="h-18" onPress={confirmPiningLocationHandler}>
                   <View className="w-full flex-row items-center justify-center bg-[#25D366] dark:bg-[#137136] rounded-xl p-3">
                     <Text className="text-white font-bold text-xl">Guardar</Text>
                   </View>
                 </ScaleBtn>
-                <ScaleBtn containerStyle={{ flex: 1 }} className="h-18" onPress={cancelPiningLocationHandler}>
-                  <View className="w-full flex-row items-center justify-center bg-[#242E42] rounded-xl p-3">
-                    <Text className="text-white font-bold text-xl">Cancel</Text>
-                  </View>
-                </ScaleBtn>
               </View>
-            } */}
+            }
 
-            {currentStep === ClientSteps.PINNING && piningLocation &&
+            {/* {(currentStep === ClientSteps.PINNING && piningLocation) &&
               (
                 <ScaleBtn containerStyle={{ flex: 1 }} className="mx-1.5 mt-3" onPress={confirmPiningLocationHandler}>
                   <View className="h-18 flex-row items-center justify-center bg-[#25D366] dark:bg-[#137136] rounded-xl p-3">
@@ -964,7 +941,7 @@ export const BottomSheetContent = ({
                   </View>
                 </ScaleBtn>
               )
-            }
+            } */}
 
             {currentStep === ClientSteps.SEARCH &&
               (
