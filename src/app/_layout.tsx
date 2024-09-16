@@ -8,6 +8,7 @@ import { NativeModules, Platform } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ToastProvider } from 'react-native-toast-notifications';
 
+import { MenuProvider } from '~/lib/react-native-popup-menu';
 import { UserProvider, useUser } from '~/context/UserContext';
 import { WSProvider } from '~/context/WSContext';
 import { UserRole } from '~/types/User';
@@ -51,24 +52,26 @@ const RootLayout = () => {
     <UserProvider>
       <WSWrapper setIsUserInitialized={setIsUserInitialized} setIsUserSigned={setIsUserSigned} setUserRole={setUserRole} >
         <ToastProvider>
-          <GestureHandlerRootView style={{ flex: 1 }}>
-            <SafeAreaProvider>
-              <Stack
-                screenOptions={{
-                  headerShown: false,
-                }}
-                // ["(auth)/code", "(auth)/sign", "(client)/index", "(common)/chat", "(common)/profile", "(taxi)/taximap"]
-                initialRouteName={!isUserSigned ? "(auth)/sign" : getHomeRouteByRole(userRole ?? "client")}
-              >
-                <Stack.Screen
-                  name="(common)/profile/[id]"
-                  options={{
-                    presentation: 'modal',
+          <MenuProvider>
+            <GestureHandlerRootView style={{ flex: 1 }}>
+              <SafeAreaProvider>
+                <Stack
+                  screenOptions={{
+                    headerShown: false,
                   }}
-                />
-              </Stack>
-            </SafeAreaProvider>
-          </GestureHandlerRootView>
+                  // ["(auth)/code", "(auth)/sign", "(client)/index", "(common)/chat", "(common)/profile", "(taxi)/taximap"]
+                  initialRouteName={!isUserSigned ? "(auth)/sign" : getHomeRouteByRole(userRole ?? "client")}
+                >
+                  <Stack.Screen
+                    name="(common)/profile/[id]"
+                    options={{
+                      presentation: 'modal',
+                    }}
+                  />
+                </Stack>
+              </SafeAreaProvider>
+            </GestureHandlerRootView>
+          </MenuProvider>
         </ToastProvider>
       </WSWrapper>
     </UserProvider>

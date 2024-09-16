@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useWindowDimensions, View, useColorScheme, TextInput } from 'react-native';
+import { useWindowDimensions, View, useColorScheme, TextInput, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
 import Animated, { useSharedValue, useAnimatedScrollHandler, ScrollEvent, useAnimatedProps, useAnimatedStyle, withTiming, interpolate, clamp, Extrapolation, useAnimatedRef } from 'react-native-reanimated'
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -11,6 +11,7 @@ import { FontAwesome6, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Placeholder, PlaceholderLine, Fade } from "~/lib/rn-placeholder";
 import { ColorLinkedin, ColorInstagram, ColorFacebook, ColorTwitter } from '~/components/svgs';
 import { ScaleBtn } from '~/components/common';
+import PopupMenu from '~/components/common/PopupMenu';
 import Colors from '~/constants/Colors';
 import { getFirstName, getLastName } from '~/utils';
 import { fetchProfile } from '~/utils/auth';
@@ -29,6 +30,7 @@ const PublicProfileScreen = ({ profileId }: { profileId: string }) => {
 
     const [profile, setProfile] = useState<Profile | null>(null);
     const [loadingProfile, setLoadingProfile] = useState(true);
+    const [avatarLoaded, setAvatarLoaded] = useState(false);
 
     useEffect(() => {
         const getProfile = async () => {
@@ -197,6 +199,31 @@ const PublicProfileScreen = ({ profileId }: { profileId: string }) => {
         ],
     }));
 
+    const popupOptions = [
+        {
+            title: "Delete",
+            icon: "delete",
+            onPress: async () => {
+                alert(`You clicked Delete`)
+            },
+            color: Colors[colorScheme ?? 'light'].delete
+        },
+        {
+            title: "Share",
+            icon: "share",
+            onPress: () => {
+                alert(`You clicked Share`)
+            }
+        },
+        {
+            title: "Report",
+            icon: "block-helper",
+            onPress: () => {
+                alert(`You clicked Report`)
+            }
+        },
+    ]
+
     return (
         <View style={{ backgroundColor: Colors[colorScheme ?? "light"].background }} className='flex-1'>
             <Animated.ScrollView
@@ -227,8 +254,18 @@ const PublicProfileScreen = ({ profileId }: { profileId: string }) => {
                                 source={{
                                     uri: profile?.avatar_url,
                                 }}
+                                onLoadEnd={() => setAvatarLoaded(true)}
                             />
                         </Animated.View>
+                    }
+
+                    {
+                        !avatarLoaded && <View className='w-[100vw] h-[100vw] absolute top-0 justify-center items-center z-20'>
+                            {/* <BlurView className='h-24 w-24 justify-center items-center rounded-lg overflow-hidden' tint={colorScheme === "light" ? "dark" : "light"} intensity={20}>
+                                <ActivityIndicator color={Colors[colorScheme ?? "light"].text} size={"large"} />
+                            </BlurView> */}
+                            <ActivityIndicator color={Colors[colorScheme ?? "light"].text} size={"large"} />
+                        </View>
                     }
 
                     {
@@ -300,11 +337,16 @@ const PublicProfileScreen = ({ profileId }: { profileId: string }) => {
                                 <FontAwesome6 name="chevron-left" size={24} color={"#fff"} />
                             </BlurView>
                         </ScaleBtn>
-                        <ScaleBtn className="">
-                            <BlurView className='h-12 px-3 flex-row justify-center items-center gap-2 rounded-lg overflow-hidden' tint={colorScheme === "light" ? "dark" : "light"} intensity={20}>
-                                <MaterialCommunityIcons name="message" size={24} color={"#fff"} />
-                            </BlurView>
-                        </ScaleBtn>
+
+                        <View className='flex-row gap-5 justify-center items-center'>
+                            <ScaleBtn className="">
+                                <BlurView className='h-12 px-3 flex-row justify-center items-center gap-2 rounded-lg overflow-hidden' tint={colorScheme === "light" ? "dark" : "light"} intensity={20}>
+                                    <MaterialCommunityIcons name="message" size={24} color={"#fff"} />
+                                </BlurView>
+                            </ScaleBtn>
+
+                            <PopupMenu options={popupOptions} />
+                        </View>
                     </Animated.View>
                 </Animated.View>
 
