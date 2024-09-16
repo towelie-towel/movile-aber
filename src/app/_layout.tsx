@@ -3,7 +3,7 @@ import '~/styles/global.css';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { NativeModules, Platform } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ToastProvider } from 'react-native-toast-notifications';
@@ -59,15 +59,14 @@ const RootLayout = () => {
                 }}
                 // ["(auth)/code", "(auth)/sign", "(client)/index", "(common)/chat", "(common)/profile", "(taxi)/taximap"]
                 initialRouteName={!isUserSigned ? "(auth)/sign" : getHomeRouteByRole(userRole ?? "client")}
-              />
-              {/* 
-            <Stack.Screen
-                name="(common)/chat"
-                options={{
-                  presentation: 'modal',
-                }}
-              />
-            */}
+              >
+                <Stack.Screen
+                  name="(common)/profile/[id]"
+                  options={{
+                    presentation: 'modal',
+                  }}
+                />
+              </Stack>
             </SafeAreaProvider>
           </GestureHandlerRootView>
         </ToastProvider>

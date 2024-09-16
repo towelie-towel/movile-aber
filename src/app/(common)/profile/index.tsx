@@ -2,9 +2,9 @@ import ProfileScreen from "~/components/screen/Profile";
 
 const Profile = () => {
 
-  return (
-    <ProfileScreen />
-  );
+    return (
+        <ProfileScreen />
+    );
 };
 
 export default Profile;

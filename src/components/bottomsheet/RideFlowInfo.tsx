@@ -36,11 +36,13 @@ const RideFlowInfo: React.FC<IRideFlowInfo> = ({ currentStep, routeInfo, cancelR
         <View className='w-full'>
             <View className="h-20 flex-row justify-between items-center">
                 <View className="flex-row gap-3 items-center">
-                    <Image
-                        style={{ width: 50, height: 50, borderRadius: 50 }}
-                        // TODO: find a placeholder image
-                        source={confirmedTaxi?.avatar_url ? { uri: confirmedTaxi?.avatar_url } : ""}
-                    />
+                    <ScaleBtn onPress={() => router.push(`profile/${confirmedTaxi?.id}`)}>
+                        <Image
+                            style={{ width: 50, height: 50, borderRadius: 50 }}
+                            // TODO: find a placeholder image
+                            source={confirmedTaxi?.avatar_url ? { uri: confirmedTaxi?.avatar_url } : ""}
+                        />
+                    </ScaleBtn>
                     <View className="justify-center">
                         <Text className="text-[#1b1b1b] dark:text-[#C1C0C9] font-bold text-xl">{confirmedTaxi?.username}</Text>
                         <View className="flex-row items-center">

@@ -3,7 +3,6 @@ import { useBottomSheet } from '@gorhom/bottom-sheet';
 import * as ExpoLocation from 'expo-location';
 import React, { useCallback, useEffect, useRef, useState, ComponentRef } from 'react';
 import { View, Text, useColorScheme, useWindowDimensions, LayoutAnimation, Keyboard, ScrollView, Animated, Easing, Alert, ActivityIndicator } from 'react-native';
-import type { LatLng } from 'react-native-maps';
 import { useAtom } from 'jotai/react';
 // import * as ImagePicker from 'expo-image-picker';
 
@@ -25,7 +24,7 @@ import { ClientSteps } from '~/constants/RideFlow';
 import { defaultMarkers } from '~/constants/Markers';
 // import ColorsPalettes from '~/constants/ColorsPalettes.json'
 import { generateUniqueId } from '~/utils';
-import { addReview, getCoordinateAddress/* , getDirections */, polylineDecode } from '~/utils/directions';
+import { addReview, getCoordinateAddress/* , getDirections, polylineDecode */ } from '~/utils/directions';
 import type { TaxiTypesInfo, TaxiType } from '~/types/Taxi';
 import type { RideInfo } from '~/types/RideFlow';
 import type { AddMarker } from '~/types/Marker';
@@ -71,7 +70,7 @@ export const BottomSheetContent = ({
   const colorScheme = useColorScheme();
   const { width } = useWindowDimensions();
   const { profile } = useUser()
-  const { snapToIndex, expand, collapse } = useBottomSheet();
+  const { snapToIndex } = useBottomSheet();
   const { cancelTaxi } = useWSActions()
   const [userMarkers, setUserMarkers] = useAtom(userMarkersAtom)
 
@@ -175,14 +174,14 @@ export const BottomSheetContent = ({
     setDestinationLoading(false)
     setRouteLoading(false)
   }, [])
-  const restoreInputFromPinedInfo = useCallback(() => {
+  /* const restoreInputFromPinedInfo = useCallback(() => {
     console.log("currentStep: ", currentStep)
     if (currentStep === ClientSteps.SEARCH) {
       fetchOrigin();
       if (pinedInfo?.destination) destinationInputViewRef.current?.setAddressText(pinedInfo.destination.address);
       stopAllLoadings()
     }
-  }, [currentStep, pinedInfo, destinationInputViewRef, fetchOrigin, stopAllLoadings])
+  }, [currentStep, pinedInfo, destinationInputViewRef, fetchOrigin, stopAllLoadings]) */
 
   const handleActiveRouteTokio = useCallback(() => {
     if (pinedInfo?.destination && pinedInfo?.origin) {
@@ -345,6 +344,7 @@ export const BottomSheetContent = ({
     setPiningMarker(null)
     setMarkerName(null)
     endPiningLocation()
+    stopAllLoadings()
     setCurrentStep(ClientSteps.SEARCH);
     /* if (pinedInfo?.origin) {
       originInputViewRef.current?.setAddressText(pinedInfo.origin.address);
@@ -721,7 +721,7 @@ export const BottomSheetContent = ({
                             textInputProps={{
                               id: "originInput",
                               placeholderTextColor: colorScheme === 'light' ? 'black' : '#6C6C6C',
-                              onFocus: (e) => {
+                              onFocus: () => {
                                 LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
                                 if (piningLocation) goBackToSearch();
                                 if (editingMarkers) endEditingMarkers();
@@ -831,7 +831,7 @@ export const BottomSheetContent = ({
                             textInputProps={{
                               id: "destinationInput",
                               placeholderTextColor: colorScheme === 'light' ? 'black' : '#6C6C6C',
-                              onFocus: (e) => {
+                              onFocus: () => {
                                 LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
                                 if (piningLocation) goBackToSearch();
                                 if (editingMarkers) endEditingMarkers();

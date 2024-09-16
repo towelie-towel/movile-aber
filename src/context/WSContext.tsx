@@ -9,14 +9,14 @@ import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
 
-import { PlaceMarkerIconType } from '~/components/markers/AddUserMarker';
-import { calculateDistance, calculateBearing, duplicateCoords, getTaxiProfile } from '~/utils/directions';
+import { calculateDistance, calculateBearing, duplicateCoords } from '~/utils/directions';
+import { getTaxiProfile, saveExpoPushTokenToDB } from '~/utils/auth';
 import type { TaxiProfile } from '~/types/Taxi';
-import type { PlaceInfo } from '~/types/Places';
 import type { RideInfo, RideStatus } from '~/types/RideFlow';
 import type { Profile } from '~/types/User';
 import type { ChatMessage } from '~/types/Chat';
 import { Platform } from 'react-native';
+import { useAtom } from 'jotai/react';
 
 Notifications.setNotificationHandler({
     handleNotification: async () => ({
@@ -94,10 +94,8 @@ async function registerForPushNotificationsAsync() {
 }
 
 
-const storedlastLocation = createJSONStorage<PlaceMarkerIconType[]>(() => AsyncStorage)
-export const lastLocationAtom = atomWithStorage<PlaceMarkerIconType[]>('last_location', [], storedlastLocation)
-const storedLocationPlaces = createJSONStorage<PlaceInfo[]>(() => AsyncStorage)
-export const locationPlacesAtom = atomWithStorage<PlaceInfo[]>('location_place', [], storedLocationPlaces)
+const storedExpoPushToken = createJSONStorage<string | null | undefined>(() => AsyncStorage)
+export const expoPushTokenAtom = atomWithStorage<string | null | undefined>('expo_push_token', undefined, storedExpoPushToken)
 
 const WS_LOGS = true;
 const LOCATION_TASK_NAME = 'background-location-task';
@@ -194,7 +192,7 @@ export const WSProvider = ({ children, userProfile }: { children: React.ReactNod
     const [confirmedTaxi, setConfirmedTaxi] = useState<TaxiProfile & { status: RideStatus } | null>();
     const [recievedMessages, setRecievedMessages] = useState<ChatMessage[] | null>();
 
-    const [expoPushToken, setExpoPushToken] = useState('');
+    const [expoPushToken, setExpoPushToken] = useAtom(expoPushTokenAtom);
     const [notification, setNotification] = useState<Notifications.Notification | undefined>(
         undefined
     );
@@ -312,7 +310,7 @@ export const WSProvider = ({ children, userProfile }: { children: React.ReactNod
 
         if (WS_LOGS) console.log('new Web Socket initializing', protocol);
         const suckItToMeBBy = new WebSocket(
-            `ws://192.168.1.101:6942/subscribe?id=e117adcb-f429-42f7-95d9-07f1c92a1c8b&lat=51.5073509&lon=-0.1277581999999997&head=51`,
+            `ws://172.20.10.12:6942/subscribe?id=e117adcb-f429-42f7-95d9-07f1c92a1c8b&lat=51.5073509&lon=-0.1277581999999997&head=51`,
             protocol
         );
 
@@ -482,7 +480,16 @@ export const WSProvider = ({ children, userProfile }: { children: React.ReactNod
 
     useEffect(() => {
         registerForPushNotificationsAsync()
-            .then(token => setExpoPushToken(token ?? ''))
+            .then(token => {
+                if (token && token !== expoPushToken) {
+                    if (userProfile?.id) {
+                        saveExpoPushTokenToDB({ token, profile_id: userProfile.id });
+                        setExpoPushToken(token ?? null)
+                    } else {
+                        console.error("user profile not found during push token saving")
+                    }
+                }
+            })
             .catch((error: any) => setExpoPushToken(`${error}`));
 
         notificationListener.current = Notifications.addNotificationReceivedListener(notification => {

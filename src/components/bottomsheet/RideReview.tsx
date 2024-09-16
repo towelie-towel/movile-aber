@@ -1,5 +1,5 @@
-import { View, Text, useColorScheme, Keyboard, TextInput } from 'react-native';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { View, Text, useColorScheme, TextInput } from 'react-native';
+import React, { useCallback, useRef, useState } from 'react';
 import { Image } from 'expo-image';
 import StarRating from 'react-native-star-rating-widget';
 

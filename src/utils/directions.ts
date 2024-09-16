@@ -1,5 +1,4 @@
 import type { RideInfo } from "~/types/RideFlow";
-import { TaxiProfile } from "~/types/Taxi";
 
 export const getAddress = async (latitude: number, longitude: number) => {
   const resp = await fetch(
@@ -36,7 +35,7 @@ export const getCoordinateAddress = async (latitude: number, longitude: number) 
 export const getLastUserRide = async (userId: string, status?: string) => {
   try {
     const resp = await fetch(
-      `http://192.168.1.101:6942/lastride?client_id=${userId}${status ? `&status=${status}` : ""}`
+      `http://172.20.10.12:6942/lastride?client_id=${userId}${status ? `&status=${status}` : ""}`
     );
     const respJson = await resp.json();
     return respJson as RideInfo;
@@ -52,7 +51,7 @@ export async function addReview(review: {
   comment?: string;
   overall_rating?: number;
 }) {
-  const response = await fetch('http://192.168.1.101:6942/savereview', {
+  const response = await fetch('http://172.20.10.12:6942/savereview', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -69,23 +68,10 @@ export async function addReview(review: {
   console.log('Review added with ID:', data.review_id);
 }
 
-export const getTaxiProfile = async (taxiId: string) => {
-  try {
-    const resp = await fetch(
-      `http://192.168.1.101:6942/taxiprofile?id=${taxiId}`
-    );
-    const respJson = await resp.json();
-    return respJson as TaxiProfile;
-  } catch (error) {
-    console.error(error);
-    throw error;
-  }
-};
-
 export const getDirections = async (startLoc: string, destinationLoc: string) => {
   try {
     const resp = await fetch(
-      `http://192.168.1.101:6942/route?from=${startLoc}&to=${destinationLoc}`
+      `http://172.20.10.12:6942/route?from=${startLoc}&to=${destinationLoc}`
     );
     const respJson = await resp.json();
     const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map((point, _) => ({

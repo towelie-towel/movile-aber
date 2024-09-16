@@ -6,6 +6,7 @@ export type Profile = {
     email?: string | null;
     phone?: string | null;
     avatar_url?: string | null;
+    cover_img_url?: string | null;
 }
 
 export type UserRole = 'client' | 'taxi' | 'admin'

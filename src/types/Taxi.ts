@@ -1,16 +1,8 @@
-import { UserRole } from "./User";
+import { Profile } from "./User";
 
 export type TaxiType = 'bike' | 'auto' | 'confort' | 'confort_plus' | 'vip';
 
-export interface TaxiProfile {
-    id?: string | null;
-    username?: string | null;
-    full_name?: string | null;
-    role?: UserRole;
-    email?: string | null;
-    phone?: string | null;
-    avatar_url?: string | null;
-
+export interface TaxiProfile extends Profile {
     type?: TaxiType;
     stars?: string | null;
     car_model?: string | null;

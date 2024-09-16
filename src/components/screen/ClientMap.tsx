@@ -10,7 +10,7 @@ import { MaterialIcons, MaterialCommunityIcons, FontAwesome6 } from '@expo/vecto
 import { BottomSheetBackdrop, BottomSheetBackdropProps, BottomSheetModal, BottomSheetModalProvider, BottomSheetHandleProps } from '@gorhom/bottom-sheet';
 import { Drawer } from 'react-native-drawer-layout';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import MapView, { type LatLng, PROVIDER_GOOGLE, PROVIDER_DEFAULT, Polyline, Marker } from 'react-native-maps';
+import MapView, { PROVIDER_GOOGLE, PROVIDER_DEFAULT, Polyline, Marker } from 'react-native-maps';
 import Animated, { Extrapolation, interpolate, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAtom } from 'jotai/react';
@@ -521,6 +521,14 @@ export default function ClientMap() {
                                     </View>
                                 </ScaleBtn>
                             )}
+
+                            <ScaleBtn onPress={() => {
+                                router.push('profile/eff41f96-178e-4e97-9f43-35d4de7b7a18');
+                            }}>
+                                <View className="bg-transparent rounded-lg p-3 shadow">
+                                    <MaterialCommunityIcons name="ab-testing" size={24} color={Colors[colorScheme ?? 'light'].text_dark} />
+                                </View>
+                            </ScaleBtn>
                         </View>
                     </TopSheetButtonsAnimStyle>
 
