@@ -454,14 +454,15 @@ export const BottomSheetContent = ({
     data: GooglePlaceData,
     _details: GooglePlaceDetail | null
   ) => {
-    const targetMarker = userMarkers.find(marker => marker.name === data.description)
+    console.log(JSON.stringify(data))
+    /* const targetMarker = userMarkers.find(marker => marker.name === data.description)
     if (targetMarker) {
       destinationInputViewRef.current?.setAddressText(targetMarker?.coords.address);
       setPinedInfo({
         origin: pinedInfo?.origin ?? null,
         destination: targetMarker.coords,
       });
-    }
+    } */
   }, [userMarkers, destinationInputViewRef, pinedInfo]);
 
   // useEffect(restoreInputFromPinedInfo, [currentStep]);
@@ -818,15 +819,26 @@ export const BottomSheetContent = ({
                         }}>
                           <GooglePlacesAutocomplete
                             ref={destinationInputViewRef}
-                            predefinedPlaces={userMarkers.map((marker) => ({
-                              description: marker.name,
-                              geometry: {
-                                location: {
-                                  lat: marker.coords.latitude,
-                                  lng: marker.coords.longitude,
+                            predefinedPlaces={[
+                              {
+                                description: "Pin on Map",
+                                geometry: {
+                                  location: {
+                                    lat: 0,
+                                    lng: 0,
+                                  },
                                 },
                               },
-                            }))}
+                              ...userMarkers.map((marker) => ({
+                                description: marker.name,
+                                geometry: {
+                                  location: {
+                                    lat: marker.coords.latitude,
+                                    lng: marker.coords.longitude,
+                                  },
+                                },
+                              }))
+                            ]}
                             placeholder="Lugar Destino"
                             textInputProps={{
                               id: "destinationInput",

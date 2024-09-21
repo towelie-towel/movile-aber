@@ -201,26 +201,19 @@ const PublicProfileScreen = ({ profileId }: { profileId: string }) => {
 
     const popupOptions = [
         {
+            title: "Report",
+            icon: "block-helper",
+            onPress: () => {
+                alert(`You clicked Report`)
+            }
+        },
+        {
             title: "Delete",
             icon: "delete",
             onPress: async () => {
                 alert(`You clicked Delete`)
             },
             color: Colors[colorScheme ?? 'light'].delete
-        },
-        {
-            title: "Share",
-            icon: "share",
-            onPress: () => {
-                alert(`You clicked Share`)
-            }
-        },
-        {
-            title: "Report",
-            icon: "block-helper",
-            onPress: () => {
-                alert(`You clicked Report`)
-            }
         },
     ]
 
@@ -345,7 +338,7 @@ const PublicProfileScreen = ({ profileId }: { profileId: string }) => {
                                 </BlurView>
                             </ScaleBtn>
 
-                            <PopupMenu options={popupOptions} />
+                            <PopupMenu optionItems={popupOptions} />
                         </View>
                     </Animated.View>
                 </Animated.View>

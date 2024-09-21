@@ -350,7 +350,7 @@ export default function ClientMap() {
                                     </Ripple>
                                     {drawerItems.map((item, index) => {
                                         return (
-                                            <Ripple key={index + 1} onTap={() => { router.push(item.route) }}>
+                                            <Ripple key={index + 1} onTapIn={() => { router.push(item.route) }}>
                                                 <View className="w-full h-16 flex-row items-center justify-between px-[10%]">
                                                     <View className='h-full flex-row items-center justify-start gap-4'>
                                                         <MaterialIcons
