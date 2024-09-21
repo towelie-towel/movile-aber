@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useWindowDimensions, View, useColorScheme, TextInput, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
 import Animated, { useSharedValue, useAnimatedScrollHandler, ScrollEvent, useAnimatedProps, useAnimatedStyle, withTiming, interpolate, clamp, Extrapolation, useAnimatedRef } from 'react-native-reanimated'
@@ -28,24 +28,45 @@ const PublicProfileScreen = ({ profileId }: { profileId: string }) => {
     const offsetY = useSharedValue(0);
     const headerAnim = useSharedValue(0);
 
+    const userIntroContainerRef = useAnimatedRef<Animated.Text | Animated.View>();
+    const userIntroNameRef = useAnimatedRef<Animated.Text | Animated.View>();
+    const userIntroContainerWidth = useSharedValue(0);
+    const userIntroContainerHeight = useSharedValue(0);
+    const userIntroNameWidth = useSharedValue(0);
+    const userIntroNameHeight = useSharedValue(0);
+
     const [profile, setProfile] = useState<Profile | null>(null);
     const [loadingProfile, setLoadingProfile] = useState(true);
     const [avatarLoaded, setAvatarLoaded] = useState(false);
 
     useEffect(() => {
-        const getProfile = async () => {
-            try {
-                const resProfile = await fetchProfile(profileId as string);
-                setProfile(resProfile);
-            } catch (error) {
-                console.error("Error fetching profile data:", error);
-            } finally {
-                setLoadingProfile(false)
-            }
-        };
-
         getProfile();
     }, [profileId])
+
+    const measureUserIntroRefs = useCallback(() => {
+        userIntroContainerRef.current?.measure((_1, _2, wi, he) => {
+            userIntroContainerWidth.value = wi;
+            userIntroContainerHeight.value = he;
+        })
+        userIntroNameRef.current?.measure((_1, _2, wi, he) => {
+            userIntroNameWidth.value = wi;
+            userIntroNameHeight.value = he;
+        })
+    }, [userIntroContainerRef, userIntroNameRef])
+
+    const getProfile = useCallback(async () => {
+        try {
+            const resProfile = await fetchProfile(profileId as string);
+
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            setProfile(resProfile);
+        } catch (error) {
+            console.error("Error fetching profile data:", error);
+        } finally {
+            setLoadingProfile(false)
+        }
+    }, [setProfile]);
 
     const handlers = {
         onScroll: (event: ScrollEvent) => {
@@ -149,14 +170,6 @@ const PublicProfileScreen = ({ profileId }: { profileId: string }) => {
         borderRadius: headerAnim.value,
     }));
 
-    const userIntroContainerRef = useAnimatedRef<Animated.Text>();
-    const userIntroNameRef = useAnimatedRef<Animated.Text>();
-
-    const userIntroContainerWidth = useSharedValue(0);
-    const userIntroContainerHeight = useSharedValue(0);
-    const userIntroNameWidth = useSharedValue(0);
-    const userIntroNameHeight = useSharedValue(0);
-
     const userIntroContainerStyles = useAnimatedStyle(() => ({
         position: "absolute",
         height: userIntroNameHeight.value * 2,
@@ -224,7 +237,6 @@ const PublicProfileScreen = ({ profileId }: { profileId: string }) => {
                 ref={scrollRef}
                 onScroll={scrollHandler}
                 style={scrollStyles}
-                scrollEnabled={!!profile && !loadingProfile}
             >
                 <Animated.View style={navStyles}>
                     <Animated.View style={[imgContainerStyles, navShadowStyles]}>
@@ -262,36 +274,53 @@ const PublicProfileScreen = ({ profileId }: { profileId: string }) => {
                     }
 
                     {
-                        loadingProfile ? (
-                            <View className='absolute bottom-16 left-4 z-20 w-60 py-1 items-start justify-end'>
-                                <Placeholder
-                                    Animation={Fade}
+                        (loadingProfile) ? (
+                            <Animated.View className={"z-20 items-start justify-end py-1 "} ref={userIntroContainerRef} style={userIntroContainerStyles}>
+                                <Animated.View
+                                    ref={userIntroNameRef}
+                                    style={[{
+                                        width: 100,
+                                        height: 24,
+                                        overflow: "hidden",
+                                    }, userIntroNameStyles]}
                                 >
-                                    <PlaceholderLine color={Colors[colorScheme ?? 'light'].card_placeholder} style={{ borderRadius: 4, marginBottom: 6 }} height={18} width={60} />
+                                    <Placeholder
+                                        Animation={Fade}
+                                    >
+                                        <PlaceholderLine color={Colors[colorScheme ?? 'light'].card_placeholder} style={{ borderRadius: 4, marginBottom: 0 }} height={18} width={100} />
+                                    </Placeholder>
+                                </Animated.View>
 
-                                    <PlaceholderLine color={Colors[colorScheme ?? 'light'].card_placeholder} style={{ borderRadius: 4, marginBottom: 0 }} height={16} width={100} />
-                                </Placeholder>
-                            </View>
+                                <View onLayout={measureUserIntroRefs} />
+
+                                <Animated.View
+                                    style={[{
+                                        width: 200,
+                                        height: 20,
+                                        overflow: "hidden",
+                                    }]}
+                                >
+                                    <Placeholder
+                                        className=''
+                                        Animation={Fade}
+                                    >
+                                        <PlaceholderLine color={Colors[colorScheme ?? 'light'].card_placeholder} style={{ borderRadius: 4, marginBottom: 0 }} height={16} width={100} />
+                                    </Placeholder>
+                                </Animated.View>
+                            </Animated.View>
                         ) : (
                             profile ? (
-                                <Animated.View className={"z-20 items-start justify-end py-1"} ref={userIntroContainerRef} style={userIntroContainerStyles}>
+                                <Animated.View className={"z-20 items-start justify-end py-1 "} ref={userIntroContainerRef} style={userIntroContainerStyles}>
                                     <Animated.Text
                                         className='font-bold text-xl text-[#000] dark:text-[#fff]'
                                         ref={userIntroNameRef}
                                         style={userIntroNameStyles}
-                                        onLayout={() => {
-                                            userIntroContainerRef.current?.measure((_1, _2, wi, he) => {
-                                                userIntroContainerWidth.value = wi;
-                                                userIntroContainerHeight.value = he;
-                                            })
-                                            userIntroNameRef.current?.measure((_1, _2, wi, he) => {
-                                                userIntroNameWidth.value = wi;
-                                                userIntroNameHeight.value = he;
-                                            })
-                                        }}
                                     >
                                         {profile.full_name ? (getFirstName(profile.full_name) + " " + getLastName(profile.full_name)) : profile.username}
                                     </Animated.Text>
+
+                                    <View onLayout={measureUserIntroRefs} />
+
                                     <Animated.Text className='text-xl text-[#000] dark:text-[#fff]'>{profile.phone + " - @" + profile.username}</Animated.Text>
                                 </Animated.View>
                             ) : (
@@ -358,6 +387,8 @@ const PublicProfileScreen = ({ profileId }: { profileId: string }) => {
                         />
                     </View>
                 </View>
+
+                <View style={{ height: height }} />
             </Animated.ScrollView>
 
         </View>
