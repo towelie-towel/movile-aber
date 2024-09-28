@@ -5,7 +5,7 @@ export async function saveExpoPushTokenToDB(payload: {
     profile_id: string;
     token: string;
 }) {
-    const response = await fetch('http://192.168.1.100:6942/savepushtoken', {
+    const response = await fetch('http://172.20.10.12:6942/savepushtoken', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -25,7 +25,7 @@ export async function saveExpoPushTokenToDB(payload: {
 export const getTaxiProfile = async (taxiId: string) => {
     try {
         const resp = await fetch(
-            `http://192.168.1.100:6942/taxiprofile?id=${taxiId}`
+            `http://172.20.10.12:6942/taxiprofile?id=${taxiId}`
         );
         const respJson = await resp.json();
         return respJson as TaxiProfile;
@@ -38,7 +38,7 @@ export const getTaxiProfile = async (taxiId: string) => {
 export const fetchProfile = async (id: string) => {
     try {
         const resp = await fetch(
-            `http://192.168.1.100:6942/profile?id=${id}`
+            `http://172.20.10.12:6942/profile?id=${id}`
         );
         const respJson = await resp.json();
         return respJson as Profile;

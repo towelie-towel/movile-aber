@@ -523,7 +523,7 @@ export default function ClientMap() {
                             )}
 
                             <ScaleBtn onPress={() => {
-                                router.push('profile/eff41f96-178e-4e97-9f43-35d4de7b7a18'); // e2725422-cc5c-4fcb-8a8c-015f8eee5c06
+                                router.push('profile/e2725422-cc5c-4fcb-8a8c-015f8eee5c06'); // eff41f96-178e-4e97-9f43-35d4de7b7a18
                             }}>
                                 <View className="bg-transparent rounded-lg p-3 shadow">
                                     <MaterialCommunityIcons name="ab-testing" size={24} color={Colors[colorScheme ?? 'light'].text_dark} />

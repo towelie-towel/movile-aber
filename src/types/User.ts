@@ -9,4 +9,8 @@ export type Profile = {
     cover_img_url?: string | null;
 }
 
+export type PublicProfile = Profile & {
+    fetch_time: number;
+}
+
 export type UserRole = 'client' | 'taxi' | 'admin'

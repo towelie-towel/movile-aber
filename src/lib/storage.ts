@@ -1,21 +1,26 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { atomWithStorage, createJSONStorage } from 'jotai/utils';
 
 import { Profile } from '~/types/User';
 
-const publicProfilesStorage = createJSONStorage<{ [uid: string]: Profile | undefined | null }>(() => AsyncStorage)
-export const publicProfilesAtom = atomWithStorage<{ [uid: string]: Profile | undefined | null }>('public-profiles', {}, publicProfilesStorage)
-
-export const storeProfile = async (profile: Profile) => {
+export const storePublicProfile = async (profile: Profile) => {
   try {
-    // await AsyncStorage.mergeItem("public-profiles", JSON.stringify({ [profile.id]: profile }));
-
     const key = `profile-${profile.id}`;
     await AsyncStorage.setItem(key, JSON.stringify(profile));
   } catch (e) {
-    console.error("storeProfile error", e)
+    console.error("storePublicProfile error", e)
+    throw e
   }
 };
+export const getStoredPublicProfile = async (id: string) => {
+  try {
+    const key = `profile-${id}`;
+    const jsonValue = await AsyncStorage.getItem(key);
+    return jsonValue != null ? JSON.parse(jsonValue) : null;
+  } catch (e) {
+    console.error("getStoredPublicProfile error", e)
+    throw e
+  }
+}
 
 export const storeData = async (key: string, value: any) => {
   try {
@@ -23,15 +28,16 @@ export const storeData = async (key: string, value: any) => {
     await AsyncStorage.setItem(key, jsonValue);
   } catch (e) {
     console.error("storeData error", e)
+    throw e
   }
 };
-
 export const getData = async (key: string) => {
   try {
     const jsonValue = await AsyncStorage.getItem(key);
     return jsonValue != null ? JSON.parse(jsonValue) : null;
   } catch (e) {
     console.error("getData error", e)
+    throw e
   }
 };
 

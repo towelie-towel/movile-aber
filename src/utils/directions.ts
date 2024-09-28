@@ -35,7 +35,7 @@ export const getCoordinateAddress = async (latitude: number, longitude: number) 
 export const getLastUserRide = async (userId: string, status?: string) => {
   try {
     const resp = await fetch(
-      `http://192.168.1.100:6942/lastride?client_id=${userId}${status ? `&status=${status}` : ""}`
+      `http://172.20.10.12:6942/lastride?client_id=${userId}${status ? `&status=${status}` : ""}`
     );
     const respJson = await resp.json();
     return respJson as RideInfo;
@@ -51,7 +51,7 @@ export async function addReview(review: {
   comment?: string;
   overall_rating?: number;
 }) {
-  const response = await fetch('http://192.168.1.100:6942/savereview', {
+  const response = await fetch('http://172.20.10.12:6942/savereview', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -71,7 +71,7 @@ export async function addReview(review: {
 export const getDirections = async (startLoc: string, destinationLoc: string) => {
   try {
     const resp = await fetch(
-      `http://192.168.1.100:6942/route?from=${startLoc}&to=${destinationLoc}`
+      `http://172.20.10.12:6942/route?from=${startLoc}&to=${destinationLoc}`
     );
     const respJson = await resp.json();
     const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map((point, _) => ({

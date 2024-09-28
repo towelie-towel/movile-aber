@@ -7,18 +7,16 @@ import { BlurView } from 'expo-blur';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FontAwesome6, MaterialCommunityIcons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useAtom } from 'jotai/react';
 
 import { Placeholder, PlaceholderLine, Fade } from "~/lib/rn-placeholder";
-import { publicProfilesAtom, storeProfile } from '~/lib/storage';
+import { storePublicProfile, getStoredPublicProfile } from '~/lib/storage';
 import { ColorLinkedin, ColorInstagram, ColorFacebook, ColorTwitter } from '~/components/svgs';
 import { ScaleBtn } from '~/components/common';
 import PopupMenu from '~/components/common/PopupMenu';
 import Colors from '~/constants/Colors';
 import { getFirstName, getLastName } from '~/utils';
 import { fetchProfile } from '~/utils/auth';
-import { Profile } from '~/types/User';
+import { PublicProfile } from '~/types/User';
 
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
@@ -38,7 +36,7 @@ const PublicProfileScreen = ({ profileId }: { profileId: string }) => {
     const userIntroNameWidth = useSharedValue(0);
     const userIntroNameHeight = useSharedValue(0);
 
-    const [profile, setProfile] = useState<Profile | null>();
+    const [publicProfile, setPublicProfile] = useState<PublicProfile | null>();
     const [loadingProfile, setLoadingProfile] = useState(true);
     const [avatarLoaded, setAvatarLoaded] = useState(false);
 
@@ -57,20 +55,54 @@ const PublicProfileScreen = ({ profileId }: { profileId: string }) => {
         })
     }, [userIntroContainerRef, userIntroNameRef])
 
+    const setProfileFromStorage = useCallback(async () => {
+        try {
+            const storedPublicProfile = await getStoredPublicProfile(profileId as string);
+            if (storedPublicProfile) {
+                setPublicProfile(prev => {
+                    if (prev) {
+                        if (prev.fetch_time < storedPublicProfile.fetch_time) {
+                            return storedPublicProfile;
+                        } else {
+                            return prev;
+                        }
+                    }
+                    return storedPublicProfile;
+                });
+            }
+            return storedPublicProfile;
+        } catch (error) {
+            console.error("Error fetching stored public profile data:", error);
+        }
+    }, [setPublicProfile]);
     const getProfile = useCallback(async () => {
         try {
-            const resProfile = await fetchProfile(profileId as string);
+            const [storedProfileResult, serverProfileResult] = await Promise.allSettled([
+                setProfileFromStorage(),
+                fetchProfile(profileId as string)
+            ]);
 
-            await storeProfile(resProfile);
+            if (storedProfileResult.status === 'fulfilled' && serverProfileResult.status === 'fulfilled') {
+                const serverPublicProfile = { ...serverProfileResult.value, fetch_time: Date.now() } as PublicProfile;
 
-            scrollRef.current?.scrollTo({ x: 0, y: 0, animated: true });
-            setProfile(resProfile);
+                setPublicProfile(serverPublicProfile);
+
+                await storePublicProfile(serverPublicProfile);
+            } else {
+                if (storedProfileResult.status === 'rejected') {
+                    console.error("Error while fetching stored public profile:", storedProfileResult.reason);
+                }
+                if (serverProfileResult.status === 'rejected') {
+                    console.error("Error while fetching server public profile:", serverProfileResult.reason);
+                }
+            }
         } catch (error) {
-            console.error("Error fetching profile data:", error);
+            console.error("Error fetching public profile data:", error);
         } finally {
             setLoadingProfile(false)
+            scrollRef.current?.scrollTo({ x: 0, y: 0, animated: true });
         }
-    }, [setProfile, scrollRef]);
+    }, [setPublicProfile, setProfileFromStorage, scrollRef]);
 
     const handlers = {
         onScroll: (event: ScrollEvent) => {
@@ -256,12 +288,12 @@ const PublicProfileScreen = ({ profileId }: { profileId: string }) => {
                     </Animated.View>
 
                     {
-                        profile?.avatar_url && <Animated.View className={"z-10"} style={imgContainerStyles}>
+                        publicProfile?.avatar_url && <Animated.View className={"z-10"} style={imgContainerStyles}>
                             <Image
                                 style={{ flex: 1 }}
                                 alt="avatar"
                                 source={{
-                                    uri: profile?.avatar_url,
+                                    uri: publicProfile?.avatar_url,
                                 }}
                                 onLoadEnd={() => setAvatarLoaded(true)}
                             />
@@ -313,19 +345,19 @@ const PublicProfileScreen = ({ profileId }: { profileId: string }) => {
                                 </Animated.View>
                             </Animated.View>
                         ) : (
-                            profile ? (
+                            publicProfile ? (
                                 <Animated.View className={"z-20 items-start justify-end py-1 "} ref={userIntroContainerRef} style={userIntroContainerStyles}>
                                     <Animated.Text
                                         className='font-bold text-xl text-[#000] dark:text-[#fff]'
                                         ref={userIntroNameRef}
                                         style={userIntroNameStyles}
                                     >
-                                        {profile.full_name ? (getFirstName(profile.full_name) + " " + getLastName(profile.full_name)) : profile.username}
+                                        {publicProfile.full_name ? (getFirstName(publicProfile.full_name) + " " + getLastName(publicProfile.full_name)) : publicProfile.username}
                                     </Animated.Text>
 
                                     <View onLayout={measureUserIntroRefs} />
 
-                                    <Animated.Text className='text-xl text-[#000] dark:text-[#fff]'>{profile.phone + " - @" + profile.username}</Animated.Text>
+                                    <Animated.Text className='text-xl text-[#000] dark:text-[#fff]'>{publicProfile.phone + " - @" + publicProfile.username}</Animated.Text>
                                 </Animated.View>
                             ) : (
                                 <>
