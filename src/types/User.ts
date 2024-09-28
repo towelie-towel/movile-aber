@@ -1,8 +1,8 @@
 export type Profile = {
-    id?: string | null;
+    id: string;
+    role: UserRole;
     username?: string | null;
     full_name?: string | null;
-    role?: UserRole;
     email?: string | null;
     phone?: string | null;
     avatar_url?: string | null;

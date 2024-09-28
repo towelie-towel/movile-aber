@@ -70,7 +70,7 @@ export const BottomSheetContent = ({
   const colorScheme = useColorScheme();
   const { width } = useWindowDimensions();
   const { profile } = useUser()
-  const { snapToIndex } = useBottomSheet();
+  const { snapToIndex, animatedPosition } = useBottomSheet();
   const { cancelTaxi } = useWSActions()
   const [userMarkers, setUserMarkers] = useAtom(userMarkersAtom)
 
@@ -81,7 +81,6 @@ export const BottomSheetContent = ({
   const originShakeAnimatedValue = useRef(new Animated.Value(0)).current;
   const destinationShakeAnimatedValue = useRef(new Animated.Value(0)).current;
 
-  const [viewPinOnMap, setViewPinOnMap] = useState(false);
   const [editingMarkers, setEditingMarkers] = useState(false);
   const [piningInput, setPiningInput] = useState<'origin' | 'destination' | null>(null);
 
@@ -205,7 +204,6 @@ export const BottomSheetContent = ({
           // navigationInfo: respJson[0].legs[0],
         })
 
-        setViewPinOnMap(false);
         setPiningInput(null);
         setCurrentStep(ClientSteps.TAXI)
       } catch (error) {
@@ -240,7 +238,6 @@ export const BottomSheetContent = ({
     // collapse();
     startPiningLocation();
     setCurrentStep(ClientSteps.PINNING);
-    setViewPinOnMap(false);
     console.log("piningInput: ", piningInput)
     // setPiningInput(null);
     Keyboard.dismiss();
@@ -441,29 +438,36 @@ export const BottomSheetContent = ({
     data: GooglePlaceData,
     _details: GooglePlaceDetail | null
   ) => {
-    const targetMarker = userMarkers.find(marker => marker.name === data.description)
-    if (targetMarker) {
-      originInputViewRef.current?.setAddressText(targetMarker?.coords.address);
-      setPinedInfo({
-        origin: targetMarker.coords,
-        destination: pinedInfo?.destination ?? null,
-      });
+    if (data.description === "Pin on Map") {
+      startPiningLocationHandler()
+    } else {
+      const targetMarker = userMarkers.find(marker => marker.name === data.description)
+      if (targetMarker) {
+        originInputViewRef.current?.setAddressText(targetMarker?.coords.address);
+        setPinedInfo({
+          origin: targetMarker.coords,
+          destination: pinedInfo?.destination ?? null,
+        });
+      }
     }
   }, [userMarkers, originInputViewRef, pinedInfo]);
   const handleDestinationMarkerTarget = useCallback(async (
     data: GooglePlaceData,
     _details: GooglePlaceDetail | null
   ) => {
-    console.log(JSON.stringify(data))
-    /* const targetMarker = userMarkers.find(marker => marker.name === data.description)
-    if (targetMarker) {
-      destinationInputViewRef.current?.setAddressText(targetMarker?.coords.address);
-      setPinedInfo({
-        origin: pinedInfo?.origin ?? null,
-        destination: targetMarker.coords,
-      });
-    } */
-  }, [userMarkers, destinationInputViewRef, pinedInfo]);
+    if (data.description === "Pin on Map") {
+      startPiningLocationHandler()
+    } else {
+      const targetMarker = userMarkers.find(marker => marker.name === data.description)
+      if (targetMarker) {
+        destinationInputViewRef.current?.setAddressText(targetMarker?.coords.address);
+        setPinedInfo({
+          origin: pinedInfo?.origin ?? null,
+          destination: targetMarker.coords,
+        });
+      }
+    }
+  }, [startPiningLocationHandler, userMarkers, destinationInputViewRef, pinedInfo]);
 
   // useEffect(restoreInputFromPinedInfo, [currentStep]);
   useEffect(handleActiveRouteTokio, [pinedInfo])
@@ -471,19 +475,6 @@ export const BottomSheetContent = ({
   useEffect(() => {
     fetchOrigin()
   }, [])
-
-  /* return (
-
-    <View className="flex-1 bg-[#F8F8F8] dark:bg-[#1b1b1b]">
-
-      <View className="w-[95%] mt-3 h-full self-center overflow-visible">
-
-        <RideReview finishRide={finishRide} />
-
-      </View>
-
-    </View>
-  ) */
 
   return (
     <View className="flex-1 bg-[#F8F8F8] dark:bg-[#1b1b1b]">
@@ -650,7 +641,7 @@ export const BottomSheetContent = ({
                     {(currentStep === ClientSteps.PINNING && piningLocation) &&
                       (
                         <>
-                          <ScaleBtn className='h-full pr-3 justify-center items-center' onPress={goBackToSearch}>
+                          <ScaleBtn className='h-full pl-1 pr-3 scale-150 justify-center items-center' onPress={goBackToSearch}>
                             <FontAwesome6 name="chevron-left" size={18} color={Colors[colorScheme ?? "light"].icons_link} />
                           </ScaleBtn>
                           <Text className="font-bold text-xl text-[#1b1b1b] dark:text-[#C1C0C9]">Seleccione el lugar {piningInput === "destination" ? "destino" : "origen"}</Text>
@@ -659,19 +650,7 @@ export const BottomSheetContent = ({
                     }
                   </View>
 
-                  {viewPinOnMap &&
-                    (
-                      <ScaleBtn onPress={startPiningLocationHandler}>
-                        <View style={{ borderColor: Colors[colorScheme ?? "light"].icons_link }} className="flex-row items-center gap-2 p-1 px-2 border rounded-lg border-[#C1C0C9]-">
-                          {/* <Text className="h-full text-lg font-medium text-center text-[#1b1b1b] dark:text-[#C1C0C9]">Fijar en el Mapa</Text> */}
-                          <FontAwesome6 name="chevron-up" size={18} color={Colors[colorScheme ?? "light"].icons_link} />
-                          <MaterialCommunityIcons name="map-search-outline" size={22} color={Colors[colorScheme ?? "light"].icons_link} />
-                        </View>
-                      </ScaleBtn>
-                    )
-                  }
-
-                  {(!viewPinOnMap && !piningLocation && currentStep === ClientSteps.SEARCH && (pinedInfo?.origin && pinedInfo.destination || routeLoading)) &&
+                  {(!piningLocation && currentStep === ClientSteps.SEARCH && (pinedInfo?.origin && pinedInfo.destination || routeLoading)) &&
                     (
                       <ScaleBtn onPress={goToPinnedRouteTaxi} disabled={routeLoading} >
                         <View style={{ borderColor: Colors[colorScheme ?? "light"].icons_link }} className="flex-row items-center justify-center p-1 border rounded-lg">
@@ -709,29 +688,36 @@ export const BottomSheetContent = ({
                         >
                           <GooglePlacesAutocomplete
                             ref={originInputViewRef}
-                            predefinedPlaces={userMarkers.map((marker) => ({
-                              description: marker.name,
-                              geometry: {
-                                location: {
-                                  lat: marker.coords.latitude,
-                                  lng: marker.coords.longitude,
+                            predefinedPlaces={[
+                              {
+                                description: "Pin on Map",
+                                geometry: {
+                                  location: {
+                                    lat: 0,
+                                    lng: 0,
+                                  },
                                 },
                               },
-                            }))}
+                              ...userMarkers.map((marker) => ({
+                                description: marker.name,
+                                geometry: {
+                                  location: {
+                                    lat: marker.coords.latitude,
+                                    lng: marker.coords.longitude,
+                                  },
+                                },
+                              }))
+                            ]}
                             placeholder="Lugar de Origen"
                             textInputProps={{
                               id: "originInput",
                               placeholderTextColor: colorScheme === 'light' ? 'black' : '#6C6C6C',
                               onFocus: () => {
-                                LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
                                 if (piningLocation) goBackToSearch();
                                 if (editingMarkers) endEditingMarkers();
-                                setViewPinOnMap(true);
                                 setPiningInput('origin');
                               },
                               onBlur: () => {
-                                LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-                                setViewPinOnMap(false);
                                 setPiningInput(null);
                               },
                             }}
@@ -844,15 +830,11 @@ export const BottomSheetContent = ({
                               id: "destinationInput",
                               placeholderTextColor: colorScheme === 'light' ? 'black' : '#6C6C6C',
                               onFocus: () => {
-                                LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
                                 if (piningLocation) goBackToSearch();
                                 if (editingMarkers) endEditingMarkers();
-                                setViewPinOnMap(true);
                                 setPiningInput('destination');
                               },
                               onBlur: () => {
-                                LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-                                setViewPinOnMap(false);
                                 setPiningInput(null);
                               },
                             }}
@@ -932,28 +914,18 @@ export const BottomSheetContent = ({
 
             {(currentStep === ClientSteps.PINNING && piningLocation) &&
               <View className="mx-1.5 flex-row justify-between mt-5 gap-5">
-                <ScaleBtn containerStyle={{ flex: 1 }} className="h-18" onPress={goBackToSearch}>
+                <ScaleBtn containerStyle={{ flex: 1 }} className="h-18" onPress={confirmPiningLocationHandler}>
+                  <View className="w-full flex-row items-center justify-center bg-[#25D366] dark:bg-[#137136] rounded-xl p-3">
+                    <Text className="text-white font-bold text-xl">Confirmar</Text>
+                  </View>
+                </ScaleBtn>
+                {/* <ScaleBtn containerStyle={{ flex: 1 }} className="h-18" onPress={goBackToSearch}>
                   <View className="w-full flex-row items-center justify-center bg-[#242E42] rounded-xl p-3">
                     <Text className="text-white font-bold text-xl">Cancelar</Text>
                   </View>
-                </ScaleBtn>
-                <ScaleBtn containerStyle={{ flex: 1 }} className="h-18" onPress={confirmPiningLocationHandler}>
-                  <View className="w-full flex-row items-center justify-center bg-[#25D366] dark:bg-[#137136] rounded-xl p-3">
-                    <Text className="text-white font-bold text-xl">Guardar</Text>
-                  </View>
-                </ScaleBtn>
+                </ScaleBtn> */}
               </View>
             }
-
-            {/* {(currentStep === ClientSteps.PINNING && piningLocation) &&
-              (
-                <ScaleBtn containerStyle={{ flex: 1 }} className="mx-1.5 mt-3" onPress={confirmPiningLocationHandler}>
-                  <View className="h-18 flex-row items-center justify-center bg-[#25D366] dark:bg-[#137136] rounded-xl p-3">
-                    <Text className="text-white font-bold text-xl">Guardar</Text>
-                  </View>
-                </ScaleBtn>
-              )
-            } */}
 
             {currentStep === ClientSteps.SEARCH &&
               (

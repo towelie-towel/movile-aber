@@ -1,4 +1,21 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { atomWithStorage, createJSONStorage } from 'jotai/utils';
+
+import { Profile } from '~/types/User';
+
+const publicProfilesStorage = createJSONStorage<{ [uid: string]: Profile | undefined | null }>(() => AsyncStorage)
+export const publicProfilesAtom = atomWithStorage<{ [uid: string]: Profile | undefined | null }>('public-profiles', {}, publicProfilesStorage)
+
+export const storeProfile = async (profile: Profile) => {
+  try {
+    // await AsyncStorage.mergeItem("public-profiles", JSON.stringify({ [profile.id]: profile }));
+
+    const key = `profile-${profile.id}`;
+    await AsyncStorage.setItem(key, JSON.stringify(profile));
+  } catch (e) {
+    console.error("storeProfile error", e)
+  }
+};
 
 export const storeData = async (key: string, value: any) => {
   try {

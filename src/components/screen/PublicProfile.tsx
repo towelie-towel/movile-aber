@@ -7,8 +7,11 @@ import { BlurView } from 'expo-blur';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FontAwesome6, MaterialCommunityIcons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAtom } from 'jotai/react';
 
 import { Placeholder, PlaceholderLine, Fade } from "~/lib/rn-placeholder";
+import { publicProfilesAtom, storeProfile } from '~/lib/storage';
 import { ColorLinkedin, ColorInstagram, ColorFacebook, ColorTwitter } from '~/components/svgs';
 import { ScaleBtn } from '~/components/common';
 import PopupMenu from '~/components/common/PopupMenu';
@@ -35,7 +38,7 @@ const PublicProfileScreen = ({ profileId }: { profileId: string }) => {
     const userIntroNameWidth = useSharedValue(0);
     const userIntroNameHeight = useSharedValue(0);
 
-    const [profile, setProfile] = useState<Profile | null>(null);
+    const [profile, setProfile] = useState<Profile | null>();
     const [loadingProfile, setLoadingProfile] = useState(true);
     const [avatarLoaded, setAvatarLoaded] = useState(false);
 
@@ -58,15 +61,16 @@ const PublicProfileScreen = ({ profileId }: { profileId: string }) => {
         try {
             const resProfile = await fetchProfile(profileId as string);
 
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            await storeProfile(resProfile);
 
+            scrollRef.current?.scrollTo({ x: 0, y: 0, animated: true });
             setProfile(resProfile);
         } catch (error) {
             console.error("Error fetching profile data:", error);
         } finally {
             setLoadingProfile(false)
         }
-    }, [setProfile]);
+    }, [setProfile, scrollRef]);
 
     const handlers = {
         onScroll: (event: ScrollEvent) => {
@@ -361,7 +365,7 @@ const PublicProfileScreen = ({ profileId }: { profileId: string }) => {
                         </ScaleBtn>
 
                         <View className='flex-row gap-5 justify-center items-center'>
-                            <ScaleBtn className="">
+                            <ScaleBtn className="" onPressIn={() => { }}>
                                 <BlurView className='h-12 px-3 flex-row justify-center items-center gap-2 rounded-lg overflow-hidden' tint={colorScheme === "light" ? "dark" : "light"} intensity={20}>
                                     <MaterialCommunityIcons name="message" size={24} color={"#fff"} />
                                 </BlurView>
