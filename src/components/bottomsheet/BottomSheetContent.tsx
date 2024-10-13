@@ -15,7 +15,7 @@ import RideReview from '~/components/bottomsheet/RideReview';
 import RideFlowInfo from '~/components/bottomsheet/RideFlowInfo';
 import { ScaleBtn } from '~/components/common';
 import { selectableMarkerIcons, UserMarkerIconType } from '~/components/markers/AddUserMarker';
-import TaxiTypeRideRowItem from '~/components/elements/TaxiTypeRideRowItem';
+import TaxiCategoryRideRowItem from '~/components/elements/TaxiCategoryRideRowItem';
 import RidesHistoryItem from '~/components/elements/RidesHistoryItem';
 import UserMarkerRowItem from '~/components/elements/UserMarkerRowItem';
 import DefaultMarkerRowItem from '~/components/elements/DefaultMarkerRowItem';
@@ -25,13 +25,13 @@ import { defaultMarkers } from '~/constants/Markers';
 // import ColorsPalettes from '~/constants/ColorsPalettes.json'
 import { generateUniqueId } from '~/utils';
 import { addReview, getCoordinateAddress/* , getDirections, polylineDecode */ } from '~/utils/directions';
-import type { TaxiTypesInfo, TaxiType } from '~/types/Taxi';
+import type { TaxiCategoryInfo, TaxiCategory } from '~/types/Taxi';
 import type { RideInfo } from '~/types/RideFlow';
 import type { AddMarker } from '~/types/Marker';
 
 import TestRidesData from '~/constants/TestRidesData.json'
 import TestRideSimulation from '~/constants/TestRideSimulation.json'
-import TestTaxiTypesInfo from '~/constants/TestTaxiTypesInfo.json'
+import TestTaxiCategoryInfo from '~/constants/TestTaxiCategoryInfo.json'
 
 /* 
 -82.381419,23.116101
@@ -49,8 +49,8 @@ interface BottomSheetContentProps {
   piningLocation: boolean;
   piningMarker: AddMarker | null;
   setPiningMarker: React.Dispatch<AddMarker | null>;
-  selectedTaxiType: string | null;
-  setSelectedTaxiType: React.Dispatch<TaxiType | null>;
+  selectedTaxiCategory: string | null;
+  setSelectedTaxiCategory: React.Dispatch<TaxiCategory | null>;
 }
 
 export const BottomSheetContent = ({
@@ -64,8 +64,8 @@ export const BottomSheetContent = ({
   startPiningLocation,
   endPiningLocation,
   getMiddlePoint,
-  selectedTaxiType,
-  setSelectedTaxiType,
+  selectedTaxiCategory,
+  setSelectedTaxiCategory,
 }: BottomSheetContentProps) => {
   const colorScheme = useColorScheme();
   const { width } = useWindowDimensions();
@@ -228,10 +228,10 @@ export const BottomSheetContent = ({
     if (!result.canceled) setMarkerImage(result);
   }, []); */
 
-  const selectTaxiTypeHandler = useCallback(async (value: TaxiType) => {
-    console.log("selectTaxiTypeHandler: ", value)
-    setSelectedTaxiType(value)
-  }, [setSelectedTaxiType]);
+  const selectTaxiCategoryHandler = useCallback(async (value: TaxiCategory) => {
+    console.log("selectTaxiCategoryHandler: ", value)
+    setSelectedTaxiCategory(value)
+  }, [setSelectedTaxiCategory]);
 
   const startPiningLocationHandler = useCallback(() => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -317,14 +317,14 @@ export const BottomSheetContent = ({
     setCurrentStep(ClientSteps.SEARCH);
     cancelTaxi()
     // setRouteInfo(null);
-    // setSelectedTaxiType(null)
+    // setSelectedTaxiCategory(null)
     // collapse();
   }, [cancelTaxi]);
   const finishRide = useCallback((review?: { stars?: number, comment?: string }) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setPiningInput(null)
     setRideInfo(null)
-    setSelectedTaxiType(null)
+    setSelectedTaxiCategory(null)
     setPinedInfo(null)
 
     setCurrentStep(ClientSteps.SEARCH);
@@ -336,7 +336,7 @@ export const BottomSheetContent = ({
   const goBackToSearch = useCallback(() => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     // expand()
-    // setSelectedTaxiType(null)
+    // setSelectedTaxiCategory(null)
     setPiningInput(null)
     setPiningMarker(null)
     setMarkerName(null)
@@ -1036,7 +1036,7 @@ export const BottomSheetContent = ({
                     <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="always" className="w-100 px-3-">
                       {
                         // @ts-ignore
-                        TestTaxiTypesInfo.map((taxiType: TaxiTypesInfo) => <TaxiTypeRideRowItem selectedTaxiType={selectedTaxiType} selectTaxiType={selectTaxiTypeHandler} key={taxiType.slug} taxiType={taxiType} />)
+                        TestTaxiCategoryInfo.map((taxiCategory: TaxiCategoryInfo) => <TaxiCategoryRideRowItem selectedTaxiCategory={selectedTaxiCategory} selectTaxiCategory={selectTaxiCategoryHandler} key={taxiCategory.slug} taxiCategory={taxiCategory} />)
                       }
                     </ScrollView>
                   </View>

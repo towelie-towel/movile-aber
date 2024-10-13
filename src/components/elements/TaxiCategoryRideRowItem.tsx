@@ -3,24 +3,24 @@ import { useColorScheme, View, Text } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, { useSharedValue, useAnimatedRef, measure, withTiming, useAnimatedStyle, runOnJS } from "react-native-reanimated";
 
-import { TaxiType, TaxiTypesInfo } from "~/types/Taxi";
+import { TaxiCategory, TaxiCategoryInfo } from "~/types/Taxi";
 import Colors from "~/constants/Colors";
-import { BikeSVG, AutoSVG, ConfortSVG, ConfortPlusSVG, VipSVG } from "../svgs";
+import { BikeSVG, BasicSVG, ConfortSVG, ConfortPlusSVG, VipSVG } from "../svgs";
 
 
-const TaxiTypeRideRowItem = React.memo(({ taxiType, selectedTaxiType, selectTaxiType }: { taxiType: TaxiTypesInfo, selectedTaxiType: string, selectTaxiType: (value: TaxiType) => void }) => {
-  const { slug, name, pricePerKm, timePerKm, distance, duration } = taxiType;
+const TaxiCategoryRideRowItem = React.memo(({ taxiCategory, selectedTaxiCategory, selectTaxiCategory }: { taxiCategory: TaxiCategoryInfo, selectedTaxiCategory: string, selectTaxiCategory: (value: TaxiCategory) => void }) => {
+  const { slug, name, pricePerKm, timePerKm, distance, duration } = taxiCategory;
 
   useEffect(() => {
-    console.log("useEffect - [selectedTaxiType, slug]: ", selectedTaxiType, slug)
-    if (selectedTaxiType !== slug) { rippleOpacity.value = withTiming(0, { duration: 500 }, () => { scale.value = 0; }); }
-  }, [selectedTaxiType, slug])
+    console.log("useEffect - [selectedTaxiCategory, slug]: ", selectedTaxiCategory, slug)
+    if (selectedTaxiCategory !== slug) { rippleOpacity.value = withTiming(0, { duration: 500 }, () => { scale.value = 0; }); }
+  }, [selectedTaxiCategory, slug])
 
   const getTypeRideIcon = useMemo(() => {
     return () => {
       switch (slug) {
         case "bike": return BikeSVG;
-        case "auto": return AutoSVG;
+        case "basic": return BasicSVG;
         case "confort": return ConfortSVG;
         case "confort_plus": return ConfortPlusSVG;
         case "vip": return VipSVG;
@@ -56,7 +56,7 @@ const TaxiTypeRideRowItem = React.memo(({ taxiType, selectedTaxiType, selectTaxi
       rippleOpacity.value = 1;
       scale.value = withTiming(1, { duration: 500 }, () => {
         console.log("onBegin - withTiming")
-        runOnJS(selectTaxiType)(slug);
+        runOnJS(selectTaxiCategory)(slug);
       });
     })
     .onEnd(() => {
@@ -70,9 +70,9 @@ const TaxiTypeRideRowItem = React.memo(({ taxiType, selectedTaxiType, selectTaxi
       }); */
 
       /*
-      // selectTaxiType(slug)
+      // selectTaxiCategory(slug)
       runOnJS(() => {
-          selectTaxiType(slug)
+          selectTaxiCategory(slug)
       })()
       */
     })
@@ -146,13 +146,13 @@ const TaxiTypeRideRowItem = React.memo(({ taxiType, selectedTaxiType, selectTaxi
   )
 })
 
-export default TaxiTypeRideRowItem;
+export default TaxiCategoryRideRowItem;
 
 
 /* 
  return (
                         <Pressable
-                          onPress={() => setSelectedTaxiType(slug as TaxiType)}
+                          onPress={() => setSelectedTaxiCategory(slug as TaxiCategory)}
                           key={name}
                           className="mx-[-10%] px-[10%] bg-[#FCCB6F] flex-row gap-7 items-center py-3">
                           <Icon color={"black"} />
@@ -177,7 +177,7 @@ export default TaxiTypeRideRowItem;
                     }
                     return (
                       <Pressable
-                        onPress={() => setSelectedTaxiType(slug as TaxiType)}
+                        onPress={() => setSelectedTaxiCategory(slug as TaxiCategory)}
                         key={name}
                         className="mx-[-10%] px-[10%] flex-row gap-7 items-center py-3">
                         <Icon color={Colors[colorScheme ?? "light"].border} />

@@ -1,6 +1,6 @@
-import { BikeSVG, AutoSVG, ConfortSVG, ConfortPlusSVG, VipSVG } from '../components/svgs/index';
+import { BikeSVG, BasicSVG, ConfortSVG, ConfortPlusSVG, VipSVG } from '~/components/svgs/index';
 
-export const taxiTypesInfo = [
+export const taxiCategoriesInfo = [
     {
         slug: 'bike',
         name: 'Bike',
@@ -9,9 +9,9 @@ export const taxiTypesInfo = [
         timePerKm: 0.5,
     },
     {
-        slug: 'auto',
-        name: 'Auto',
-        Icon: AutoSVG,
+        slug: 'basic',
+        name: 'Basic',
+        Icon: BasicSVG,
         pricePerKm: 1,
         timePerKm: 0.45,
     },

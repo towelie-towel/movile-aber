@@ -13,7 +13,7 @@ import DashedLine from '~/components/bottomsheet/DashedLine';
 import Colors from '~/constants/Colors';
 import { ClientSteps } from '~/constants/RideFlow';
 import { polylineDecode } from '~/utils/directions';
-import type { TaxiProfile, TaxiType } from '~/types/Taxi';
+import type { TaxiProfile, TaxiCategory } from '~/types/Taxi';
 
 interface InputHeaderContentProps {
     currentStep: ClientSteps;
@@ -23,8 +23,8 @@ interface InputHeaderContentProps {
     cancelPiningLocation: () => void;
     confirmPiningLocation: () => Promise<{ latitude: number; longitude: number; address?: Address }>;
     piningLocation: boolean;
-    selectedTaxiType: string | null;
-    setSelectedTaxiType: React.Dispatch<TaxiType | null>;
+    selectedTaxiCategory: string | null;
+    setSelectedTaxiCategory: React.Dispatch<TaxiCategory | null>;
     confirmedTaxi: TaxiProfile | null;
 }
 

@@ -14,8 +14,8 @@
         }
     },
     {
-        "slug": "auto",
-        "name": "Auto",
+        "slug": "basic",
+        "name": "Basic",
         "pricePerKm": 1,
         "timePerKm": 0.45,
         "duration": {

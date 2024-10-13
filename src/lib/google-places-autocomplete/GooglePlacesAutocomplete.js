@@ -30,7 +30,6 @@ import debounce from 'lodash.debounce';
 import PropTypes from 'prop-types';
 import Qs from 'qs';
 import { MaterialIcons } from '@expo/vector-icons';
-import RippleCenter from '../../components/common/RippleCenterBtn';
 
 const defaultStyles = {
   container: {

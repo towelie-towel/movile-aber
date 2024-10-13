@@ -1,9 +1,9 @@
 import { Profile } from "./User";
 
-export type TaxiType = 'bike' | 'auto' | 'confort' | 'confort_plus' | 'vip';
+export type TaxiCategory = 'bike' | 'basic' | 'confort' | 'confort_plus' | 'vip';
 
 export interface TaxiProfile extends Profile {
-    type?: TaxiType;
+    category?: TaxiCategory;
     stars?: string | null;
     car_model?: string | null;
     years_of_experience?: string | null;
@@ -11,8 +11,8 @@ export interface TaxiProfile extends Profile {
     plate_number?: string | null;
 }
 
-export interface TaxiTypesInfo {
-    slug: TaxiType;
+export interface TaxiCategoryInfo {
+    slug: TaxiCategory;
     name: string;
     pricePerKm: number;
     timePerKm: number;

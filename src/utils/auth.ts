@@ -22,6 +22,25 @@ export async function saveExpoPushTokenToDB(payload: {
     console.log('Expo token saved:', data);
 }
 
+export async function updateProfile(profile: Partial<Profile> & { id: string }) {
+    const response = await fetch('http://172.20.10.12:6942/updateprofile', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(profile),
+    });
+
+    if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`Failed to update profile: ${error}`);
+    }
+    console.log(response)
+
+    const data = await response.json();
+    console.log('Profile updated:', data);
+}
+
 export const getTaxiProfile = async (taxiId: string) => {
     try {
         const resp = await fetch(

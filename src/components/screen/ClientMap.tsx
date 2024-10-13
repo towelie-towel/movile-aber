@@ -33,7 +33,7 @@ import { NightMap } from '~/constants/NightMap';
 import { drawerItems } from '~/constants/Drawer';
 import { ClientSteps } from '~/constants/RideFlow';
 import { calculateMiddlePointAndDelta, getLastUserRide, polylineDecode } from '~/utils/directions';
-import type { TaxiType } from '~/types/Taxi';
+import type { TaxiCategory } from '~/types/Taxi';
 import type { RideInfo } from '~/types/RideFlow';
 import type { AddMarker } from '~/types/Marker';
 
@@ -72,7 +72,7 @@ export default function ClientMap() {
     const [currentStep, setCurrentStep] = useState<ClientSteps>(ClientSteps.SEARCH);
     const [piningLocation, setPiningLocation] = useState(false);
     const [piningMarker, setPiningMarker] = useState<AddMarker | null>(null);
-    const [selectedTaxiType, setSelectedTaxiType] = useState<TaxiType | null>(null);
+    const [selectedTaxiCategory, setSelectedTaxiCategory] = useState<TaxiCategory | null>(null);
     const [findingRide, setFindingRide] = useState(false);
     const [rideInfo, setRideInfo] = useState<RideInfo | null>(null);
     // const [confirmedTaxi, setConfirmedTaxi] = useState<TaxiProfile | null>(null);
@@ -97,7 +97,7 @@ export default function ClientMap() {
     }, [followLocation])
     useEffect(() => {
         if (RIDE_FLOW_LOGS) console.log("currentStep: ", currentStep)
-        if (RIDE_FLOW_LOGS) console.log("selectedTaxiType: ", selectedTaxiType)
+        if (RIDE_FLOW_LOGS) console.log("selectedTaxiCategory: ", selectedTaxiCategory)
 
         if (Platform.OS === "ios") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
 
@@ -476,7 +476,7 @@ export default function ClientMap() {
                                 <View className='w-12' />
 
                                 {currentStep <= ClientSteps.FINDING && currentStep !== ClientSteps.PINNING &&
-                                    <FindRideBtn rideInfo={rideInfo} startFindingRide={startFindingRide} errorFindingRide={errorFindingRide} disabled={(findingRide || !selectedTaxiType)} >
+                                    <FindRideBtn rideInfo={rideInfo} startFindingRide={startFindingRide} errorFindingRide={errorFindingRide} disabled={(findingRide || !selectedTaxiCategory)} >
                                         <View className="bg-[#FCCB6F] dark:bg-[#fab526] w-40 h-14 rounded-lg p-3">
                                             <Text className="text-center text-lg font-bold w-auto text-[#fff] dark:text-[#222]">
                                                 {findingRide ? 'Finding Ride' : 'Request Ride'}
@@ -604,8 +604,8 @@ export default function ClientMap() {
                             setPiningMarker={setPiningMarker}
                             rideInfo={rideInfo}
                             setRideInfo={setRideInfo}
-                            selectedTaxiType={selectedTaxiType}
-                            setSelectedTaxiType={setSelectedTaxiType}
+                            selectedTaxiCategory={selectedTaxiCategory}
+                            setSelectedTaxiCategory={setSelectedTaxiCategory}
                         />
                     </BottomSheetModal>
 

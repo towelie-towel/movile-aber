@@ -7,7 +7,7 @@ import AnimatedMarker from './AnimatedMarker';
 import { useWSState } from '~/context/WSContext';
 import { MotiView } from '@motify/components';
 import { Easing } from 'react-native-reanimated';
-import { TaxiSVG } from '../svgs';
+import { TaxiSVG } from '~/components/svgs';
 
 type UserMarkerProps = {
   activeCircle?: boolean;

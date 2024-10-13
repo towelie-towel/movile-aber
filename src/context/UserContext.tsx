@@ -5,9 +5,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 
 import { getData } from '~/lib/storage';
 import { UserMarkerIconType } from '~/components/markers/AddUserMarker';
-import { UserRoles } from '~/constants/User';
-import { fetchProfile } from '~/utils/auth';
-import type { Profile } from '~/types/User';
+import { fetchProfile, updateProfile } from '~/utils/auth';
+import type { Profile, UserRole } from '~/types/User';
 
 const storedUserMarkers = createJSONStorage<UserMarkerIconType[]>(() => AsyncStorage)
 export const userMarkersAtom = atomWithStorage<UserMarkerIconType[]>('user_markers', [], storedUserMarkers)
@@ -39,11 +38,7 @@ function reducer(state: State, action: Action): State {
         isInitializing: false,
         profile: {
           ...state.profile,
-          id: action.payload.id,
-          phone: action.payload.phone,
-          username: action.payload.username,
-          full_name: action.payload.full_name,
-          role: action.payload.role,
+          ...action.payload
         },
         isError: false,
         error: null
@@ -63,13 +58,7 @@ function reducer(state: State, action: Action): State {
 
 type UserContext = {
   signOut: () => Promise<void>;
-  updateUser: (params: {
-    username?: string;
-    full_name?: string;
-    role?: UserRoles;
-    avatar_url?: string;
-    email?: string;
-  }) => Promise<void>;
+  updateUserHandler: (params: Omit<Partial<Profile>, "id">) => Promise<void>;
 } & State
 
 const initialValue: UserContext = {
@@ -81,7 +70,7 @@ const initialValue: UserContext = {
   signOut: async () => {
     throw new Error('Function not initizaliced yet');
   },
-  updateUser: async () => {
+  updateUserHandler: async () => {
     throw new Error('Function not initizaliced yet');
   },
 };
@@ -131,30 +120,23 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, []);
 
-  const updateUser = useCallback(async ({
-    username,
-    full_name,
-    role,
-    avatar_url,
-    email,
-  }: {
-    username?: string;
-    full_name?: string;
-    role?: UserRoles;
-    avatar_url?: string;
-    email?: string;
-  }) => {
+  const updateUserHandler = useCallback(async (profile: Omit<Partial<Profile>, "id">) => {
     try {
       // update user
+      if (!state.profile) {
+        throw new Error('Profile not found');
+      }
+
+      await updateProfile({ ...profile, id: state.profile.id });
 
       dispatch({
         type: 'UPDATE_PROFILE_SUCCESS', payload: {
           ...state.profile,
-          username: username ?? state.profile?.username,
-          full_name: full_name ?? state.profile?.full_name,
-          role: role ?? state.profile?.role,
-          avatar_url: avatar_url ?? state.profile?.avatar_url,
-          email: email ?? state.profile?.email,
+          username: profile.username ?? state.profile.username,
+          full_name: profile.full_name ?? state.profile.full_name,
+          role: profile.role ?? state.profile.role,
+          avatar_url: profile.avatar_url ?? state.profile.avatar_url,
+          email: profile.email ?? state.profile.email,
         }
       });
     } catch (error) {
@@ -187,7 +169,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     <UserContext.Provider
       value={{
         ...state,
-        updateUser,
+        updateUserHandler,
         signOut,
       }}>
       {children}

@@ -6,7 +6,7 @@ import { LatLng } from 'react-native-maps';
 
 import { useWSState } from '~/context/WSContext';
 import { calculateDistance } from '~/utils/directions';
-import { ConfortSVG } from '../svgs';
+import { ConfortSVG } from '~/components/svgs';
 
 const TaximeterRide: React.FC = () => {
     const { position } = useWSState()

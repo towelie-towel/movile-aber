@@ -364,7 +364,7 @@ export const BikeSVG = ({ color = "#242E42" }) => {
   );
 };
 
-export const AutoSVG = ({ color = "#242E42" }) => {
+export const BasicSVG = ({ color = "#242E42" }) => {
   return (
     <Svg width="50" height="27" viewBox="0 0 50 27" fill="none">
       <Path

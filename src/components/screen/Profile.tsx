@@ -3,17 +3,17 @@ import React from 'react';
 import { useWindowDimensions, View, useColorScheme, TextInput, Text } from 'react-native';
 import Animated, { useSharedValue, runOnJS, useAnimatedScrollHandler, ScrollEvent, useAnimatedProps, useAnimatedStyle, withTiming, interpolate, clamp, Extrapolation, useAnimatedRef } from 'react-native-reanimated'
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import ImageView from 'react-native-image-viewing';
+import { router } from 'expo-router';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FontAwesome6 } from '@expo/vector-icons';
+import ImageView from 'react-native-image-viewing';
 
 import Colors from '~/constants/Colors';
 import { useUser } from '~/context/UserContext';
 import { ColorLinkedin, ColorInstagram, ColorFacebook, ColorTwitter } from '~/components/svgs';
+import { ScaleBtn } from '~/components/common';
 import { getFirstName, getLastName } from '~/utils';
-import { ScaleBtn } from '../common';
-import { router } from 'expo-router';
 
 
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
@@ -174,7 +174,6 @@ const ProfileScreen = () => {
 
     }));
 
-
     const headerBtnsStyles = useAnimatedStyle(() => ({
         position: "absolute",
         // top: clamp(offsetY.value, 0, width - insets.top - 120) + insets.top,
@@ -268,7 +267,7 @@ const ProfileScreen = () => {
                                 <FontAwesome6 name="chevron-left" size={24} color={"#A1A1A1"} />
                             </BlurView>
                         </ScaleBtn>
-                        <ScaleBtn className="">
+                        <ScaleBtn onPressIn={() => { router.push('profile/edit'); }}>
                             <BlurView className='h-12 px-3 flex-row justify-center items-center gap-2 rounded-lg overflow-hidden' tint={colorScheme === "light" ? "dark" : "light"} intensity={20}>
                                 <Text className="font-bold text-xl text-[#A1A1A1]">Editar</Text>
                                 <FontAwesome6 name="edit" size={18} color={"#A1A1A1"} />

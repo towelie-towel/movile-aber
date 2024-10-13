@@ -68,6 +68,12 @@ const RootLayout = () => {
                       presentation: 'modal',
                     }}
                   />
+                  <Stack.Screen
+                    name="(common)/profile/edit"
+                    options={{
+                      presentation: 'modal',
+                    }}
+                  />
                 </Stack>
               </SafeAreaProvider>
             </GestureHandlerRootView>
