@@ -1,27 +1,107 @@
-import React, { useCallback } from 'react';
-import { useColorScheme, View, Text, ScrollView, useWindowDimensions } from 'react-native';
-import Animated, { useSharedValue, useAnimatedScrollHandler, ScrollEvent, useAnimatedStyle, withTiming, interpolate, Extrapolation, useAnimatedRef } from 'react-native-reanimated'
+import React, { useCallback, useEffect, useState } from 'react';
+import { useColorScheme, View, useWindowDimensions } from 'react-native';
+import Animated, { useSharedValue, useAnimatedScrollHandler, ScrollEvent, useAnimatedStyle, withTiming, interpolate, Extrapolation, useAnimatedRef } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { MaterialCommunityIcons, FontAwesome6 } from '@expo/vector-icons';
+import { router } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { FontAwesome6 } from '@expo/vector-icons';
 import { Path, Svg } from 'react-native-svg';
 import { BlurView } from 'expo-blur';
 
+import { useUser } from '~/context/UserContext';
 import { ScaleBtn } from '~/components/common';
-import DashedLine from '~/components/bottomsheet/DashedLine';
-import { capitalizeString } from '~/utils';
+import RideHistoryItem from '~/components/elements/RideHistoryItem';
+import { getUserRidesHistoryPaginated } from '~/utils/directions';
 import Colors from '~/constants/Colors';
 
-import TestRidesData from '~/constants/TestRidesData.json'
-import { router } from 'expo-router';
+const PAGE_SIZE = 10;
 
 const HistoryScreen = () => {
     const colorScheme = useColorScheme();
     const { width } = useWindowDimensions();
-    const insets = useSafeAreaInsets()
+    const insets = useSafeAreaInsets();
 
-    const scrollRef = useAnimatedRef<Animated.ScrollView>();
+    const { profile } = useUser();
+
+    const scrollRef = useAnimatedRef<Animated.FlatList<any>>();
     const offsetY = useSharedValue(0);
     const headerAnim = useSharedValue(0);
+
+    const [ridesHistory, setRidesHistory] = useState<any[]>([]);
+    const [page, setPage] = useState(0);
+
+    const [loading, setLoading] = useState(false);
+    const [loadingMoreRides, setLoadingMoreRides] = useState(false);
+
+    useEffect(() => {
+        fetchRidesHistory()
+
+        return () => {
+            setRidesHistory((prev) => {
+                if (prev) {
+                    console.log("prev.length", prev.length)
+                    AsyncStorage.setItem(`rides-history`, JSON.stringify(prev));
+                } else {
+                    AsyncStorage.removeItem(`rides-history`);
+                }
+                return [];
+            });
+            setPage(0);
+            // AsyncStorage.removeItem(`rides-history`);
+        };
+    }, []);
+    useEffect(() => {
+        if (ridesHistory.length) {
+            AsyncStorage.setItem(`rides-history`, JSON.stringify(ridesHistory));
+        }
+    }, [ridesHistory])
+
+    const fetchRidesHistory = useCallback(async () => {
+        setLoading(true);
+
+        let currentPage = 1;
+
+        const data = await AsyncStorage.getItem(`rides-history`);
+        if (data) {
+            const storedRidesHistory = JSON.parse(data) as any[];
+            console.log("storedRidesHistory.length", storedRidesHistory.length)
+
+            currentPage = (storedRidesHistory.length / PAGE_SIZE) + 1;
+
+            setRidesHistory(storedRidesHistory);
+            setPage(currentPage);
+        }
+
+
+        try {
+            console.log("currentPage: ", currentPage)
+            const data = await getUserRidesHistoryPaginated(profile?.id!, 1, currentPage * PAGE_SIZE);
+
+            setRidesHistory(data);
+            setPage((prev) => !prev ? 2 : prev + 1);
+        } catch (error) {
+            console.error(error);
+            // Fallback to local storage if server request fails
+            const localData = await AsyncStorage.getItem(`rides-history`);
+            if (localData) {
+                setRidesHistory(JSON.parse(localData));
+            }
+        } finally {
+            setLoading(false);
+        }
+    }, [page, profile]);
+    const fetchMoreRidesHistory = useCallback(async () => {
+        setLoadingMoreRides(true);
+        try {
+            const data = await getUserRidesHistoryPaginated(profile?.id!, page, PAGE_SIZE);
+            setRidesHistory((prev) => [...prev, ...data]);
+            setPage((prev) => prev + 1);
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setLoadingMoreRides(false);
+        }
+    }, [page, profile]);
 
     const handlers = {
         onScroll: (event: ScrollEvent) => {
@@ -29,7 +109,9 @@ const HistoryScreen = () => {
             offsetY.value = event.contentOffset.y;
 
             if (offsetY.value === 0) {
-                scrollRef.current?.scrollTo(0)
+                scrollRef.current?.scrollToIndex({
+                    index: 0
+                });
             }
 
             if (headerAnim.value === 0) {
@@ -56,7 +138,7 @@ const HistoryScreen = () => {
 
     const navRef = useAnimatedRef<Animated.View>();
     const navStyles = useAnimatedStyle(() => ({
-    }))
+    }));
     const navTitleRef = useAnimatedRef<Animated.Text>();
     const navTitleWidth = useSharedValue(0);
     const navTitleHeight = useSharedValue(0);
@@ -102,20 +184,11 @@ const HistoryScreen = () => {
                 )
             }
         ],
-    }))
+    }));
 
-    const getStatusColor = useCallback((status?: string | null) => {
-        switch (status) {
-            case "calceled": return "#242E42"
-            case "completed": return "#25D366"
-            case "error": return "#f82f00"
-            case "ongoing": return "#FCCB6F"
-            case "pending": return "#FCCB6F"
-
-            default:
-                return undefined
-        }
-    }, [])
+    const renderItem = useCallback(({ item }: any) => {
+        return <RideHistoryItem item={item} />;
+    }, []);
 
     return (
         <View className="flex-1" style={{ backgroundColor: Colors[colorScheme ?? 'light'].background_light }}>
@@ -158,7 +231,7 @@ const HistoryScreen = () => {
                                 navTitleRef.current?.measure((_1, _2, wi, he) => {
                                     navTitleWidth.value = wi;
                                     navTitleHeight.value = he;
-                                })
+                                });
                             }}
                             ref={navTitleRef}
                             numberOfLines={1}
@@ -171,58 +244,19 @@ const HistoryScreen = () => {
                     </View>
                 </Animated.View>
 
-                <Animated.ScrollView ref={scrollRef} style={scrollStyles} onScroll={scrollHandler} showsVerticalScrollIndicator={false} className="px-[5%]">
-                    {
-                        TestRidesData.map((item) => {
-                            return (
-                                <View key={item.id} className='mb-5 rounded-lg shadow-sm' style={{ backgroundColor: Colors[colorScheme ?? 'light'].background_light }} >
-                                    <View className='px-2'>
-                                        <View className="relative z-30 h-12 w-full mt-4 pr-[2.5%] flex-row items-center-">
-                                            <MaterialCommunityIcons className='mt-1' name="map-marker-account" size={32} color={Colors[colorScheme ?? "light"].border} />
+                <Animated.FlatList
+                    ref={scrollRef}
+                    style={scrollStyles}
+                    onScroll={scrollHandler}
+                    showsVerticalScrollIndicator={false}
+                    className="px-[5%]"
+                    data={ridesHistory}
+                    renderItem={renderItem}
+                    onEndReached={page ? fetchMoreRidesHistory : undefined}
+                    onEndReachedThreshold={0.5}
+                />
+                <View className='h-52'></View>
 
-                                            <ScrollView horizontal showsHorizontalScrollIndicator={false} className='mt-2'>
-                                                <Text numberOfLines={1} className="ml-2 font-bold- text-lg text-[#1b1b1b] dark:text-[#C1C0C9] ">{item?.origin_address}</Text>
-                                            </ScrollView>
-                                        </View>
-                                        <View className="relative z-20 h-12 w-full mb-3 pr-[2.5%] flex-row items-end">
-                                            <DashedLine
-                                                axis="vertical"
-                                                style={{
-                                                    height: 24,
-                                                    left: 15,
-                                                    top: -32,
-                                                }}
-                                                dashColor={Colors[colorScheme ?? "light"].border}
-                                            />
-                                            <MaterialCommunityIcons
-                                                className="ml-[-1.5px] mb-1"
-                                                name="map-marker-radius"
-                                                size={32}
-                                                color={Colors[colorScheme ?? "light"].border}
-                                            />
-                                            <ScrollView horizontal showsHorizontalScrollIndicator={false} className='mb-2'>
-                                                <Text numberOfLines={1} className="ml-2 font-bold- text-lg text-[#1b1b1b] dark:text-[#C1C0C9]">{item?.destination_address}</Text>
-                                            </ScrollView>
-                                        </View>
-                                    </View>
-                                    <View className='h-12 border-t border-t-gray-300 dark:border-t-gray-500 flex-row items-center justify-between px-4'>
-                                        <View className='flex-row items-center'>
-                                            <FontAwesome6 className='' name="money-bill" size={22} color={Colors[colorScheme ?? "light"].border} />
-                                            <Text numberOfLines={1} className="ml-2 font-medium text-lg text-[#1b1b1b] dark:text-[#C1C0C9]">${item?.price}</Text>
-                                        </View>
-                                        <ScaleBtn className='px-2 -mr-2 h-full justify-center'>
-                                            <View className='flex-row items-center'>
-                                                <Text style={{ color: getStatusColor(item?.status) }} numberOfLines={1} className="font-medium text-lg mr-2">{capitalizeString(item?.status)}</Text>
-                                                <FontAwesome6 name="chevron-right" size={18} color={getStatusColor(item?.status)} />
-                                            </View>
-                                        </ScaleBtn>
-                                    </View>
-                                </View>
-                            )
-                        })
-                    }
-                    <View className='h-52'></View>
-                </Animated.ScrollView>
             </View >
         </View>
     );

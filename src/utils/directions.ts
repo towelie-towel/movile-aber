@@ -1,5 +1,16 @@
 import type { RideInfo } from "~/types/RideFlow";
 
+export const getUserRidesHistoryPaginated = async (client_id: string, page?: number, perPage?: number) => {
+  try {
+    const resp = await fetch(`http://172.20.10.12:6942/getuserrideshistorypaginated?client_id=${client_id}${page ? `&page=${page}` : ""}${perPage ? `&per_page=${perPage}` : ""}`);
+    const respJson = await resp.json();
+    return respJson;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+
 export const getAddress = async (latitude: number, longitude: number) => {
   const resp = await fetch(
     `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=AIzaSyAtcwUbA0jjJ6ARXl5_FqIqYcGbTI_XZEE`
@@ -162,6 +173,8 @@ export function polylineDecode(str: string, precision?: number) {
 
   return coordinates;
 }
+
+// From this point on every line must be checked
 
 /* export function calculateMiddlePointAndDelta(coord1: { latitude: number, longitude: number }, coord2: { latitude: number, longitude: number }, bottomSheetHeightPercentage = 0.3, deltaIncreaseFactor = 1.2) {
   // Calculate middle point
