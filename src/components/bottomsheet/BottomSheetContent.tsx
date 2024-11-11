@@ -24,7 +24,7 @@ import { ClientSteps } from '~/constants/RideFlow';
 import { defaultMarkers } from '~/constants/Markers';
 // import ColorsPalettes from '~/constants/ColorsPalettes.json'
 import { generateUniqueId } from '~/utils';
-import { addReview, getCoordinateAddress/* , getDirections, polylineDecode */ } from '~/utils/directions';
+import { addReview, getCoordinateAddress, getHeDirections/* , getDirections, polylineDecode */ } from '~/utils/directions';
 import type { TaxiCategoryInfo, TaxiCategory } from '~/types/Taxi';
 import type { RideInfo } from '~/types/RideFlow';
 import type { AddMarker } from '~/types/Marker';
@@ -182,11 +182,12 @@ export const BottomSheetContent = ({
     }
   }, [currentStep, pinedInfo, destinationInputViewRef, fetchOrigin, stopAllLoadings]) */
 
-  const handleActiveRouteTokio = useCallback(() => {
+  const handleActiveRouteTokio = useCallback(async () => {
     if (pinedInfo?.destination && pinedInfo?.origin) {
       try {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         setRouteLoading(true)
+        console.log(await getHeDirections(`${pinedInfo.origin.latitude},${pinedInfo.origin.longitude}`, `${pinedInfo.destination.latitude},${pinedInfo.destination.longitude}`, "car"))
         // const { overview_polyline, decodedCoords, distance, duration } = await getDirections(`${pinedInfo.origin.latitude},${pinedInfo.origin.longitude}`, `${pinedInfo.destination.latitude},${pinedInfo.destination.longitude}`)
         // snapToIndex(1);
         const { overview_polyline, distance, duration } = TestRideSimulation
@@ -283,6 +284,7 @@ export const BottomSheetContent = ({
           }
         }
       } else {
+        // TODO: handle this case has only sending the coordinates to the server and the server fetch the route
         throw new Error('No street address found in the response.');
       }
     } catch (error) {
@@ -470,7 +472,9 @@ export const BottomSheetContent = ({
   }, [startPiningLocationHandler, userMarkers, destinationInputViewRef, pinedInfo]);
 
   // useEffect(restoreInputFromPinedInfo, [currentStep]);
-  useEffect(handleActiveRouteTokio, [pinedInfo])
+  useEffect(() => {
+    handleActiveRouteTokio()
+  }, [pinedInfo])
 
   useEffect(() => {
     fetchOrigin()

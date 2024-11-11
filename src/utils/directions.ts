@@ -1,5 +1,7 @@
 import type { RideInfo } from "~/types/RideFlow";
 
+const DEV_LOGS = true;
+
 export const getUserRidesHistoryPaginated = async (client_id: string, page?: number, perPage?: number) => {
   try {
     const resp = await fetch(`http://172.20.10.12:6942/getuserrideshistorypaginated?client_id=${client_id}${page ? `&page=${page}` : ""}${perPage ? `&per_page=${perPage}` : ""}`);
@@ -27,6 +29,38 @@ export const getAddress = async (latitude: number, longitude: number) => {
   );
   console.log(JSON.stringify(respJson.results, null, 2));
   return streets;
+};
+
+export const getGoAddress = async (latitude: number, longitude: number) => {
+  const resp = await fetch(
+    `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=AIzaSyAtcwUbA0jjJ6ARXl5_FqIqYcGbTI_XZEE`
+  );
+  const respJson = await resp.json();
+
+  const streetAddresses = respJson.results.filter(
+    (result: any) => result.types.includes('street_address') || result.types.includes('route')
+  );
+  const streets = streetAddresses.map(
+    (address: any) =>
+      address.address_components.find((component: any) => component.types.includes('route'))
+        ?.long_name
+  );
+  console.log(JSON.stringify(respJson.results, null, 2));
+  return streets;
+};
+
+export const getHeAddress = async (latitude: number, longitude: number) => {
+  const resp = await fetch(
+    `https://revgeocode.search.hereapi.com/v1/revgeocode?at=${latitude},${longitude}&types=street&limit=5&apiKey=mRASkFtnRqYimoHBzud5-kSsj0y_FvqR-1jwJHrfUvQ&showMapReferences=pointAddress&show=streetInfo`
+  );
+  const addressRes = await resp.json();
+  console.log(JSON.stringify(addressRes, null, 2))
+  if (addressRes.items.length > 0) {
+    const streetInfo = `${addressRes.items[0].address.street.replace('Calle ', '')} e/ ${addressRes.items[1].address.street.replace('Calle ', '')} y ${addressRes.items[2].address.street.replace('Calle ', '')}, ${addressRes.items[2].address.district}, Habana, Cuba`;
+    return streetInfo;
+  } else {
+    return null;
+  }
 };
 
 export const getCoordinateAddress = async (latitude: number, longitude: number) => {
@@ -78,6 +112,27 @@ export async function addReview(review: {
   const data = await response.json();
   console.log('Review added with ID:', data.review_id);
 }
+
+// https://router.hereapi.com/v8/routes
+// TODO: add transPostMode query param (car, scooter, taxi)
+export const getHeDirections = async (startLoc: string, destinationLoc: string, transportMode?: string) => {
+  try {
+    DEV_LOGS && console.log("getHeDirections: ", { startLoc, destinationLoc, transportMode })
+    // TODO: use origin/destination param's options
+    const resp = await fetch(
+      `https://router.hereapi.com/v8/routes?apiKey=mRASkFtnRqYimoHBzud5-kSsj0y_FvqR-1jwJHrfUvQ&origin=${startLoc}&destination=${destinationLoc}&transportMode=${transportMode ?? "car"}`
+    );
+    const respJson = await resp.json();
+    const decodedCoords = polylineDecode(respJson[0].overview_polyline.points).map((point, _) => ({
+      latitude: point[0]!,
+      longitude: point[1]!,
+    }));
+    return { overview_polyline: respJson[0].overview_polyline, decodedCoords, distance: respJson[0].legs[0].distance, duration: respJson[0].legs[0].duration };
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
 
 export const getDirections = async (startLoc: string, destinationLoc: string) => {
   try {

@@ -47,7 +47,8 @@ const TaxisMarkers = ({ onPressTaxi, animateToRegion, followLocation, taxiConfir
       }
     }
   }, [confirmedTaxi, taxiConfirm, startRide])
-  const onFollowLocationChangeHandler = useCallback(() => {
+
+  /* const onFollowLocationChangeHandler = useCallback(() => {
     if (followLocation.current === "taxi") {
       animateToRegion({
         latitudeDelta: 0.00922, longitudeDelta: 0.009121,
@@ -55,12 +56,13 @@ const TaxisMarkers = ({ onPressTaxi, animateToRegion, followLocation, taxiConfir
         longitude: taxis[0].longitude,
       })
     }
-  }, [followLocation])
+  }, [followLocation]) */
 
   useEffect(onWsTaxisChangeHandler, [wsTaxis]);
   useEffect(onTaxisChangeHandler, [taxis]);
   useEffect(onConfirmedTaxiChangeHandler, [confirmedTaxi]);
-  useEffect(onFollowLocationChangeHandler, [followLocation]);
+
+  // useEffect(onFollowLocationChangeHandler, [followLocation]);
 
   return (
     <>

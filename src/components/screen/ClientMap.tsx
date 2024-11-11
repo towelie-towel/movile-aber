@@ -77,27 +77,29 @@ export default function ClientMap() {
     const [rideInfo, setRideInfo] = useState<RideInfo | null>(null);
     // const [confirmedTaxi, setConfirmedTaxi] = useState<TaxiProfile | null>(null);
 
-    const activeRoute = rideInfo && polylineDecode(rideInfo.overview_polyline.points).map((point, _) => ({
+    const activeRoute = !!rideInfo ? polylineDecode(rideInfo.overview_polyline.points).map((point, _) => ({
         latitude: point[0]!,
         longitude: point[1]!,
-    }));
+    })) : null;
 
     useEffect(() => {
         let unsubscribeInterval: NodeJS.Timeout;
+        if (RIDE_FLOW_LOGS) console.log("useEffect - followLocation: ", followLocation)
         unsubscribeInterval = setInterval(() => {
+            if (RIDE_FLOW_LOGS) console.log("useEffect - followLocation, setInterval - 200 ", followLocation.current)
             if (followLocation.current === "user") {
                 animateToUserLocation()
             }
         }, 2000)
         return () => {
+            if (RIDE_FLOW_LOGS) console.log("useEffect_return - followLocation: ", { followLocation, unsubscribeInterval })
             if (unsubscribeInterval) {
                 clearInterval(unsubscribeInterval)
             }
         }
     }, [followLocation])
     useEffect(() => {
-        if (RIDE_FLOW_LOGS) console.log("currentStep: ", currentStep)
-        if (RIDE_FLOW_LOGS) console.log("selectedTaxiCategory: ", selectedTaxiCategory)
+        if (RIDE_FLOW_LOGS) console.log("useEffect - currentStep: ", { currentStep, selectedTaxiCategory })
 
         if (Platform.OS === "ios") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
 
@@ -176,12 +178,23 @@ export default function ClientMap() {
         [mapViewRef]
     );
     const animateToUserLocation = useCallback(async () => {
-        // TODO: find a more performant way to fetch user coordinates
-        const position = await ExpoLocation.getCurrentPositionAsync({ accuracy: ExpoLocation.Accuracy.Highest });
-        animateToRegion({ latitude: position?.coords.latitude - 0.0025 * sheetCurrentSnapRef.current, longitude: position?.coords.longitude, latitudeDelta: 0.00922, longitudeDelta: 0.009121, });
+        // TODO: see if ref change inside the setInterval callback or useCallbacks calls?
+        if (followLocation.current != "user") followLocation.current = null
+
+        let position: ExpoLocation.LocationObject | null
+
+        position = await ExpoLocation.getLastKnownPositionAsync();
+        if (position) {
+            animateToRegion({ latitude: position?.coords.latitude - 0.0025 * sheetCurrentSnapRef.current, longitude: position?.coords.longitude, latitudeDelta: 0.00922, longitudeDelta: 0.009121, });
+        } else {
+            position = await ExpoLocation.getCurrentPositionAsync({ accuracy: ExpoLocation.LocationAccuracy.High })
+            animateToRegion({ latitude: position?.coords.latitude - 0.0025 * sheetCurrentSnapRef.current, longitude: position?.coords.longitude, latitudeDelta: 0.00922, longitudeDelta: 0.009121, });
+        }
     }, [sheetCurrentSnapRef, animateToRegion, followLocation]);
     const animateToActiveRoute = useCallback(() => {
-        followLocation.current = null;
+        // TODO: see if ref change inside the setInterval callback or useCallbacks calls?
+        followLocation.current = null
+
         if (!activeRoute) return
         animateToRegion(calculateMiddlePointAndDelta(
             { latitude: activeRoute[0].latitude, longitude: activeRoute[0].longitude },
@@ -190,15 +203,17 @@ export default function ClientMap() {
                 longitude: activeRoute[activeRoute.length - 1].longitude,
             }
         ));
-    }, [activeRoute, animateToRegion]);
+    }, [activeRoute, animateToRegion, followLocation]);
     const animateToRoute = useCallback(
         (
             origin: { latitude: number; longitude: number },
             destination: { latitude: number; longitude: number }
         ) => {
-            followLocation.current = null;
+            // TODO: see if ref change inside the setInterval callback or useCallbacks calls?
+            followLocation.current = null
+
             animateToRegion(calculateMiddlePointAndDelta(origin, destination));
-        }, [animateToRegion]);
+        }, [animateToRegion, followLocation]);
 
     // renders
     const renderCustomHandle = useCallback((props: BottomSheetHandleProps) => <CustomHandle title="Custom Handle Example" {...props} />, []);
@@ -403,6 +418,7 @@ export default function ClientMap() {
                         showsUserLocation={currentStep !== ClientSteps.RIDE}
                         style={{ flex: 1 }}
                         onTouchMove={() => {
+                            // TODO: see if ref change inside the setInterval callback or useCallbacks calls?
                             followLocation.current = null;
                         }}
                         onTouchStart={() => { }}
@@ -421,9 +437,23 @@ export default function ClientMap() {
                         provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : PROVIDER_DEFAULT}
                         customMapStyle={colorScheme === 'dark' ? NightMap : undefined}
                     >
-                        {activeRoute && <Polyline coordinates={activeRoute} strokeWidth={5} strokeColor="#000" />}
-                        <TaxisMarkers taxiConfirm={taxiConfirm} startRide={startRide} animateToRegion={animateToRegion} followLocation={followLocation} onPressTaxi={onPressTaxi} />
-                        <UserMarker findingRide={findingRide} completeRide={completeRide} />
+                        {activeRoute && <Polyline
+                            coordinates={activeRoute}
+                            strokeWidth={5}
+                            strokeColor="#000"
+                        />}
+
+                        <TaxisMarkers
+                            taxiConfirm={taxiConfirm}
+                            startRide={startRide}
+                            animateToRegion={animateToRegion}
+                            followLocation={followLocation}
+                            onPressTaxi={onPressTaxi}
+                        />
+                        <UserMarker
+                            findingRide={findingRide}
+                            completeRide={completeRide}
+                        />
 
                         <AnimatedRouteMarker key={2} />
 
@@ -450,14 +480,13 @@ export default function ClientMap() {
                         <Animated.View
                             style={[{ position: 'absolute', top: 0, right: 0, flex: 1, zIndex: 1000 }, piningMarkerAnimStyle]}
                         >
-                            {!piningLocation &&
-                                <UserMapMarker style={{ position: 'absolute', right: width / 2 - 41, top: height / 2 - 82, zIndex: 1001, }} piningMarker={piningMarker} />
-                            }
-                            {piningLocation && (
+                            {piningLocation ? (
                                 <View style={{ position: 'absolute', right: width / 2 - 24, top: height / 2 - 48, zIndex: 1001 }}>
                                     <MaterialIcons name="location-pin" size={48} color={Colors[colorScheme ?? 'light'].text} />
                                 </View>
-                            )}
+                            ) :
+                                <UserMapMarker style={{ position: 'absolute', right: width / 2 - 41, top: height / 2 - 82, zIndex: 1001, }} piningMarker={piningMarker} />
+                            }
                         </Animated.View>
                     )}
 
@@ -503,7 +532,12 @@ export default function ClientMap() {
                             )}
 
                             {(currentStep === ClientSteps.PICKUP || currentStep === ClientSteps.RIDE) && (
-                                <ScaleBtn onPress={() => { followLocation.current = "taxi" }}>
+                                <ScaleBtn onPress={() => {
+
+                                    // TODO: see if ref change inside the setInterval callback or useCallbacks calls?
+                                    followLocation.current = "taxi"
+
+                                }}>
                                     <View className="bg-transparent rounded-lg p-3 ">
                                         <MaterialCommunityIcons name="taxi" size={24} color={Colors[colorScheme ?? 'light'].text_dark} />
                                     </View>
@@ -512,7 +546,9 @@ export default function ClientMap() {
 
                             {currentStep !== ClientSteps.RIDE && (
                                 <ScaleBtn onPress={() => {
+                                    // TODO: see if ref change inside the setInterval callback or useCallbacks calls?
                                     followLocation.current = "user";
+
                                     animateToUserLocation()
                                 }}>
                                     <View className="bg-transparent rounded-lg p-3 shadow">
